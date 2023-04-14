@@ -1,14 +1,14 @@
 package ru.bprn.printhouse.views.helloworld;
 
-import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import ru.bprn.printhouse.data.AbstractEntity;
+import ru.bprn.printhouse.data.entity.PrintMashine;
+import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.views.MainLayout;
 
 @PageTitle("Hello World")
@@ -17,21 +17,48 @@ import ru.bprn.printhouse.views.MainLayout;
 @AnonymousAllowed
 public class HelloWorldView extends HorizontalLayout {
 
-    private TextField name;
-    private Button sayHello;
+    private Grid<PrintMashine> grid = new Grid<>(PrintMashine.class);
+    private PrintMashineService printMashineService;
+    private String name = "";
+    private CrudForm form;
 
-    public HelloWorldView() {
-        name = new TextField("Your name");
-        sayHello = new Button("Say hello");
-        sayHello.addClickListener(e -> {
-            Notification.show("Hello " + name.getValue());
-        });
-        sayHello.addClickShortcut(Key.ENTER);
+    public HelloWorldView(PrintMashineService printMashineService) {
+        this.printMashineService = printMashineService;
+        addClassName("hello-world-view");
+        setSizeFull();
+        configureGrid();
+        add(grid);
+        updateList();
+        form = new CrudForm(PrintMashine.class);
+        add (form);
 
-        setMargin(true);
-        setVerticalComponentAlignment(Alignment.END, name, sayHello);
+    }
+    private void configureGrid() {
+        grid.addClassName("printmashine-grid");
+        grid.setSizeFull();
 
-        add(name, sayHello);
+        grid.asSingleSelect().addValueChangeListener(event ->
+                editContact(event.getValue()));
+
+    }
+
+    public <T extends AbstractEntity> void editContact(T contact) {
+        if (contact == null) {
+            closeEditor();
+        } else {
+            form.setData(contact);
+            form.setVisible(true);
+            addClassName("editing");
+        }
+    }
+    private void closeEditor() {
+        form.setData(null);
+        form.setVisible(false);
+        removeClassName("editing");
+    }
+
+    private  void updateList (){
+        grid.setItems(printMashineService.findAll());
     }
 
 }

@@ -1,5 +1,16 @@
 package ru.bprn.printhouse.data;
 
 public enum Role {
-    USER, ADMIN;
+    USER("user"), ADMIN("admin");
+
+    private String roleName;
+
+    private Role(String roleName) {
+        this.roleName = roleName;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
 }

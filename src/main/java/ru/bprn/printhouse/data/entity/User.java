@@ -1,16 +1,11 @@
 package ru.bprn.printhouse.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
-import java.util.Set;
+import jakarta.persistence.*;
+import ru.bprn.printhouse.data.AbstractEntity;
 import ru.bprn.printhouse.data.Role;
+
+import java.util.Set;
 
 @Entity
 @Table(name = "application_user")
