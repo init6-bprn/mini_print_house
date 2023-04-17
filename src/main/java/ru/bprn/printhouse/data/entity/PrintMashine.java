@@ -1,14 +1,18 @@
 package ru.bprn.printhouse.data.entity;
 
+import jakarta.persistence.*;
 import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
 
-import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
 public class PrintMashine extends AbstractEntity {
 
+    @NotNull
+    @NotEmpty
     private String name;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
@@ -20,7 +24,7 @@ public class PrintMashine extends AbstractEntity {
     private QuantityColors quantityColors;
 
 
-    public PrintMashine() {
+    public PrintMashine( String name) {
     }
 
 }

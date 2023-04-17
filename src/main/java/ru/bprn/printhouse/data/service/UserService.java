@@ -1,13 +1,12 @@
 package ru.bprn.printhouse.data.service;
 
+import ru.bprn.printhouse.data.entity.User;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import ru.bprn.printhouse.data.entity.User;
 import ru.bprn.printhouse.data.repository.UserRepository;
-
-import java.util.Optional;
 
 @Service
 public class UserService {

@@ -52,8 +52,7 @@ public class PrintMashineService {
             printMashineRepository.saveAll(
             Stream.of("HP LaserJet", "Konica Minolta", "Duplo")
                     .map(name ->{
-                        PrintMashine mash = new PrintMashine();
-                        mash.setName(name);
+                        PrintMashine mash = new PrintMashine(name);
                         mash.setTypeOfPrinter(types.get(r.nextInt(types.size())));
                         mash.setQuantityColors(colors.get(r.nextInt(colors.size())));
                         return  mash;

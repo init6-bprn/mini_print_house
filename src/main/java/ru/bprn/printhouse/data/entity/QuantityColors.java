@@ -21,8 +21,6 @@ public class QuantityColors extends AbstractEntity {
     @OneToMany (fetch = FetchType.EAGER, mappedBy = "quantityColors")
     private List<PrintMashine> printMashine;
 
-    public QuantityColors(){}
-
     public  QuantityColors(String name) {
         this.name = name;
     }
