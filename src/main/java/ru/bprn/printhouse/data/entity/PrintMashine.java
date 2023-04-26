@@ -3,9 +3,7 @@ package ru.bprn.printhouse.data.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
-
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 @Data
 @Entity
@@ -24,7 +22,11 @@ public class PrintMashine extends AbstractEntity {
     private QuantityColors quantityColors;
 
 
-    public PrintMashine( String name) {
+    public PrintMashine() {
+    }
+
+    public PrintMashine(String name) {
+        this.name = name;
     }
 
 }
