@@ -30,6 +30,14 @@ public class PrintMashineService {
         return  printMashineRepository.findAll();
     }
 
+    public PrintMashine save (PrintMashine pmachine) {
+        return printMashineRepository.save(pmachine);
+    }
+
+    public void delete(PrintMashine pmachine) {
+        printMashineRepository.delete(pmachine);
+    }
+
     @PostConstruct
     public void populateTestData() {
         if (typeOfPrinterRepository.count() == 0) {

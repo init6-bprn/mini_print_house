@@ -15,6 +15,15 @@ public class QuantityColorsService {
     }
 
     public List<QuantityColors> findAll (){
+
         return quantityColorsRepository.findAll();
     }
+
+    public QuantityColors save (QuantityColors qcolors) {
+        return quantityColorsRepository.save(qcolors);
+    }
+    public  void delete (QuantityColors qcolors) {
+        quantityColorsRepository.delete(qcolors);
+    }
+
 }
