@@ -1,11 +1,10 @@
 package ru.bprn.printhouse.data.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
-
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import java.util.List;
 
 @Data
 @Entity
@@ -15,8 +14,8 @@ public class QuantityColors extends AbstractEntity {
     @NotEmpty
     private String name = "";
 
-    @OneToMany (fetch = FetchType.EAGER, mappedBy = "quantityColors")
-    private List<PrintMashine> printMashine;
+    // @OneToMany (fetch = FetchType.EAGER, mappedBy = "quantityColors")
+    //private List<PrintMashine> printMashine;
 
     public QuantityColors() {
     }

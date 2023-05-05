@@ -1,35 +1,45 @@
 package ru.bprn.printhouse.views.dictionary;
 
 
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.HasValueAndElement;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import org.vaadin.crudui.crud.impl.GridCrud;
+import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
+import org.vaadin.crudui.layout.impl.VerticalSplitCrudLayout;
 import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
 import ru.bprn.printhouse.views.MainLayout;
 
-@PageTitle("Словарь количества цыетов")
+import java.util.List;
+
+@PageTitle("Словарь количества цветов")
 @Route(value = "quantity_colors_dictionary", layout = MainLayout.class)
 @AnonymousAllowed
 public class QuantityColorsDictionary extends VerticalLayout{
 
         public QuantityColorsDictionary(QuantityColorsService qcService) {
 
-            setSpacing(false);
+            DefaultCrudFormFactory<QuantityColors> formFactory = new DefaultCrudFormFactory<QuantityColors>(QuantityColors.class) {
+                @Override
+                protected void configureForm(FormLayout formLayout, List<HasValueAndElement> fields) {
+                    Component nameField = (Component) fields.get(0);
+                    formLayout.setColspan(nameField, 2);
+                }
+            };
+            formFactory.setUseBeanValidation(true);
+            formFactory.setVisibleProperties("name");
 
-            H2 header = new H2("This place intentionally left empty");
-            header.addClassNames(Margin.Top.XLARGE, Margin.Bottom.MEDIUM);
-            add(header);
-            add(new Paragraph("It’s a place where you can grow your own UI 🤗"));
+            GridCrud<QuantityColors> crud = new GridCrud<>(QuantityColors.class, new VerticalSplitCrudLayout(), formFactory);
+            crud.setClickRowToUpdate(true);
+            crud.setUpdateOperationVisible(false);
+            crud.getGrid().setColumns("name");
 
-            GridCrud<QuantityColors> crud = new GridCrud<>(QuantityColors.class);
-            crud.getGrid().setColumnReorderingAllowed(true);
-
+            setSizeFull();
             this.add(crud);
 
             crud.setOperations(
@@ -39,7 +49,6 @@ public class QuantityColorsDictionary extends VerticalLayout{
                     user -> qcService.delete(user)
             );
 
-            setSizeFull();
             setJustifyContentMode(JustifyContentMode.CENTER);
             setDefaultHorizontalComponentAlignment(Alignment.START);
             getStyle().set("text-align", "center");

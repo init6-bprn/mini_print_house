@@ -41,7 +41,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void addDrawerContent() {
-        H1 appName = new H1("My App");
+        H1 appName = new H1("Микротипография");
         appName.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
         Header header = new Header(appName);
 
@@ -54,11 +54,13 @@ public class MainLayout extends AppLayout {
         // AppNav is not yet an official component.
         // For documentation, visit https://github.com/vaadin/vcf-nav#readme
         AppNav nav = new AppNav();
+        var dick = new AppNavItem("Словари");
+        dick.addItem(new AppNavItem("Количество цветов", QuantityColorsDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+        dick.addItem(new AppNavItem("Печатные устройства", PrintMachineDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+        nav.addItem(dick);
 
         nav.addItem(new AppNavItem("Hello World", HelloWorldView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(new AppNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
-        nav.addItem(new AppNavItem("Dictionary", QuantityColorsDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
-        nav.addItem(new AppNavItem("Dictionary-1", PrintMachineDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
         return nav;
     }
 

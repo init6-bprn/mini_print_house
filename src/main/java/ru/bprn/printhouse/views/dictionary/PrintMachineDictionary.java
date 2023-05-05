@@ -1,16 +1,16 @@
 package ru.bprn.printhouse.views.dictionary;
 
 
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import org.vaadin.crudui.crud.impl.GridCrud;
+import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.service.PrintMashineService;
+import ru.bprn.printhouse.data.service.QuantityColorsService;
+import ru.bprn.printhouse.data.service.TypeOfPrinterService;
 import ru.bprn.printhouse.views.MainLayout;
 
 @PageTitle("Словарь печатных машин")
@@ -18,25 +18,27 @@ import ru.bprn.printhouse.views.MainLayout;
 @AnonymousAllowed
 public class PrintMachineDictionary extends VerticalLayout{
 
-        public PrintMachineDictionary(PrintMashineService pmService) {
-
-            setSpacing(false);
-
-            H2 header = new H2("This place intentionally left empty");
-            header.addClassNames(Margin.Top.XLARGE, Margin.Bottom.MEDIUM);
-            add(header);
-            add(new Paragraph("It’s a place where you can grow your own UI 🤗"));
+        public PrintMachineDictionary(PrintMashineService pmService, QuantityColorsService qcService, TypeOfPrinterService topService) {
 
             GridCrud<PrintMashine> crud = new GridCrud<>(PrintMashine.class);
+            crud.getGrid().setColumns("name", "quantityColors", "typeOfPrinter");
             crud.getGrid().setColumnReorderingAllowed(true);
+            crud.getGrid().setSortableColumns("name", "quantityColors", "typeOfPrinter");
+
+            crud.getCrudFormFactory().setUseBeanValidation(true);
+            crud.getCrudFormFactory().setVisibleProperties("name", "quantityColors", "typeOfPrinter");
+            crud.getCrudFormFactory().setFieldProvider("quantityColors",
+                    new ComboBoxProvider<>(qcService.findAll()));
+            crud.getCrudFormFactory().setFieldProvider("typeOfPrinter",
+                    new ComboBoxProvider<>(topService.findAll()));
 
             this.add(crud);
 
             crud.setOperations(
                     () -> pmService.findAll(),
-                    user -> pmService.save(user),
-                    user -> pmService.save(user),
-                    user -> pmService.delete(user)
+                    printMashine -> pmService.save(printMashine),
+                    printMashine -> pmService.save(printMashine),
+                    printMashine -> pmService.delete(printMashine)
             );
 
             setSizeFull();
