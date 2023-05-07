@@ -15,6 +15,8 @@ import ru.bprn.printhouse.components.appnav.AppNavItem;
 import ru.bprn.printhouse.views.about.AboutView;
 import ru.bprn.printhouse.views.dictionary.PrintMachineDictionary;
 import ru.bprn.printhouse.views.dictionary.QuantityColorsDictionary;
+import ru.bprn.printhouse.views.dictionary.TypeOfMaterialDictionary;
+import ru.bprn.printhouse.views.dictionary.TypeOfPrinterDictionary;
 import ru.bprn.printhouse.views.helloworld.HelloWorldView;
 
 /**
@@ -57,6 +59,8 @@ public class MainLayout extends AppLayout {
         var dick = new AppNavItem("Словари");
         dick.addItem(new AppNavItem("Количество цветов", QuantityColorsDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
         dick.addItem(new AppNavItem("Печатные устройства", PrintMachineDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+        dick.addItem(new AppNavItem("Тип принтера", TypeOfPrinterDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+        dick.addItem(new AppNavItem("Тип материала", TypeOfMaterialDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
         nav.addItem(dick);
 
         nav.addItem(new AppNavItem("Hello World", HelloWorldView.class, LineAwesomeIcon.GLOBE_SOLID.create()));

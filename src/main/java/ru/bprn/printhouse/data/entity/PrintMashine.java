@@ -11,7 +11,29 @@ public class PrintMashine extends AbstractEntity {
 
     @NotNull
     @NotEmpty
-    private String name;
+    private String name = "Какой-то принтер";
+
+    private Integer maxPrintAreaX;
+
+    private Integer maxPrintAreaY;
+
+    private Integer cost;
+
+    private Integer click;
+
+    private Integer madeClick;
+
+    @NotNull
+    @NotEmpty
+    private Float priceOfCMYKClick = 0f;
+
+    @NotNull
+    @NotEmpty
+    private Float priceOfBlackClick = 0f;
+
+    @NotNull
+    @NotEmpty
+    private Float priceOfSpotClick = 0f;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @JoinColumn(name = "type_of_printer", nullable = false )

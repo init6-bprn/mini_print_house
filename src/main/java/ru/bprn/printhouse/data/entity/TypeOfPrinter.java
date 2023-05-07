@@ -15,8 +15,8 @@ public class TypeOfPrinter extends AbstractEntity {
     @NotEmpty
     private String name = "";
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "typeOfPrinter")
-    private List<PrintMashine> printMashine;
+    //@OneToMany(fetch = FetchType.EAGER, mappedBy = "typeOfPrinter")
+    //private List<PrintMashine> printMashine;
 
     public TypeOfPrinter() {
     }

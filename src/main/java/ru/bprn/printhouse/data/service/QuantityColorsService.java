@@ -14,15 +14,15 @@ public class QuantityColorsService {
         this.quantityColorsRepository = quantityColorsRepository;
     }
 
-    public List<QuantityColors> findAll (){
+    public List<QuantityColors> findAll(){
 
         return quantityColorsRepository.findAll();
     }
 
-    public QuantityColors save (QuantityColors qcolors) {
+    public QuantityColors save(QuantityColors qcolors) {
         return quantityColorsRepository.save(qcolors);
     }
-    public  void delete (QuantityColors qcolors) {
+    public  void delete(QuantityColors qcolors) {
         quantityColorsRepository.delete(qcolors);
     }
 

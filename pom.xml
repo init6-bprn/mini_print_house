@@ -29,6 +29,7 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
+
     </repositories>
 
     <dependencyManagement>
@@ -82,6 +83,12 @@
             <artifactId>lombok</artifactId>
             <version>1.18.26</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.vaadin.crudui</groupId>
+            <artifactId>crudui</artifactId>
+            <version>7.0.0</version>
         </dependency>
 
         <dependency>

@@ -18,9 +18,13 @@ public class TypeOfPrinterService {
             this.typeOfPrinterRepository = typeOfPrinterRepository;
         }
 
+        public void delete(TypeOfPrinter typeOfPrinter) {typeOfPrinterRepository.delete(typeOfPrinter);}
+
         public List<TypeOfPrinter> findAll() {
             return typeOfPrinterRepository.findAll();
         }
+
+        public TypeOfPrinter save(TypeOfPrinter typeOfPrinter) {return typeOfPrinterRepository.save(typeOfPrinter) ;}
 
 }
 

@@ -11,21 +11,22 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
-import org.vaadin.crudui.layout.impl.VerticalSplitCrudLayout;
 import ru.bprn.printhouse.data.entity.QuantityColors;
+import ru.bprn.printhouse.data.entity.TypeOfMaterial;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
+import ru.bprn.printhouse.data.service.TypeOfMaterialService;
 import ru.bprn.printhouse.views.MainLayout;
 
 import java.util.List;
 
-@PageTitle("Словарь количества цветов")
-@Route(value = "quantity_colors_dictionary", layout = MainLayout.class)
+@PageTitle("Словарь типов материалов")
+@Route(value = "type_of_material_dictionary", layout = MainLayout.class)
 @AnonymousAllowed
-public class QuantityColorsDictionary extends VerticalLayout{
+public class TypeOfMaterialDictionary extends VerticalLayout{
 
-        public QuantityColorsDictionary(QuantityColorsService qcService) {
+        public TypeOfMaterialDictionary(TypeOfMaterialService tomService) {
 
-            DefaultCrudFormFactory<QuantityColors> formFactory = new DefaultCrudFormFactory<QuantityColors>(QuantityColors.class) {
+            DefaultCrudFormFactory<TypeOfMaterial> formFactory = new DefaultCrudFormFactory<TypeOfMaterial>(TypeOfMaterial.class) {
                 @Override
                 protected void configureForm(FormLayout formLayout, List<HasValueAndElement> fields) {
                     Component nameField = (Component) fields.get(0);
@@ -35,7 +36,7 @@ public class QuantityColorsDictionary extends VerticalLayout{
             formFactory.setUseBeanValidation(true);
             formFactory.setVisibleProperties("name");
 
-            GridCrud<QuantityColors> crud = new GridCrud<>(QuantityColors.class, new HorizontalSplitCrudLayout(), formFactory);
+            GridCrud<TypeOfMaterial> crud = new GridCrud<>(TypeOfMaterial.class, new HorizontalSplitCrudLayout(), formFactory);
             crud.setClickRowToUpdate(true);
             crud.setUpdateOperationVisible(false);
             crud.getGrid().setColumns("name");
@@ -44,10 +45,10 @@ public class QuantityColorsDictionary extends VerticalLayout{
             this.add(crud);
 
             crud.setOperations(
-                    () -> qcService.findAll(),
-                    user -> qcService.save(user),
-                    user -> qcService.save(user),
-                    user -> qcService.delete(user)
+                    () -> tomService.findAll(),
+                    user -> tomService.save(user),
+                    user -> tomService.save(user),
+                    user -> tomService.delete(user)
             );
 
             setJustifyContentMode(JustifyContentMode.CENTER);
