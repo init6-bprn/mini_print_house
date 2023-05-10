@@ -11,9 +11,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
-import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.entity.TypeOfMaterial;
-import ru.bprn.printhouse.data.service.QuantityColorsService;
 import ru.bprn.printhouse.data.service.TypeOfMaterialService;
 import ru.bprn.printhouse.views.MainLayout;
 

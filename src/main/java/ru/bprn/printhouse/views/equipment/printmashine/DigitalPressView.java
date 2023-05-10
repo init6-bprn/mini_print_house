@@ -11,6 +11,8 @@ import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.TypeOfMaterialService;
 import ru.bprn.printhouse.views.MainLayout;
 
+import java.beans.IntrospectionException;
+
 @PageTitle("Цифровые печатные машины")
 @Route(value = "digital_print", layout = MainLayout.class)
 @AnonymousAllowed
@@ -22,7 +24,7 @@ public class DigitalPressView extends HorizontalLayout {
     private String name = "";
     private CrudForm form;
 
-    public DigitalPressView(PrintMashineService printMashineService, TypeOfMaterialService typeOfMaterialService) {
+    public DigitalPressView(PrintMashineService printMashineService, TypeOfMaterialService typeOfMaterialService) throws IntrospectionException {
         this.printMashineService = printMashineService;
         this.typeOfMaterialService = typeOfMaterialService;
         addClassName("digital-print-view");
@@ -30,7 +32,7 @@ public class DigitalPressView extends HorizontalLayout {
         configureGrid();
         add(grid);
         updateList();
-        form = new CrudForm(PrintMashine.class);
+        form = new CrudForm<PrintMashine>(PrintMashine.class);
         add (form);
 
     }
