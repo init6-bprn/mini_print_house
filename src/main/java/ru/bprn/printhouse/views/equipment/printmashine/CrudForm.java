@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.helloworld;
+package ru.bprn.printhouse.views.equipment.printmashine;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;

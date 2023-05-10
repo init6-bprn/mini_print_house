@@ -17,7 +17,7 @@ import ru.bprn.printhouse.views.dictionary.PrintMachineDictionary;
 import ru.bprn.printhouse.views.dictionary.QuantityColorsDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfMaterialDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfPrinterDictionary;
-import ru.bprn.printhouse.views.helloworld.HelloWorldView;
+import ru.bprn.printhouse.views.equipment.printmashine.DigitalPressView;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -63,8 +63,11 @@ public class MainLayout extends AppLayout {
         dick.addItem(new AppNavItem("Тип материала", TypeOfMaterialDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
         nav.addItem(dick);
 
-        nav.addItem(new AppNavItem("Hello World", HelloWorldView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        dick =new AppNavItem("Оборудование");
+        dick.addItem(new AppNavItem("ЦПМ", DigitalPressView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        nav.addItem(dick);
         nav.addItem(new AppNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
+
         return nav;
     }
 
