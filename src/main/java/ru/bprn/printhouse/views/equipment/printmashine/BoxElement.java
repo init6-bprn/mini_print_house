@@ -11,7 +11,7 @@ import ru.bprn.printhouse.data.AbstractEntity;
 public class BoxElement<T> extends VerticalLayout{
 
     @Autowired
-    private ApplicationContext applicationContext;
+    ApplicationContext applicationContext;
 
     public BoxElement (Class<T> domainType){
         this.setBoxSizing(BoxSizing.BORDER_BOX);
