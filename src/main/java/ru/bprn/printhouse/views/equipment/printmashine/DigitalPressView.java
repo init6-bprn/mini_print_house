@@ -1,67 +1,51 @@
 package ru.bprn.printhouse.views.equipment.printmashine;
 
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.data.AbstractEntity;
+import org.vaadin.crudui.crud.impl.GridCrud;
+import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.service.PrintMashineService;
-import ru.bprn.printhouse.data.service.TypeOfMaterialService;
+import ru.bprn.printhouse.data.service.QuantityColorsService;
+import ru.bprn.printhouse.data.service.TypeOfPrinterService;
 import ru.bprn.printhouse.views.MainLayout;
-
-import java.beans.IntrospectionException;
 
 @PageTitle("Цифровые печатные машины")
 @Route(value = "digital_print", layout = MainLayout.class)
 @AnonymousAllowed
-public class DigitalPressView extends HorizontalLayout {
 
-    private Grid<PrintMashine> grid = new Grid<>(PrintMashine.class);
-    private PrintMashineService printMashineService;
-    private TypeOfMaterialService typeOfMaterialService;
-    private String name = "";
-    private CrudForm form;
+public class DigitalPressView extends VerticalLayout {
 
-    public DigitalPressView(PrintMashineService printMashineService, TypeOfMaterialService typeOfMaterialService) throws IntrospectionException {
-        this.printMashineService = printMashineService;
-        this.typeOfMaterialService = typeOfMaterialService;
-        addClassName("digital-print-view");
-        setSizeFull();
-        configureGrid();
-        add(grid);
-        updateList();
-        form = new CrudForm<PrintMashine>(PrintMashine.class);
-        add (form);
+    public DigitalPressView(PrintMashineService pmService, TypeOfPrinterService topService, QuantityColorsService qcService) {
+        GridCrud<PrintMashine> crud = new GridCrud<>(PrintMashine.class);
+        crud.getGrid().setColumns("name", "cost", "click", "madeClick", "maxPrintAreaX",
+                "maxPrintAreaY", "priceOfCMYKClick", "priceOfBlackClick", "priceOfSpotClick",
+                "quantityColors", "typeOfPrinter");
+        crud.getGrid().setColumnReorderingAllowed(true);
+        crud.getGrid().setSortableColumns("name", "quantityColors", "typeOfPrinter");
+
+        crud.getCrudFormFactory().setUseBeanValidation(true);
+        crud.getCrudFormFactory().setVisibleProperties("name", "cost", "click", "madeClick", "maxPrintAreaX",
+                "maxPrintAreaY", "priceOfCMYKClick", "priceOfBlackClick", "priceOfSpotClick",
+                "quantityColors", "typeOfPrinter");
+        crud.getCrudFormFactory().setFieldProvider("quantityColors",
+                new ComboBoxProvider<>(qcService.findAll()));
+        crud.getCrudFormFactory().setFieldProvider("typeOfPrinter",
+                new ComboBoxProvider<>(topService.findAll()));
+
+        this.add(crud);
+        crud.setOperations(
+                () -> pmService.findAll(),
+                user -> pmService.save(user),
+                user -> pmService.save(user),
+                user -> pmService.delete(user)
+        );
+
+        setJustifyContentMode(JustifyContentMode.CENTER);
+        setDefaultHorizontalComponentAlignment(Alignment.START);
+        getStyle().set("text-align", "center");
 
     }
-    private void configureGrid() {
-        grid.addClassName("printmashine-grid");
-        grid.setSizeFull();
-
-        grid.asSingleSelect().addValueChangeListener(event ->
-                editContact(event.getValue()));
-
-    }
-
-    public <T extends AbstractEntity> void editContact(T contact) {
-        if (contact == null) {
-            closeEditor();
-        } else {
-            form.setData(contact);
-            form.setVisible(true);
-            addClassName("editing");
-        }
-    }
-    private void closeEditor() {
-        form.setData(null);
-        form.setVisible(false);
-        removeClassName("editing");
-    }
-
-    private  void updateList (){
-        grid.setItems(printMashineService.findAll());
-    }
-
 }

@@ -9,33 +9,42 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import ru.bprn.printhouse.data.AbstractEntity;
+import ru.bprn.printhouse.data.entity.PrintMashine;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
-public class CrudForm<T> extends FormLayout {
+public class CrudForm extends FormLayout {
 
     private final Button save = new Button("Save");
     private final Button delete = new Button("Delete");
     private final Button close = new Button("Cancel");
-    private AbstractEntity entity;
-    @Autowired
-    ApplicationContext ctx;
+    private PrintMashine entity;
 
-    public CrudForm(Class<T> classe) {
+    private Binder<PrintMashine> binder;
 
-        Binder<T> bind = new Binder<T>(classe);
+    public CrudForm(Class<PrintMashine> classe)  {
+
+        binder = new Binder<>(PrintMashine.class);
+
         List<Field> fields = Arrays.stream(classe.getDeclaredFields()).toList();
-        for (Field field: fields) {
-            if (field.getType().isAssignableFrom(String.class)) add(new TextField(field.getName()));
-            if (field.getType().isAssignableFrom(Integer.class)) add(new IntegerField(field.getName()));
-            if (field.getType().isAssignableFrom(Float.class)) add(new NumberField(field.getName()));
-            if (field.getType().getName().contains("entity")) add(addComboBox(field.getName()));
-        }
+
+            for (Field field: fields) {
+                String caps = field.getName().substring(0,1).toUpperCase() + field.getName().substring(1);
+                if (field.getType().isAssignableFrom(String.class)) {
+                    var textField = new TextField(caps);
+                    add(textField);
+                    binder.bind(textField, PrintMashine::getName,
+                        PrintMashine::setName);
+                }
+                if (field.getType().isAssignableFrom(Integer.class)) add(new IntegerField(field.getName()));
+                if (field.getType().isAssignableFrom(Float.class)) add(new NumberField(field.getName()));
+                if (field.getType().getName().contains("entity")) add(addComboBox(field.getName()));
+
+            }
+
 
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
@@ -45,10 +54,8 @@ public class CrudForm<T> extends FormLayout {
 
     }
 
-    public <T extends AbstractEntity> void setData (T ent) {
-
-        this.entity = ent;
-        //getChildren().
+    public void setData (PrintMashine ent) {
+        binder.readBean(ent);
     }
 
     private ComboBox<AbstractEntity> addComboBox (String name) {
