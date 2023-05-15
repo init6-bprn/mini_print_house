@@ -31,6 +31,22 @@ public class PrintMashineService {
     }
 
     public PrintMashine save (PrintMashine pmachine) {
+
+        if (pmachine.getPriceOfCmykClick()!=0)
+        pmachine.setFinalCostOfCmykClick(pmachine.getPriceOfCmykClick()
+                +pmachine.getCost().floatValue()/pmachine.getClicks().floatValue());
+        else pmachine.setFinalCostOfCmykClick(0f);
+
+        if (pmachine.getPriceOfBlackClick()!=0)
+        pmachine.setFinalCostOfBlackClick(pmachine.getPriceOfBlackClick()
+                +pmachine.getCost().floatValue()/pmachine.getClicks().floatValue());
+        else pmachine.setFinalCostOfBlackClick(0f);
+
+        if (pmachine.getPriceOfSpotClick()!=0)
+        pmachine.setFinalCostOfSpotClick(pmachine.getPriceOfSpotClick()
+                +pmachine.getCost().floatValue()/pmachine.getClicks().floatValue());
+        else pmachine.setFinalCostOfSpotClick(0f);
+
         return printMashineRepository.save(pmachine);
     }
 

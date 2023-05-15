@@ -20,15 +20,14 @@ public class DigitalPressView extends VerticalLayout {
 
     public DigitalPressView(PrintMashineService pmService, TypeOfPrinterService topService, QuantityColorsService qcService) {
         GridCrud<PrintMashine> crud = new GridCrud<>(PrintMashine.class);
-        crud.getGrid().setColumns("name", "cost", "click", "madeClick", "maxPrintAreaX",
-                "maxPrintAreaY", "priceOfCMYKClick", "priceOfBlackClick", "priceOfSpotClick",
-                "quantityColors", "typeOfPrinter");
+        crud.getGrid().setColumns("name", "typeOfPrinter", "quantityColors", "madeOfClicks", "maxPrintAreaX",
+                "maxPrintAreaY");
         crud.getGrid().setColumnReorderingAllowed(true);
         crud.getGrid().setSortableColumns("name", "quantityColors", "typeOfPrinter");
 
         crud.getCrudFormFactory().setUseBeanValidation(true);
-        crud.getCrudFormFactory().setVisibleProperties("name", "cost", "click", "madeClick", "maxPrintAreaX",
-                "maxPrintAreaY", "priceOfCMYKClick", "priceOfBlackClick", "priceOfSpotClick",
+        crud.getCrudFormFactory().setVisibleProperties("name", "cost", "clicks", "madeOfClicks", "maxPrintAreaX",
+                "maxPrintAreaY", "priceOfCmykClick", "priceOfBlackClick", "priceOfSpotClick",
                 "quantityColors", "typeOfPrinter");
         crud.getCrudFormFactory().setFieldProvider("quantityColors",
                 new ComboBoxProvider<>(qcService.findAll()));

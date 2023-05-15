@@ -5,7 +5,6 @@ import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
 
 @Data
-@SequenceGenerator(name = "idgenerator", sequenceName = "PrintSpeedMaterialDensity_SEQ", allocationSize = 1)
 @Entity
 @Table(name = "print_speed_material_density")
 public class PrintSpeedMaterialDensity extends AbstractEntity {

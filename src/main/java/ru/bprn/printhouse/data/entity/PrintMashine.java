@@ -11,28 +11,38 @@ public class PrintMashine extends AbstractEntity {
 
     @NotNull
     @NotEmpty
-    private String name = "Какой-то принтер";
+    private String name;
 
+    @NotNull
+    @PositiveOrZero
     private Integer maxPrintAreaX;
 
+    @NotNull
+    @PositiveOrZero
     private Integer maxPrintAreaY;
 
+    @NotNull
+    @PositiveOrZero
     private Integer cost;
 
-    private Integer click;
-
-    private Integer madeClick;
+    @NotNull
+    @PositiveOrZero
+    private Integer clicks;
 
     @NotNull
-    @NotEmpty
-    private Float priceOfCMYKClick = 0f;
+    @PositiveOrZero
+    private Integer madeOfClicks;
 
     @NotNull
-    @NotEmpty
+    @PositiveOrZero
+    private Float priceOfCmykClick = 0f;
+
+    @NotNull
+    @PositiveOrZero
     private Float priceOfBlackClick = 0f;
 
     @NotNull
-    @NotEmpty
+    @PositiveOrZero
     private Float priceOfSpotClick = 0f;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
@@ -43,8 +53,21 @@ public class PrintMashine extends AbstractEntity {
     @JoinColumn(name = "quantity_colors_id", nullable = false)
     private QuantityColors quantityColors;
 
+    @NotNull
+    @PositiveOrZero
+    private Float finalCostOfCmykClick;
+
+    @NotNull
+    @PositiveOrZero
+    private Float finalCostOfBlackClick;
+
+    @NotNull
+    @PositiveOrZero
+    private Float finalCostOfSpotClick;
+
 
     public PrintMashine() {
+        this.name = "Какой-то принтер";
     }
 
     public PrintMashine(String name) {
