@@ -13,11 +13,11 @@ import org.vaadin.lineawesome.LineAwesomeIcon;
 import ru.bprn.printhouse.components.appnav.AppNav;
 import ru.bprn.printhouse.components.appnav.AppNavItem;
 import ru.bprn.printhouse.views.about.AboutView;
-import ru.bprn.printhouse.views.dictionary.PrintMachineDictionary;
 import ru.bprn.printhouse.views.dictionary.QuantityColorsDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfMaterialDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfPrinterDictionary;
 import ru.bprn.printhouse.views.equipment.printmashine.DigitalPressView;
+import ru.bprn.printhouse.views.equipment.printmashine.PrintSpeedMaterialDensityView;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -58,13 +58,13 @@ public class MainLayout extends AppLayout {
         AppNav nav = new AppNav();
         var dick = new AppNavItem("Словари");
         dick.addItem(new AppNavItem("Количество цветов", QuantityColorsDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
-        dick.addItem(new AppNavItem("Печатные устройства", PrintMachineDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
         dick.addItem(new AppNavItem("Тип принтера", TypeOfPrinterDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
         dick.addItem(new AppNavItem("Тип материала", TypeOfMaterialDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
         nav.addItem(dick);
 
         dick =new AppNavItem("Оборудование");
         dick.addItem(new AppNavItem("ЦПМ", DigitalPressView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        dick.addItem(new AppNavItem("Скорость-плотность ЦПМ", PrintSpeedMaterialDensityView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
         nav.addItem(new AppNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
 

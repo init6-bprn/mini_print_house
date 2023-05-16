@@ -5,7 +5,6 @@ import ru.bprn.printhouse.data.AbstractEntity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.util.List;
 
 @Data
 @Entity

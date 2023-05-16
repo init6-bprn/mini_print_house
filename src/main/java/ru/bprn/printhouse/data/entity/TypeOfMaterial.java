@@ -9,13 +9,12 @@ import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
 
 @Data
-@SequenceGenerator(name = "idgenerator", sequenceName = "TypeOfMaterial_SEQ", allocationSize = 1)
 @Entity
 @Table(name = "type_of_material")
 public class TypeOfMaterial extends AbstractEntity {
     @NotNull
     @NotEmpty
-    private String name = "";
+    private String name = "Бумага";
 
     public TypeOfMaterial() {
     }
@@ -24,5 +23,9 @@ public class TypeOfMaterial extends AbstractEntity {
         this.name = name;
     }
 
+    @Override
+    public String toString(){
+        return this.name;
+    }
 
 }

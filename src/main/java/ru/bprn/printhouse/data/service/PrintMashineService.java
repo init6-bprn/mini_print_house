@@ -8,7 +8,7 @@ import ru.bprn.printhouse.data.repository.PrintMashineRepository;
 import ru.bprn.printhouse.data.repository.QuantityColorsRepository;
 import ru.bprn.printhouse.data.repository.TypeOfPrinterRepository;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;

@@ -1,6 +1,9 @@
 package ru.bprn.printhouse.data.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
 
@@ -9,9 +12,15 @@ import ru.bprn.printhouse.data.AbstractEntity;
 @Table(name = "print_speed_material_density")
 public class PrintSpeedMaterialDensity extends AbstractEntity {
 
-    private byte densityNoMore;
+    @NotNull
+    @PositiveOrZero
+    @Max(300)
+    private Integer densityNoMore;
 
-    private byte speed;
+    @NotNull
+    @PositiveOrZero
+    @Max(300)
+    private Integer speed;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @JoinColumn(name = "type_of_material", nullable = false )

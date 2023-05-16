@@ -2,7 +2,6 @@ package ru.bprn.printhouse.data.entity;
 
 import ru.bprn.printhouse.data.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
