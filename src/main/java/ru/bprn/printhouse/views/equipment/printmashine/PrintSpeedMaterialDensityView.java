@@ -6,7 +6,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import org.vaadin.crudui.crud.CrudOperation;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 import ru.bprn.printhouse.data.entity.PrintMashine;
@@ -23,9 +22,10 @@ import ru.bprn.printhouse.views.MainLayout;
 public class PrintSpeedMaterialDensityView extends VerticalLayout {
 
     public PrintSpeedMaterialDensityView(PrintSpeedMaterialDensityService psmdService, PrintMashineService pmService, TypeOfMaterialService tomService){
-        var filter = new ComboBox<PrintMashine>("Выберите принтер:");
+        var filter = new ComboBox<PrintMashine>();
         filter.setItems(pmService.findAll());
-        this.add(filter);
+        filter.setItemLabelGenerator(PrintMashine::getName);
+        //this.add(filter);
 
         GridCrud<PrintSpeedMaterialDensity> crud = new GridCrud<>(PrintSpeedMaterialDensity.class);
         crud.getCrudLayout().addFilterComponent(filter);
@@ -35,8 +35,8 @@ public class PrintSpeedMaterialDensityView extends VerticalLayout {
         crud.getGrid().setSortableColumns("typeOfMaterial", "speed", "densityNoMore");
 
         crud.getCrudFormFactory().setUseBeanValidation(true);
-        crud.getCrudFormFactory().setVisibleProperties( CrudOperation.ADD,"printMachine", "typeOfMaterial", "speed", "densityNoMore");
-        crud.getCrudFormFactory().setVisibleProperties("typeOfMaterial", "speed", "densityNoMore");
+
+        crud.getCrudFormFactory().setVisibleProperties("printMashine", "typeOfMaterial", "speed", "densityNoMore");
         crud.getCrudFormFactory().setFieldProvider("typeOfMaterial",
                 new ComboBoxProvider<>(tomService.findAll()));
         crud.getCrudFormFactory().setFieldProvider("printMashine",
@@ -45,10 +45,10 @@ public class PrintSpeedMaterialDensityView extends VerticalLayout {
         this.add(crud);
 
         crud.setOperations(
-                () -> psmdService.findPrintSpeedMaterialDensitiesByPrintMashine((PrintMashine) filter.getValue()),
-                user -> psmdService.save(user),
-                user -> psmdService.save(user),
-                user -> psmdService.delete(user)
+                () -> psmdService.findPrintSpeedMaterialDensitiesByPrintMashine(filter.getValue()),
+                psmd -> psmdService.save(psmd),
+                psmd -> psmdService.save(psmd),
+                psmd -> psmdService.delete(psmd)
         );
 
         filter.addValueChangeListener(e -> crud.refreshGrid());

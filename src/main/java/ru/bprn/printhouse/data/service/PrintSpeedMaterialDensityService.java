@@ -26,7 +26,8 @@ public class PrintSpeedMaterialDensityService {
     }
 
     public List<PrintSpeedMaterialDensity> findPrintSpeedMaterialDensitiesByPrintMashine (PrintMashine printMashine) {
-        return this.printSpeedMaterialDensityRepository.findPrintSpeedMaterialDensitiesByPrintMashine(printMashine);
+        if (printMashine!= null) return this.printSpeedMaterialDensityRepository.findPrintSpeedMaterialDensitiesByPrintMashine(printMashine);
+        else return this.findAll();
     }
 
     public PrintSpeedMaterialDensity save(PrintSpeedMaterialDensity printSpeedMaterialDensity){

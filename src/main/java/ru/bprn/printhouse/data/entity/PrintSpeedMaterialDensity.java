@@ -9,7 +9,7 @@ import ru.bprn.printhouse.data.AbstractEntity;
 
 @Data
 @Entity
-@Table(name = "print_speed_material_density")
+//@Table(name = "print_speed_material_density")
 public class PrintSpeedMaterialDensity extends AbstractEntity {
 
     @NotNull
@@ -22,11 +22,11 @@ public class PrintSpeedMaterialDensity extends AbstractEntity {
     @Max(300)
     private Integer speed;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "type_of_material", nullable = false )
     private TypeOfMaterial typeOfMaterial;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "print_mashine", nullable = false )
     private PrintMashine printMashine;
 

@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.data.service;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.QuantityColors;
@@ -8,9 +9,7 @@ import ru.bprn.printhouse.data.repository.PrintMashineRepository;
 import ru.bprn.printhouse.data.repository.QuantityColorsRepository;
 import ru.bprn.printhouse.data.repository.TypeOfPrinterRepository;
 
-import jakarta.annotation.PostConstruct;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,6 +68,8 @@ public class PrintMashineService {
                             .map(QuantityColors::new)
                             .collect(Collectors.toList()));
         }
+
+        /*
         if (printMashineRepository.count()==0) {
             Random r = new Random(0);
             List<TypeOfPrinter> types = typeOfPrinterRepository.findAll();
@@ -82,6 +83,8 @@ public class PrintMashineService {
                         return  mash;
                     }).collect(Collectors.toList()));
         }
+
+         */
 
     }
 

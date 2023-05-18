@@ -1,12 +1,10 @@
 package ru.bprn.printhouse.data.entity;
 
-import lombok.Data;
+import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import ru.bprn.printhouse.data.AbstractEntity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-
-@Data
 @Entity
 public class TypeOfPrinter extends AbstractEntity {
 
@@ -24,9 +22,16 @@ public class TypeOfPrinter extends AbstractEntity {
         this.name = name;
     }
 
-    @Override
-    public String toString() {
-        return getName();
+    public String getName() {
+        return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return  this.name;
+    }
 }
