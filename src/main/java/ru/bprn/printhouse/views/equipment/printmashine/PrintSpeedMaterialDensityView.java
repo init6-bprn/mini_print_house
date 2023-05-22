@@ -25,7 +25,6 @@ public class PrintSpeedMaterialDensityView extends VerticalLayout {
         var filter = new ComboBox<PrintMashine>();
         filter.setItems(pmService.findAll());
         filter.setItemLabelGenerator(PrintMashine::getName);
-        //this.add(filter);
 
         GridCrud<PrintSpeedMaterialDensity> crud = new GridCrud<>(PrintSpeedMaterialDensity.class);
         crud.getCrudLayout().addFilterComponent(filter);

@@ -5,6 +5,8 @@ import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
 import jakarta.validation.constraints.*;
 
+import java.util.Set;
+
 @Data
 @Entity
 public class PrintMashine extends AbstractEntity {
@@ -64,6 +66,13 @@ public class PrintMashine extends AbstractEntity {
     @NotNull
     @PositiveOrZero
     private Float finalCostOfSpotClick;
+
+    @ManyToMany
+    @JoinTable(
+            name = "print_leafs_jt",
+            joinColumns = @JoinColumn(name = "print_mashine_id"),
+            inverseJoinColumns = @JoinColumn(name = "size_of_print_leaf"))
+    private Set<SizeOfPrintLeaf> sizeOfPrintLeaves;
 
 
     public PrintMashine() {
