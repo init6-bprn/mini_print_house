@@ -8,7 +8,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.BeanValidationBinder;
 import ru.bprn.printhouse.data.AbstractEntity;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 
@@ -23,11 +23,11 @@ public class CrudForm extends FormLayout {
     private final Button close = new Button("Cancel");
     private PrintMashine entity;
 
-    private Binder<PrintMashine> binder;
+    private BeanValidationBinder<PrintMashine> binder;
 
     public CrudForm(Class<PrintMashine> classe)  {
 
-        binder = new Binder<>(PrintMashine.class);
+        binder = new BeanValidationBinder<>(PrintMashine.class);
 
         List<Field> fields = Arrays.stream(classe.getDeclaredFields()).toList();
 
@@ -44,7 +44,7 @@ public class CrudForm extends FormLayout {
                 if (field.getType().getName().contains("entity")) add(addComboBox(field.getName()));
 
             }
-
+        binder.bindInstanceFields(this);
 
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         delete.addThemeVariants(ButtonVariant.LUMO_ERROR);

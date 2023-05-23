@@ -41,8 +41,10 @@ public class SizeOfPrintLeafDictionary extends VerticalLayout {
         crud.setClickRowToUpdate(true);
         crud.setUpdateOperationVisible(false);
         crud.getGrid().setColumns("name", "length", "width");
+        /*
         crud.getCrudFormFactory().setFieldProvider("printMashineSet",
                 new CheckBoxGroupProvider<>(pmService.findAll()));
+                */
         crud.getCrudFormFactory().setFieldProvider("printMashineSet",
                 new CheckBoxGroupProvider<>("Print_Mashine", pmService.findAll(), PrintMashine::getName));
 

@@ -1,6 +1,9 @@
 package ru.bprn.printhouse.data.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -27,7 +30,9 @@ public class SizeOfPrintLeaf extends AbstractEntity {
     @PositiveOrZero
     private int width;
 
-    @ManyToMany(mappedBy = "sizeOfPrintLeaves", fetch = FetchType.EAGER)
+    //@ManyToMany(fetch = FetchType.EAGER)
+    //@Fetch(FetchMode.JOIN)
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<PrintMashine> printMashineSet = new HashSet<>();
 
     public SizeOfPrintLeaf() {

@@ -1,9 +1,13 @@
 package ru.bprn.printhouse.data.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import ru.bprn.printhouse.data.AbstractEntity;
-import jakarta.validation.constraints.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -69,10 +73,14 @@ public class PrintMashine extends AbstractEntity {
     private Float finalCostOfSpotClick;
 
     @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.JOIN)
+    /*
     @JoinTable(
             name = "mashines_leafs",
             joinColumns = @JoinColumn(name = "print_mashine_id"),
             inverseJoinColumns = @JoinColumn(name = "size_of_print_leaf_id"))
+
+     */
     private Set<SizeOfPrintLeaf> sizeOfPrintLeaves = new HashSet<>();
 
 
