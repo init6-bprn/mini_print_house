@@ -8,9 +8,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
+import org.vaadin.crudui.form.impl.field.provider.CheckBoxGroupProvider;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
+import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
+import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.SizeOfPrintLeafService;
 import ru.bprn.printhouse.views.MainLayout;
 
@@ -22,7 +25,7 @@ import java.util.List;
 
 public class SizeOfPrintLeafDictionary extends VerticalLayout {
 
-    public SizeOfPrintLeafDictionary (SizeOfPrintLeafService sizeOfPrintLeafService) {
+    public SizeOfPrintLeafDictionary (SizeOfPrintLeafService sizeOfPrintLeafService, PrintMashineService pmService) {
 
         DefaultCrudFormFactory<SizeOfPrintLeaf> formFactory = new DefaultCrudFormFactory<SizeOfPrintLeaf>(SizeOfPrintLeaf.class) {
             @Override
@@ -32,12 +35,16 @@ public class SizeOfPrintLeafDictionary extends VerticalLayout {
             }
         };
         formFactory.setUseBeanValidation(true);
-        formFactory.setVisibleProperties("name");
+        formFactory.setVisibleProperties("name", "length", "width", "printMashineSet");
 
         GridCrud<SizeOfPrintLeaf> crud = new GridCrud<>(SizeOfPrintLeaf.class, new HorizontalSplitCrudLayout(), formFactory);
         crud.setClickRowToUpdate(true);
         crud.setUpdateOperationVisible(false);
-        crud.getGrid().setColumns("name");
+        crud.getGrid().setColumns("name", "length", "width");
+        crud.getCrudFormFactory().setFieldProvider("printMashineSet",
+                new CheckBoxGroupProvider<>(pmService.findAll()));
+        crud.getCrudFormFactory().setFieldProvider("printMashineSet",
+                new CheckBoxGroupProvider<>("Print_Mashine", pmService.findAll(), PrintMashine::getName));
 
         setSizeFull();
         this.add(crud);

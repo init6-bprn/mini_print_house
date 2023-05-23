@@ -19,6 +19,7 @@ import ru.bprn.printhouse.data.entity.User;
 import ru.bprn.printhouse.security.AuthenticatedUser;
 import ru.bprn.printhouse.views.about.AboutView;
 import ru.bprn.printhouse.views.dictionary.QuantityColorsDictionary;
+import ru.bprn.printhouse.views.dictionary.SizeOfPrintLeafDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfMaterialDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfPrinterDictionary;
 import ru.bprn.printhouse.views.equipment.printmashine.DigitalPressView;
@@ -79,6 +80,10 @@ public class MainLayout extends AppLayout {
 
         if (accessChecker.hasAccess(TypeOfMaterialDictionary.class))
             dick.addItem(new AppNavItem("Тип материала", TypeOfMaterialDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+
+        if (accessChecker.hasAccess(SizeOfPrintLeafDictionary.class))
+            dick.addItem(new AppNavItem("Размер печатного листа", SizeOfPrintLeafDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+
         nav.addItem(dick);
 
         dick =new AppNavItem("Оборудование");

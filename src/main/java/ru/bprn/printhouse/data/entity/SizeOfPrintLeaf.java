@@ -7,6 +7,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -26,8 +27,8 @@ public class SizeOfPrintLeaf extends AbstractEntity {
     @PositiveOrZero
     private int width;
 
-    @ManyToMany(mappedBy = "sizeOfPrintLeaves")
-    private Set<PrintMashine> printMashineSet;
+    @ManyToMany(mappedBy = "sizeOfPrintLeaves", fetch = FetchType.EAGER)
+    private Set<PrintMashine> printMashineSet = new HashSet<>();
 
     public SizeOfPrintLeaf() {
     }

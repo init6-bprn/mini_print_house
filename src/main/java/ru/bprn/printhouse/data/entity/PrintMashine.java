@@ -5,6 +5,7 @@ import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
 import jakarta.validation.constraints.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -67,12 +68,12 @@ public class PrintMashine extends AbstractEntity {
     @PositiveOrZero
     private Float finalCostOfSpotClick;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "print_leafs_jt",
+            name = "mashines_leafs",
             joinColumns = @JoinColumn(name = "print_mashine_id"),
-            inverseJoinColumns = @JoinColumn(name = "size_of_print_leaf"))
-    private Set<SizeOfPrintLeaf> sizeOfPrintLeaves;
+            inverseJoinColumns = @JoinColumn(name = "size_of_print_leaf_id"))
+    private Set<SizeOfPrintLeaf> sizeOfPrintLeaves = new HashSet<>();
 
 
     public PrintMashine() {
