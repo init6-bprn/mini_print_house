@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import ru.bprn.printhouse.data.AbstractEntity;
@@ -12,7 +15,9 @@ import ru.bprn.printhouse.data.AbstractEntity;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+ @Data @EqualsAndHashCode
+ @ToString
+
 @Entity
 public class PrintMashine extends AbstractEntity {
 
@@ -72,20 +77,28 @@ public class PrintMashine extends AbstractEntity {
     @PositiveOrZero
     private Float finalCostOfSpotClick;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @Fetch(FetchMode.JOIN)
-    /*
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {
+            CascadeType.MERGE
+    })
+    //@Fetch(FetchMode.JOIN)
     @JoinTable(
             name = "mashines_leafs",
             joinColumns = @JoinColumn(name = "print_mashine_id"),
             inverseJoinColumns = @JoinColumn(name = "size_of_print_leaf_id"))
-
-     */
     private Set<SizeOfPrintLeaf> sizeOfPrintLeaves = new HashSet<>();
 
+    private void addSizeOfPrintLeaf(SizeOfPrintLeaf prnLeaf){
+        this.sizeOfPrintLeaves.add(prnLeaf);
+        prnLeaf.getPrintMashineSet().add(this);
+    }
+
+    private void removeSizeOfPrintLeaf(SizeOfPrintLeaf prnLeaf){
+        this.sizeOfPrintLeaves.remove(prnLeaf);
+        prnLeaf.getPrintMashineSet().remove(this);
+    }
 
     public PrintMashine() {
-        this.name = "Какой-то принтер";
+        this.name = "Same printer";
     }
 
     public PrintMashine(String name) {

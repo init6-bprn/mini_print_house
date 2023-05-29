@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.*;
 import lombok.Data;
 import ru.bprn.printhouse.data.AbstractEntity;
 
@@ -14,6 +15,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
+@EqualsAndHashCode @ToString @NoArgsConstructor
 @Entity
 @Table(name = "size_of_print_leaf")
 public class SizeOfPrintLeaf extends AbstractEntity {
@@ -32,10 +34,17 @@ public class SizeOfPrintLeaf extends AbstractEntity {
 
     //@ManyToMany(fetch = FetchType.EAGER)
     //@Fetch(FetchMode.JOIN)
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "sizeOfPrintLeaves")
     private Set<PrintMashine> printMashineSet = new HashSet<>();
 
-    public SizeOfPrintLeaf() {
+    private void addPrintMashine(PrintMashine pMashibe){
+        this.printMashineSet.add(pMashibe);
+        pMashibe.getSizeOfPrintLeaves().add(this);
+    }
+
+    private void removePrintMashine(PrintMashine pMashibe){
+        this.printMashineSet.remove(pMashibe);
+        pMashibe.getSizeOfPrintLeaves().remove(this);
     }
 
 }
