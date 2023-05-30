@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import ru.bprn.printhouse.data.AbstractEntity;
 
 import java.util.HashSet;
@@ -78,15 +76,15 @@ public class PrintMashine extends AbstractEntity {
     private Float finalCostOfSpotClick;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = {
-            CascadeType.MERGE
+            CascadeType.PERSIST
     })
     //@Fetch(FetchMode.JOIN)
     @JoinTable(
             name = "mashines_leafs",
-            joinColumns = @JoinColumn(name = "print_mashine_id"),
-            inverseJoinColumns = @JoinColumn(name = "size_of_print_leaf_id"))
+            joinColumns = @JoinColumn(name = "print_mashine_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "size_of_print_leaf_id", referencedColumnName = "id"))
     private Set<SizeOfPrintLeaf> sizeOfPrintLeaves = new HashSet<>();
-
+/*
     private void addSizeOfPrintLeaf(SizeOfPrintLeaf prnLeaf){
         this.sizeOfPrintLeaves.add(prnLeaf);
         prnLeaf.getPrintMashineSet().add(this);
@@ -96,7 +94,7 @@ public class PrintMashine extends AbstractEntity {
         this.sizeOfPrintLeaves.remove(prnLeaf);
         prnLeaf.getPrintMashineSet().remove(this);
     }
-
+*/
     public PrintMashine() {
         this.name = "Same printer";
     }

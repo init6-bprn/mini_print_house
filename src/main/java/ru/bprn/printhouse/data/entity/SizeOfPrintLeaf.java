@@ -32,11 +32,9 @@ public class SizeOfPrintLeaf extends AbstractEntity {
     @PositiveOrZero
     private int width;
 
-    //@ManyToMany(fetch = FetchType.EAGER)
-    //@Fetch(FetchMode.JOIN)
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "sizeOfPrintLeaves")
     private Set<PrintMashine> printMashineSet = new HashSet<>();
-
+/*
     private void addPrintMashine(PrintMashine pMashibe){
         this.printMashineSet.add(pMashibe);
         pMashibe.getSizeOfPrintLeaves().add(this);
@@ -46,5 +44,5 @@ public class SizeOfPrintLeaf extends AbstractEntity {
         this.printMashineSet.remove(pMashibe);
         pMashibe.getSizeOfPrintLeaves().remove(this);
     }
-
+*/
 }

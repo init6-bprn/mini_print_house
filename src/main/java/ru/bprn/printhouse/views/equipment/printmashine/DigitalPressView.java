@@ -40,7 +40,7 @@ public class DigitalPressView extends VerticalLayout {
         //crud.getCrudFormFactory().setFieldProvider("sizeOfPrintLeaves",
           //      new CheckBoxGroupProvider<>(soplService.findAll()));
         crud.getCrudFormFactory().setFieldProvider("sizeOfPrintLeaves",
-                new CheckBoxGroupProvider<>("Print size", soplService.findAll(), SizeOfPrintLeaf::getName));
+                new CheckBoxGroupProvider<>("sizeOfPrintLeaves", soplService.findAll(), SizeOfPrintLeaf::getName));
 
 
         this.add(crud);
