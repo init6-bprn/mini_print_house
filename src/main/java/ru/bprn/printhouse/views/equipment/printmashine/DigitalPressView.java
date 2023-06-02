@@ -1,6 +1,7 @@
 package ru.bprn.printhouse.views.equipment.printmashine;
 
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -8,7 +9,9 @@ import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.field.provider.CheckBoxGroupProvider;
 import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 import ru.bprn.printhouse.data.entity.PrintMashine;
+import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
+import ru.bprn.printhouse.data.entity.TypeOfPrinter;
 import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
 import ru.bprn.printhouse.data.service.SizeOfPrintLeafService;
@@ -34,9 +37,9 @@ public class DigitalPressView extends VerticalLayout {
                 "maxPrintAreaY", "priceOfCmykClick", "priceOfBlackClick", "priceOfSpotClick",
                 "quantityColors", "typeOfPrinter", "sizeOfPrintLeaves");
         crud.getCrudFormFactory().setFieldProvider("quantityColors",
-                new ComboBoxProvider<>(qcService.findAll()));
+                new ComboBoxProvider<>("quantityColors", qcService.findAll(), new TextRenderer<>(QuantityColors::getName), QuantityColors::getName));
         crud.getCrudFormFactory().setFieldProvider("typeOfPrinter",
-                new ComboBoxProvider<>(topService.findAll()));
+                new ComboBoxProvider<>("typeOfPrinter", topService.findAll(), new TextRenderer<>(TypeOfPrinter::getName), TypeOfPrinter::getName));
         //crud.getCrudFormFactory().setFieldProvider("sizeOfPrintLeaves",
           //      new CheckBoxGroupProvider<>(soplService.findAll()));
         crud.getCrudFormFactory().setFieldProvider("sizeOfPrintLeaves",

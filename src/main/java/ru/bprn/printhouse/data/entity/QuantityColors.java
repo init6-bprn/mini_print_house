@@ -1,14 +1,24 @@
 package ru.bprn.printhouse.data.entity;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import ru.bprn.printhouse.data.AbstractEntity;
+import lombok.*;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
 @Entity
-public class QuantityColors extends AbstractEntity {
+@Table(name = "quantity_colors")
+public class QuantityColors{
+
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Long id;
 
     @NotNull
     @NotEmpty
@@ -16,16 +26,5 @@ public class QuantityColors extends AbstractEntity {
 
     // @OneToMany (fetch = FetchType.EAGER, mappedBy = "quantityColors")
     //private List<PrintMashine> printMashine;
-
-    public QuantityColors() {
-    }
-
-    public  QuantityColors(String name) {
-        this.name = name;
-    }
-
-    public String toString(){
-        return getName();
-    }
 
 }

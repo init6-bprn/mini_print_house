@@ -1,6 +1,7 @@
 package ru.bprn.printhouse.data.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.repository.PrintMashineRepository;
 import ru.bprn.printhouse.data.repository.QuantityColorsRepository;
@@ -9,6 +10,7 @@ import ru.bprn.printhouse.data.repository.TypeOfPrinterRepository;
 import java.util.List;
 
 @Service
+@Transactional
 public class PrintMashineService {
     private PrintMashineRepository printMashineRepository;
     private QuantityColorsRepository quantityColorsRepository;
@@ -19,7 +21,6 @@ public class PrintMashineService {
         this.quantityColorsRepository = quantityColorsRepository;
         this.typeOfPrinterRepository = typeOfPrinterRepository;
     }
-
     public List<PrintMashine> findAll(){
         return  printMashineRepository.findAll();
     }

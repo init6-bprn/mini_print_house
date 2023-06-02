@@ -1,37 +1,29 @@
 package ru.bprn.printhouse.data.entity;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import ru.bprn.printhouse.data.AbstractEntity;
+import lombok.*;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
 @Entity
-public class TypeOfPrinter extends AbstractEntity {
+public class TypeOfPrinter{
+
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Long id;
 
     @NotNull
     @NotEmpty
     private String name = "";
 
+
     //@OneToMany(fetch = FetchType.EAGER, mappedBy = "typeOfPrinter")
     //private List<PrintMashine> printMashine;
-
-    public TypeOfPrinter() {
-    }
-
-    public TypeOfPrinter (String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return  this.name;
-    }
 }

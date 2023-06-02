@@ -4,20 +4,25 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import ru.bprn.printhouse.data.AbstractEntity;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
- @Data @EqualsAndHashCode
+ @Data
+ @EqualsAndHashCode (onlyExplicitlyIncluded = true)
  @ToString
+ @NoArgsConstructor
+ @AllArgsConstructor
 
 @Entity
-public class PrintMashine extends AbstractEntity {
+public class PrintMashine{
+
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Long id;
 
     @NotNull
     @NotEmpty
@@ -75,10 +80,7 @@ public class PrintMashine extends AbstractEntity {
     @PositiveOrZero
     private Float finalCostOfSpotClick;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {
-            CascadeType.PERSIST
-    })
-    //@Fetch(FetchMode.JOIN)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "mashines_leafs",
             joinColumns = @JoinColumn(name = "print_mashine_id", referencedColumnName = "id"),
@@ -95,16 +97,5 @@ public class PrintMashine extends AbstractEntity {
         prnLeaf.getPrintMashineSet().remove(this);
     }
 */
-    public PrintMashine() {
-        this.name = "Same printer";
-    }
-
-    public PrintMashine(String name) {
-        this.name = name;
-    }
-
-    public String toString (){
-        return this.name;
-    }
 
 }

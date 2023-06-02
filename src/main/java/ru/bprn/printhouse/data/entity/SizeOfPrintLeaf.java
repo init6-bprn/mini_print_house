@@ -1,24 +1,28 @@
 package ru.bprn.printhouse.data.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
-import lombok.Data;
-import ru.bprn.printhouse.data.AbstractEntity;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@EqualsAndHashCode @ToString @NoArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
 @Entity
 @Table(name = "size_of_print_leaf")
-public class SizeOfPrintLeaf extends AbstractEntity {
+public class SizeOfPrintLeaf{
+
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Long id;
 
     @NotNull
     @NotEmpty

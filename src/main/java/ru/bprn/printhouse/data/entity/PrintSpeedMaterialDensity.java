@@ -4,23 +4,33 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.Data;
+import lombok.*;
 import ru.bprn.printhouse.data.AbstractEntity;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString
 @Entity
-//@Table(name = "print_speed_material_density")
+@Table(name = "print_speed_material_density")
 public class PrintSpeedMaterialDensity extends AbstractEntity {
 
-    @NotNull
-    @PositiveOrZero
-    @Max(300)
-    private Integer densityNoMore;
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Long id;
 
     @NotNull
     @PositiveOrZero
     @Max(300)
-    private Integer speed;
+    private Integer densityNoMore = 0;
+
+    @NotNull
+    @PositiveOrZero
+    @Max(300)
+    private Integer speed = 0;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "type_of_material", nullable = false )
@@ -29,10 +39,5 @@ public class PrintSpeedMaterialDensity extends AbstractEntity {
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "print_mashine", nullable = false )
     private PrintMashine printMashine;
-
-    public PrintSpeedMaterialDensity() {
-        this.densityNoMore = 0;
-        this.speed = 0;
-    }
 
 }

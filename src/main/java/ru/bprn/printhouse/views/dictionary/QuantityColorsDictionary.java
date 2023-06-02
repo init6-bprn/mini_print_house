@@ -11,7 +11,6 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
-import org.vaadin.crudui.layout.impl.VerticalSplitCrudLayout;
 import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
 import ru.bprn.printhouse.views.MainLayout;
@@ -25,7 +24,7 @@ public class QuantityColorsDictionary extends VerticalLayout{
 
         public QuantityColorsDictionary(QuantityColorsService qcService) {
 
-            DefaultCrudFormFactory<QuantityColors> formFactory = new DefaultCrudFormFactory<QuantityColors>(QuantityColors.class) {
+            DefaultCrudFormFactory<QuantityColors> formFactory = new DefaultCrudFormFactory<>(QuantityColors.class) {
                 @Override
                 protected void configureForm(FormLayout formLayout, List<HasValueAndElement> fields) {
                     Component nameField = (Component) fields.get(0);
