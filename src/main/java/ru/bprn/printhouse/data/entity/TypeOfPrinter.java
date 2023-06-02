@@ -9,7 +9,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString
 @Entity
 public class TypeOfPrinter{
 
@@ -23,6 +22,10 @@ public class TypeOfPrinter{
     @NotEmpty
     private String name = "";
 
+    @Override
+    public String toString(){
+        return getName();
+    }
 
     //@OneToMany(fetch = FetchType.EAGER, mappedBy = "typeOfPrinter")
     //private List<PrintMashine> printMashine;

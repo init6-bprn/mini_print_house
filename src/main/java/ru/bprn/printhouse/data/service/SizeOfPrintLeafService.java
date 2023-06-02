@@ -16,7 +16,7 @@ public class SizeOfPrintLeafService {
     public SizeOfPrintLeafService (SizeOfPrintLeafRepository sopfRepository) {
         this.sizeOfPrintLeafRepository = sopfRepository;
     }
-
+    @Transactional
     public List<SizeOfPrintLeaf> findAll(){
         return sizeOfPrintLeafRepository.findAll();
     }

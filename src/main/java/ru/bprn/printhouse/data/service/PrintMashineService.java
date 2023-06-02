@@ -25,7 +25,7 @@ public class PrintMashineService {
         return  printMashineRepository.findAll();
     }
 
-    public PrintMashine save (PrintMashine pmachine) {
+    public PrintMashine save(PrintMashine pmachine) {
 
         if (pmachine.getPriceOfCmykClick()!=0)
         pmachine.setFinalCostOfCmykClick(pmachine.getPriceOfCmykClick()

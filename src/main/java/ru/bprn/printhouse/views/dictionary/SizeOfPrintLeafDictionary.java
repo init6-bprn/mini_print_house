@@ -2,13 +2,13 @@ package ru.bprn.printhouse.views.dictionary;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValueAndElement;
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
-import org.vaadin.crudui.form.impl.field.provider.CheckBoxGroupProvider;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
 import ru.bprn.printhouse.data.entity.PrintMashine;
@@ -42,17 +42,24 @@ public class SizeOfPrintLeafDictionary extends VerticalLayout {
         crud.setUpdateOperationVisible(false);
         crud.getGrid().setColumns("name", "length", "width");
 
-        crud.getCrudFormFactory().setFieldProvider("printMashineSet",
-                new CheckBoxGroupProvider<>("Print_Mashine", pmService.findAll(), PrintMashine::getName));
+        crud.getCrudFormFactory().setFieldProvider("printMashineSet", q -> {
+            MultiSelectComboBox<PrintMashine> mCombo = new MultiSelectComboBox<>();
+            mCombo.setItems(pmService.findAll());
+            mCombo.setItemLabelGenerator(PrintMashine::getName);
+            return mCombo;
+        });
+
+                //new CheckBoxGroupProvider<>("Print_Mashine", pmService.findAll(), PrintMashine::getName));
 
         setSizeFull();
         this.add(crud);
 
         crud.setOperations(
                 () -> sizeOfPrintLeafService.findAll(),
-                service -> sizeOfPrintLeafService.save(service),
-                service -> sizeOfPrintLeafService.save(service),
-                service -> sizeOfPrintLeafService.delete(service)
+               leaf ->  //{leaf.getPrintMashineSet().
+                    sizeOfPrintLeafService.save(leaf),
+                leaf -> sizeOfPrintLeafService.save(leaf),
+                leaf -> sizeOfPrintLeafService.delete(leaf)
         );
 
         setJustifyContentMode(JustifyContentMode.CENTER);

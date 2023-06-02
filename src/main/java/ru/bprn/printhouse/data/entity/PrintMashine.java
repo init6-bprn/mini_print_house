@@ -11,7 +11,6 @@ import java.util.Set;
 
  @Data
  @EqualsAndHashCode (onlyExplicitlyIncluded = true)
- @ToString
  @NoArgsConstructor
  @AllArgsConstructor
 
@@ -80,7 +79,7 @@ public class PrintMashine{
     @PositiveOrZero
     private Float finalCostOfSpotClick;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER )
     @JoinTable(
             name = "mashines_leafs",
             joinColumns = @JoinColumn(name = "print_mashine_id", referencedColumnName = "id"),
@@ -97,5 +96,8 @@ public class PrintMashine{
         prnLeaf.getPrintMashineSet().remove(this);
     }
 */
-
+    @Override
+    public String toString(){
+            return getName();
+    };
 }

@@ -9,7 +9,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString
 @Entity
 @Table(name = "quantity_colors")
 public class QuantityColors{
@@ -26,5 +25,9 @@ public class QuantityColors{
 
     // @OneToMany (fetch = FetchType.EAGER, mappedBy = "quantityColors")
     //private List<PrintMashine> printMashine;
+    @Override
+    public String toString(){
+        return getName();
+    }
 
 }

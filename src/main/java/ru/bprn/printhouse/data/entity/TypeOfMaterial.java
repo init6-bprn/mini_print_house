@@ -9,7 +9,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString
 @Entity
 @Table(name = "type_of_material")
 public class TypeOfMaterial{
@@ -23,5 +22,10 @@ public class TypeOfMaterial{
     @NotNull
     @NotEmpty
     private String name = "Бумага";
+
+    @Override
+    public String toString(){
+        return getName();
+    }
 
 }

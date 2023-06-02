@@ -38,15 +38,15 @@ public class SizeOfPrintLeaf{
 
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "sizeOfPrintLeaves")
     private Set<PrintMashine> printMashineSet = new HashSet<>();
-/*
-    private void addPrintMashine(PrintMashine pMashibe){
+
+    private void addToPrintMashineSet(PrintMashine pMashibe){
         this.printMashineSet.add(pMashibe);
         pMashibe.getSizeOfPrintLeaves().add(this);
     }
 
-    private void removePrintMashine(PrintMashine pMashibe){
+    private void removeFromPrintMashineSet(PrintMashine pMashibe){
         this.printMashineSet.remove(pMashibe);
         pMashibe.getSizeOfPrintLeaves().remove(this);
     }
-*/
+
 }
