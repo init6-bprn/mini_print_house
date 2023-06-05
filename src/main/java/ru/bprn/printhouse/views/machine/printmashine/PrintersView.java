@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.equipment.printmashine;
+package ru.bprn.printhouse.views.machine.printmashine;
 
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -19,9 +19,9 @@ import ru.bprn.printhouse.views.MainLayout;
 @Route(value = "digital_print", layout = MainLayout.class)
 @AnonymousAllowed
 
-public class DigitalPressView extends VerticalLayout {
+public class PrintersView extends VerticalLayout {
 
-    public DigitalPressView(PrintMashineService pmService, TypeOfPrinterService topService, QuantityColorsService qcService, SizeOfPrintLeafService soplService) {
+    public PrintersView(PrintMashineService pmService, TypeOfPrinterService topService, QuantityColorsService qcService, SizeOfPrintLeafService soplService) {
         GridCrud<PrintMashine> crud = new GridCrud<>(PrintMashine.class);
 
         crud.getGrid().setColumns("name", "typeOfPrinter", "quantityColors", "madeOfClicks", "maxPrintAreaX",

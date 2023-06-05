@@ -22,8 +22,8 @@ import ru.bprn.printhouse.views.dictionary.QuantityColorsDictionary;
 import ru.bprn.printhouse.views.dictionary.SizeOfPrintLeafDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfMaterialDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfPrinterDictionary;
-import ru.bprn.printhouse.views.equipment.printmashine.DigitalPressView;
-import ru.bprn.printhouse.views.equipment.printmashine.PrintSpeedMaterialDensityView;
+import ru.bprn.printhouse.views.machine.printmashine.PrintersView;
+import ru.bprn.printhouse.views.machine.printmashine.PrintSpeedMaterialDensityView;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -87,8 +87,8 @@ public class MainLayout extends AppLayout {
         nav.addItem(dick);
 
         dick =new AppNavItem("Оборудование");
-        if (accessChecker.hasAccess(DigitalPressView.class))
-            dick.addItem(new AppNavItem("ЦПМ", DigitalPressView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        if (accessChecker.hasAccess(PrintersView.class))
+            dick.addItem(new AppNavItem("ЦПМ", PrintersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         if (accessChecker.hasAccess(PrintSpeedMaterialDensityView.class))
             dick.addItem(new AppNavItem("Скорость-плотность ЦПМ", PrintSpeedMaterialDensityView.class, LineAwesomeIcon.GLOBE_SOLID.create()));

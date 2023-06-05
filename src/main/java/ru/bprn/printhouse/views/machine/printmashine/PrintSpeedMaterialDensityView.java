@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.equipment.printmashine;
+package ru.bprn.printhouse.views.machine.printmashine;
 
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
