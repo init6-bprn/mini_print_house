@@ -37,15 +37,13 @@ public class PrintersView extends VerticalLayout {
                 new ComboBoxProvider<>(qcService.findAll()));
         crud.getCrudFormFactory().setFieldProvider("typeOfPrinter",
                 new ComboBoxProvider<>(topService.findAll()));
-        //crud.getCrudFormFactory().setFieldProvider("sizeOfPrintLeaves",
-          //      new CheckBoxGroupProvider<>(soplService.findAll()));
+
         crud.getCrudFormFactory().setFieldProvider("sizeOfPrintLeaves", q -> {
                     MultiSelectComboBox<SizeOfPrintLeaf> mCombo = new MultiSelectComboBox<>();
                     mCombo.setItems(soplService.findAll());
                     mCombo.setItemLabelGenerator(SizeOfPrintLeaf::getName);
                     return mCombo;
                 });
-                //new CheckBoxGroupProvider<>("sizeOfPrintLeaves", soplService.findAll(), SizeOfPrintLeaf::getName));
 
 
         this.add(crud);

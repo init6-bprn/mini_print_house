@@ -13,7 +13,9 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString
+@Getter
+@Setter
+
 @Entity
 @Table(name = "size_of_print_leaf")
 public class SizeOfPrintLeaf{
@@ -48,5 +50,5 @@ public class SizeOfPrintLeaf{
         this.printMashineSet.remove(pMashibe);
         pMashibe.getSizeOfPrintLeaves().remove(this);
     }
-
+    public String toString() {return getName();}
 }

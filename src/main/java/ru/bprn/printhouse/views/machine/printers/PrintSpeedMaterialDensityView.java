@@ -12,6 +12,7 @@ import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.PrintSpeedMaterialDensity;
 import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.PrintSpeedMaterialDensityService;
+import ru.bprn.printhouse.data.service.ThicknessService;
 import ru.bprn.printhouse.data.service.TypeOfMaterialService;
 import ru.bprn.printhouse.views.MainLayout;
 
@@ -21,7 +22,8 @@ import ru.bprn.printhouse.views.MainLayout;
 
 public class PrintSpeedMaterialDensityView extends VerticalLayout {
 
-    public PrintSpeedMaterialDensityView(PrintSpeedMaterialDensityService psmdService, PrintMashineService pmService, TypeOfMaterialService tomService){
+    public PrintSpeedMaterialDensityView(PrintSpeedMaterialDensityService psmdService, PrintMashineService pmService,
+                                         TypeOfMaterialService tomService, ThicknessService thService){
         var filter = new ComboBox<PrintMashine>();
         filter.setItems(pmService.findAll());
         filter.setItemLabelGenerator(PrintMashine::getName);
@@ -29,17 +31,19 @@ public class PrintSpeedMaterialDensityView extends VerticalLayout {
         GridCrud<PrintSpeedMaterialDensity> crud = new GridCrud<>(PrintSpeedMaterialDensity.class);
         crud.getCrudLayout().addFilterComponent(filter);
 
-        crud.getGrid().setColumns("typeOfMaterial", "speed", "densityNoMore");
+        crud.getGrid().setColumns("typeOfMaterial", "density", "speed");
         crud.getGrid().setColumnReorderingAllowed(true);
-        crud.getGrid().setSortableColumns("typeOfMaterial", "speed", "densityNoMore");
+        crud.getGrid().setSortableColumns("typeOfMaterial", "density", "speed");
 
         crud.getCrudFormFactory().setUseBeanValidation(true);
 
-        crud.getCrudFormFactory().setVisibleProperties("printMashine", "typeOfMaterial", "speed", "densityNoMore");
+        crud.getCrudFormFactory().setVisibleProperties("printMashine", "typeOfMaterial", "density", "speed");
         crud.getCrudFormFactory().setFieldProvider("typeOfMaterial",
                 new ComboBoxProvider<>(tomService.findAll()));
         crud.getCrudFormFactory().setFieldProvider("printMashine",
                 new ComboBoxProvider<>(pmService.findAll()));
+        crud.getCrudFormFactory().setFieldProvider("density",
+                new ComboBoxProvider<>(thService.findAll()));
 
         this.add(crud);
 

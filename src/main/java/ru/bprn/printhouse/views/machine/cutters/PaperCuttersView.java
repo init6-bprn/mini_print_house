@@ -18,6 +18,7 @@ import ru.bprn.printhouse.views.MainLayout;
 public class PaperCuttersView extends VerticalLayout {
 
     public PaperCuttersView(PaperCutterService pcService, TypeOfPrinterService topService, SizeOfPrintLeafService soplService) {
+
         GridCrud<PaperCutter> crud = new GridCrud<>(PaperCutter.class);
 
         crud.getGrid().setColumns("name", "maxSizeX", "maxSizeY", "finalCostOfCut");
@@ -44,9 +45,9 @@ public class PaperCuttersView extends VerticalLayout {
         this.add(crud);
         crud.setOperations(
                 () -> pcService.findAll(),
-                printer -> pcService.save(printer),
-                printer -> pcService.save(printer),
-                printer -> pcService.delete(printer)
+                cutter -> pcService.save(cutter),
+                cutter -> pcService.save(cutter),
+                cutter -> pcService.delete(cutter)
         );
 
         setJustifyContentMode(JustifyContentMode.CENTER);

@@ -10,6 +10,8 @@ import lombok.*;
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
+@Getter
+@Setter
 @Table(name = "quantity_colors")
 public class QuantityColors{
 

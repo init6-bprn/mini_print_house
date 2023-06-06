@@ -22,10 +22,9 @@ public class PrintSpeedMaterialDensity extends AbstractEntity {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @NotNull
-    @PositiveOrZero
-    @Max(300)
-    private Integer densityNoMore = 0;
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    @JoinColumn(name = "thickness", nullable = false )
+    private Thickness density;
 
     @NotNull
     @PositiveOrZero

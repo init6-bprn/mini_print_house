@@ -18,12 +18,11 @@ import ru.bprn.printhouse.components.appnav.AppNavItem;
 import ru.bprn.printhouse.data.entity.User;
 import ru.bprn.printhouse.security.AuthenticatedUser;
 import ru.bprn.printhouse.views.about.AboutView;
-import ru.bprn.printhouse.views.dictionary.QuantityColorsDictionary;
-import ru.bprn.printhouse.views.dictionary.SizeOfPrintLeafDictionary;
-import ru.bprn.printhouse.views.dictionary.TypeOfMaterialDictionary;
-import ru.bprn.printhouse.views.dictionary.TypeOfPrinterDictionary;
-import ru.bprn.printhouse.views.machine.printers.PrintersView;
+import ru.bprn.printhouse.views.dictionary.*;
+import ru.bprn.printhouse.views.machine.cutters.PaperCuttersView;
 import ru.bprn.printhouse.views.machine.printers.PrintSpeedMaterialDensityView;
+import ru.bprn.printhouse.views.machine.printers.PrintersView;
+import ru.bprn.printhouse.views.material.MaterialView;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -81,17 +80,28 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(TypeOfMaterialDictionary.class))
             dick.addItem(new AppNavItem("Тип материала", TypeOfMaterialDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
 
+        if (accessChecker.hasAccess(ThicknessDictionary.class))
+            dick.addItem(new AppNavItem("Плотность материала", ThicknessDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+
         if (accessChecker.hasAccess(SizeOfPrintLeafDictionary.class))
             dick.addItem(new AppNavItem("Размер печатного листа", SizeOfPrintLeafDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
 
         nav.addItem(dick);
 
-        dick =new AppNavItem("Оборудование");
+        dick = new AppNavItem("Оборудование");
         if (accessChecker.hasAccess(PrintersView.class))
             dick.addItem(new AppNavItem("ЦПМ", PrintersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
+        if (accessChecker.hasAccess(PaperCuttersView.class))
+            dick.addItem(new AppNavItem("Резаки", PaperCuttersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+
         if (accessChecker.hasAccess(PrintSpeedMaterialDensityView.class))
             dick.addItem(new AppNavItem("Скорость-плотность ЦПМ", PrintSpeedMaterialDensityView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        nav.addItem(dick);
+
+        dick = new AppNavItem("Материалы");
+        if (accessChecker.hasAccess(MaterialView.class))
+            dick.addItem(new AppNavItem("Бумага для цифры", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
         if (accessChecker.hasAccess(AboutView.class))

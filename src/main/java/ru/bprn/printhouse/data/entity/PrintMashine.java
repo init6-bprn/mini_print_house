@@ -13,6 +13,8 @@ import java.util.Set;
  @EqualsAndHashCode (onlyExplicitlyIncluded = true)
  @NoArgsConstructor
  @AllArgsConstructor
+ @Getter
+ @Setter
 
 @Entity
 public class PrintMashine{

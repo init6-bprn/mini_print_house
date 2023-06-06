@@ -1,8 +1,8 @@
 package ru.bprn.printhouse.data.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
 @Data
@@ -12,23 +12,19 @@ import lombok.*;
 @Getter
 @Setter
 @Entity
-public class TypeOfPrinter{
-
-    @EqualsAndHashCode.Include
+@Table(name = "thickness")
+public class Thickness {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotNull
-    @NotEmpty
-    private String name = "";
+    @PositiveOrZero
+    private Integer thickness;
 
-    @Override
     public String toString(){
-        return getName();
+        return this.thickness.toString();
     }
-
-    //@OneToMany(fetch = FetchType.EAGER, mappedBy = "typeOfPrinter")
-    //private List<PrintMashine> printMashine;
 }

@@ -9,6 +9,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Getter
+@Setter
 @Entity
 @Table(name = "type_of_material")
 public class TypeOfMaterial{
