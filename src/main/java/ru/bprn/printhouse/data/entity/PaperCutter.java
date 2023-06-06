@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "guillotine_paper_cutter")
+@Table(name = "paper_cutters")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

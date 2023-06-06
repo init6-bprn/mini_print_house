@@ -22,8 +22,8 @@ import ru.bprn.printhouse.views.dictionary.QuantityColorsDictionary;
 import ru.bprn.printhouse.views.dictionary.SizeOfPrintLeafDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfMaterialDictionary;
 import ru.bprn.printhouse.views.dictionary.TypeOfPrinterDictionary;
-import ru.bprn.printhouse.views.machine.printmashine.PrintersView;
-import ru.bprn.printhouse.views.machine.printmashine.PrintSpeedMaterialDensityView;
+import ru.bprn.printhouse.views.machine.printers.PrintersView;
+import ru.bprn.printhouse.views.machine.printers.PrintSpeedMaterialDensityView;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;

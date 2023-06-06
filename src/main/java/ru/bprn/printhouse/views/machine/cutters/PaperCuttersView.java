@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.machine.pappercutters;
+package ru.bprn.printhouse.views.machine.cutters;
 
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;

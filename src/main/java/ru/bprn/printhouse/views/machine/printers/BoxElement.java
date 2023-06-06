@@ -1,12 +1,10 @@
-package ru.bprn.printhouse.views.machine.printmashine;
+package ru.bprn.printhouse.views.machine.printers;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.BoxSizing;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import ru.bprn.printhouse.data.AbstractEntity;
 
 public class BoxElement<T> extends VerticalLayout{
 
