@@ -37,6 +37,9 @@ public class PrintMashine{
     @PositiveOrZero
     private Integer maxPrintAreaY;
 
+    @Embedded
+    private Gap gap;
+
     @NotNull
     @PositiveOrZero
     private Integer cost;
@@ -97,8 +100,9 @@ public class PrintMashine{
         this.sizeOfPrintLeaves.remove(prnLeaf);
         prnLeaf.getPrintMashineSet().remove(this);
     }
-*/  @ManyToMany(fetch = FetchType.EAGER, mappedBy = "printers", targetEntity = Material.class)
-     private Set<Material> materials = new HashSet<>();
+*/
+    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "printers", targetEntity = Material.class)
+    private Set<Material> materials = new HashSet<>();
 
     private Boolean hasDuplex = false;
 
@@ -109,5 +113,5 @@ public class PrintMashine{
     @Override
     public String toString(){
             return getName();
-    };
+    }
 }
