@@ -97,7 +97,15 @@ public class PrintMashine{
         this.sizeOfPrintLeaves.remove(prnLeaf);
         prnLeaf.getPrintMashineSet().remove(this);
     }
-*/
+*/  @ManyToMany(fetch = FetchType.EAGER, mappedBy = "printers", targetEntity = Material.class)
+     private Set<Material> materials = new HashSet<>();
+
+    private Boolean hasDuplex = false;
+
+    @NotNull
+    @PositiveOrZero
+    private Integer testLeaves = 0;
+
     @Override
     public String toString(){
             return getName();

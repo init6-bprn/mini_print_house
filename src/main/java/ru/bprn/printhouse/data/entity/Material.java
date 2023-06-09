@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "material")
 @NoArgsConstructor
@@ -35,6 +38,13 @@ public class Material {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "thickness", nullable = false )
     private Thickness thickness;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "material_printer",
+            joinColumns = @JoinColumn(name = "print_mashine_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "material_id", referencedColumnName = "id"))
+    private Set<PrintMashine> printers = new HashSet<>();
 
     private Float priceOfLeaf = 0f;
 
