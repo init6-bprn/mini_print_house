@@ -6,6 +6,10 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
+import ru.bprn.printhouse.data.AbstractWork;
+
+import java.util.LinkedList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -41,13 +45,7 @@ public class Template {
     @Positive
     private Integer quantity = 1;
 
-    @NotEmpty
-    @PositiveOrZero
-    private Integer leafs = 0;
-
-    @NotEmpty
-    @Positive
-    private Integer onLeaf = 1;
+    private List<AbstractWork> abstractWorkList = new LinkedList<>();
 
     @Enumerated(EnumType.STRING)
     private StatusOfOperation status;
