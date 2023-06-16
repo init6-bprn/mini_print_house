@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 @Inheritance(strategy= InheritanceType.JOINED)
 @DiscriminatorColumn(name="works_type")
 @Table(name="works")
-public abstract class AbstractWork {
+public abstract class AbstractWork implements CalculateCostAndTime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -28,9 +28,13 @@ public abstract class AbstractWork {
         this.id = id;
     }
 
-    public Integer calculateTime() {return time;};
+    @Override
+    public Integer calculateTime() {
+        return null;
+    }
 
-    public Double calculateCost() {return Cost;};
-
-
+    @Override
+    public Double calculateCost() {
+        return null;
+    }
 }

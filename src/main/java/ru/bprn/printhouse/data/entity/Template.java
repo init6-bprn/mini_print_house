@@ -19,7 +19,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "template")
-public class Template {
+public class Template{
     @Id
     @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,6 +37,10 @@ public class Template {
     @PositiveOrZero
     private Integer sizeY = 0;
 
+    @NotEmpty
+    @Positive
+    private Float bleed = 2f;
+
     @ManyToOne (fetch = FetchType.EAGER)
     @JoinColumn (name = "material")
     private Material material;
@@ -45,12 +49,28 @@ public class Template {
     @Positive
     private Integer quantity = 1;
 
-    private List<AbstractWork> abstractWorkList = new LinkedList<>();
+    @NotEmpty
+    @Positive
+    private Integer quantityOfLeaves = 1;
 
-    @Enumerated(EnumType.STRING)
-    private StatusOfOperation status;
+    @OneToMany
+    private List<AbstractWork> abstractWorkList = new LinkedList<>();
 
     @Embedded
     private Gap gap;
+
+    public Integer calculateTime() {
+        return 0;
+
+    }
+
+    public Double calculateCost() {
+        Double price = 0d;
+        for (AbstractWork aw: abstractWorkList) {
+            price += aw.calculateCost();
+        };
+        return price;
+    }
+
 
 }

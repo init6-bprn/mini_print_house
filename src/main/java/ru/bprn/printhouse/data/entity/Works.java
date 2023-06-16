@@ -34,4 +34,13 @@ public class Works extends AbstractWork {
 
     private Integer row = 1;
 
+    @Override
+    public Integer calculateTime() {
+        return null;
+    }
+
+    @Override
+    public Double calculateCost() {
+        return null;
+    }
 }
