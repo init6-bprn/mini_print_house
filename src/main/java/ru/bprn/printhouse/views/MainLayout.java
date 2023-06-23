@@ -104,6 +104,11 @@ public class MainLayout extends AppLayout {
             dick.addItem(new AppNavItem("Бумага для цифры", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
+        dick = new AppNavItem("Шаблоны");
+        if (accessChecker.hasAccess(MaterialView.class))
+            dick.addItem(new AppNavItem("Шаблоны работ", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        nav.addItem(dick);
+
         if (accessChecker.hasAccess(AboutView.class))
             nav.addItem(new AppNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
 

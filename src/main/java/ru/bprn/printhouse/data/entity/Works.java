@@ -1,16 +1,16 @@
 package ru.bprn.printhouse.data.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import ru.bprn.printhouse.data.AbstractWork;
 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
+@EqualsAndHashCode
+@ToString
 @Entity
 @DiscriminatorValue("P")
 @Table(name = "works_for_print")
