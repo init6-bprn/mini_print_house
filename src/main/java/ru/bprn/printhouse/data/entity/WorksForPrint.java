@@ -4,19 +4,18 @@ import jakarta.persistence.*;
 import lombok.*;
 import ru.bprn.printhouse.data.AbstractWork;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+
 @Getter
 @Setter
-@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode (callSuper = true)
 @ToString
-@Entity
-@DiscriminatorValue("P")
 @Table(name = "works_for_print")
-public class Works extends AbstractWork {
+@Entity
+public class WorksForPrint extends AbstractWork {
 
-    private Boolean duplex = false;
+    private int duplex = 0;
 
     private Double priceOfOneOperation = 0d;
 
@@ -30,9 +29,9 @@ public class Works extends AbstractWork {
     @JoinColumn(name = "print_mashine_id")
     private PrintMashine printMashine;
 
-    private Integer column = 1;
+    private Integer columns_ = 1;
 
-    private Integer row = 1;
+    private Integer rows_ = 1;
 
     @Override
     public Integer calculateTime() {
@@ -43,4 +42,5 @@ public class Works extends AbstractWork {
     public Double calculateCost() {
         return null;
     }
+
 }

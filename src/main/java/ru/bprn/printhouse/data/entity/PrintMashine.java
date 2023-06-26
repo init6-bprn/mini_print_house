@@ -108,7 +108,7 @@ public class PrintMashine{
 
     @NotNull
     @PositiveOrZero
-    private Integer testLeaves = 0;
+    private Integer testLeaves = Integer.valueOf(0);
 
 
 
