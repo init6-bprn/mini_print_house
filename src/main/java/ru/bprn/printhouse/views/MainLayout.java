@@ -23,6 +23,7 @@ import ru.bprn.printhouse.views.machine.cutters.PaperCuttersView;
 import ru.bprn.printhouse.views.machine.printers.PrintSpeedMaterialDensityView;
 import ru.bprn.printhouse.views.machine.printers.PrintersView;
 import ru.bprn.printhouse.views.material.MaterialView;
+import ru.bprn.printhouse.views.template.TemplateView;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -105,8 +106,8 @@ public class MainLayout extends AppLayout {
         nav.addItem(dick);
 
         dick = new AppNavItem("Шаблоны");
-        if (accessChecker.hasAccess(MaterialView.class))
-            dick.addItem(new AppNavItem("Шаблоны работ", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        if (accessChecker.hasAccess(TemplateView.class))
+            dick.addItem(new AppNavItem("Шаблоны работ", TemplateView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
         if (accessChecker.hasAccess(AboutView.class))

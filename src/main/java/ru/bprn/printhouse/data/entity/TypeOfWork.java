@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.data;
+package ru.bprn.printhouse.data.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
