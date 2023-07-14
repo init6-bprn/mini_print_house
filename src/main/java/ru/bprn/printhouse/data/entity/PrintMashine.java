@@ -5,8 +5,10 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
+import org.hibernate.Hibernate;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
  @Data
@@ -116,4 +118,5 @@ public class PrintMashine{
     public String toString(){
             return getName();
     }
-}
+
+ }

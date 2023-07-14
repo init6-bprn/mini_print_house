@@ -12,7 +12,7 @@ import lombok.*;
 @Getter
 @Setter
 @Entity
-public class TypeOfPrinter{
+public class TypeOfPrinter {
 
     @EqualsAndHashCode.Include
     @Id
