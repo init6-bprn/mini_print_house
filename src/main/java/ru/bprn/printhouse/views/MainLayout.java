@@ -6,15 +6,16 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.sidenav.SideNav;
+import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import org.vaadin.lineawesome.LineAwesomeIcon;
-import ru.bprn.printhouse.components.appnav.AppNav;
-import ru.bprn.printhouse.components.appnav.AppNavItem;
 import ru.bprn.printhouse.data.entity.User;
 import ru.bprn.printhouse.security.AuthenticatedUser;
 import ru.bprn.printhouse.views.about.AboutView;
@@ -66,52 +67,52 @@ public class MainLayout extends AppLayout {
         addToDrawer(header, scroller, createFooter());
     }
 
-    private AppNav createNavigation() {
+    private SideNav createNavigation() {
         // AppNav is not yet an official component.
         // For documentation, visit https://github.com/vaadin/vcf-nav#readme
-        AppNav nav = new AppNav();
+       SideNav nav = new SideNav();
 
-        var dick = new AppNavItem("Словари");
+        var dick = new SideNavItem("Словари");
         if (accessChecker.hasAccess(QuantityColorsDictionary.class))
-            dick.addItem(new AppNavItem("Количество цветов", QuantityColorsDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+            dick.addItem(new SideNavItem("Количество цветов", QuantityColorsDictionary.class, VaadinIcon.RECORDS.create()));
 
         if (accessChecker.hasAccess(TypeOfPrinterDictionary.class))
-            dick.addItem(new AppNavItem("Тип принтера", TypeOfPrinterDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+            dick.addItem(new SideNavItem("Тип принтера", TypeOfPrinterDictionary.class, VaadinIcon.RECORDS.create()));
 
         if (accessChecker.hasAccess(TypeOfMaterialDictionary.class))
-            dick.addItem(new AppNavItem("Тип материала", TypeOfMaterialDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+            dick.addItem(new SideNavItem("Тип материала", TypeOfMaterialDictionary.class, VaadinIcon.RECORDS.create()));
 
         if (accessChecker.hasAccess(ThicknessDictionary.class))
-            dick.addItem(new AppNavItem("Плотность материала", ThicknessDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+            dick.addItem(new SideNavItem("Плотность материала", ThicknessDictionary.class, VaadinIcon.RECORDS.create()));
 
         if (accessChecker.hasAccess(SizeOfPrintLeafDictionary.class))
-            dick.addItem(new AppNavItem("Размер печатного листа", SizeOfPrintLeafDictionary.class, LineAwesomeIcon.EDIT_SOLID.create()));
+            dick.addItem(new SideNavItem("Размер печатного листа", SizeOfPrintLeafDictionary.class, VaadinIcon.RECORDS.create()));
 
         nav.addItem(dick);
 
-        dick = new AppNavItem("Оборудование");
+        dick = new SideNavItem("Оборудование");
         if (accessChecker.hasAccess(PrintersView.class))
-            dick.addItem(new AppNavItem("ЦПМ", PrintersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+            dick.addItem(new SideNavItem("ЦПМ", PrintersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         if (accessChecker.hasAccess(PaperCuttersView.class))
-            dick.addItem(new AppNavItem("Резаки", PaperCuttersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+            dick.addItem(new SideNavItem("Резаки", PaperCuttersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         if (accessChecker.hasAccess(PrintSpeedMaterialDensityView.class))
-            dick.addItem(new AppNavItem("Скорость-плотность ЦПМ", PrintSpeedMaterialDensityView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+            dick.addItem(new SideNavItem("Скорость-плотность ЦПМ", PrintSpeedMaterialDensityView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
-        dick = new AppNavItem("Материалы");
+        dick = new SideNavItem("Материалы");
         if (accessChecker.hasAccess(MaterialView.class))
-            dick.addItem(new AppNavItem("Бумага для цифры", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+            dick.addItem(new SideNavItem("Бумага для цифры", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
-        dick = new AppNavItem("Шаблоны");
+        dick = new SideNavItem("Шаблоны");
         if (accessChecker.hasAccess(TemplateView.class))
-            dick.addItem(new AppNavItem("Шаблоны работ", TemplateView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+            dick.addItem(new SideNavItem("Шаблоны работ", TemplateView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
         if (accessChecker.hasAccess(AboutView.class))
-            nav.addItem(new AppNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
+            nav.addItem(new SideNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
 
         return nav;
     }
