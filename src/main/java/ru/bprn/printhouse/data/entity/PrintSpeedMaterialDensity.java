@@ -10,7 +10,7 @@ import ru.bprn.printhouse.data.AbstractEntity;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(callSuper=false, onlyExplicitlyIncluded = true)
 @ToString
 @Entity
 @Table(name = "print_speed_material_density")
