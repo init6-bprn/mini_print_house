@@ -88,6 +88,9 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(SizeOfPrintLeafDictionary.class))
             dick.addItem(new SideNavItem("Размер печатного листа", SizeOfPrintLeafDictionary.class, VaadinIcon.RECORDS.create()));
 
+        if (accessChecker.hasAccess(StandartSizeDictionary.class))
+            dick.addItem(new SideNavItem("Размер изделия", StandartSizeDictionary.class, VaadinIcon.RECORDS.create()));
+
         nav.addItem(dick);
 
         dick = new SideNavItem("Оборудование");
