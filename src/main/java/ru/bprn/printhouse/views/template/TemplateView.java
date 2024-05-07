@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.views.template;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -63,11 +64,6 @@ public class TemplateView extends VerticalLayout {
         var width = new NumberField();
         width.setLabel("Ширина");
 
-        var addSizeButton = new Button("Add");
-        addSizeButton.addClickListener(e-> {
-            addSizeDialog(length.getValue(), width.getValue());
-        });
-
         var standartSizeCombo = new ComboBox<StandartSize>();
         standartSizeCombo.setItems(standartSizeService.findAll());
         standartSizeCombo.setLabel("Размер изделия");
@@ -77,8 +73,25 @@ public class TemplateView extends VerticalLayout {
         }) ;
         standartSizeCombo.setValue(standartSizeService.findAll().get(0));
 
+        var dialog = new SizeDialog(standartSizeService);
+        dialog.addDialogCloseActionListener(e->{
+            if (dialog.getStandartSize()!= null)
+                {
+                    standartSizeCombo.setItems(standartSizeService.findAll());
+                    standartSizeCombo.setValue(dialog.getStandartSize());
+                }
+            e.getSource().close();
+        });
 
-        hLayout.add(quantityField, standartSizeCombo, length, width);
+        var addSizeButton = new Button("Add");
+        addSizeButton.addClickListener(e-> {
+            dialog.setX(length.getValue());
+            dialog.setY(width.getValue());
+            dialog.setModal(true);
+            dialog.open();
+        });
+
+        hLayout.add(quantityField, standartSizeCombo, length, width, addSizeButton, dialog);
         this.add(hLayout);
     }
 
@@ -97,37 +110,4 @@ public class TemplateView extends VerticalLayout {
         this.add(hLayout);
     }
 
-    private Dialog addSizeDialog(Double length, Double width) {
-        var dialog = new Dialog();
-        dialog.setHeaderTitle("Новый стандартный размер");
-
-        VerticalLayout dialogLayout = new VerticalLayout();
-
-        var name = new TextField();
-        name.setLabel("Введите название");
-        name.setValue("А56");
-
-        var lengthField = new NumberField("Длина");
-        lengthField.setValue(length);
-
-        var widthField = new NumberField("Ширина");
-        widthField.setValue(width);
-
-        dialogLayout.add(name, lengthField, widthField);
-        dialog.add(dialogLayout);
-
-        Button saveButton = new Button("Add", e -> {
-            StandartSize standartSize = new StandartSize();
-            standartSize.setName(name.getValue());
-            standartSize.setLength(lengthField.getValue());
-            standartSize.setWidth(widthField.getValue());
-            standartSizeService.save(standartSize);
-            dialog.close();
-        });
-
-        Button cancelButton = new Button("Cancel", e -> dialog.close());
-        dialog.getFooter().add(cancelButton);
-        dialog.getFooter().add(saveButton);
-        return dialog;
-    }
 }
