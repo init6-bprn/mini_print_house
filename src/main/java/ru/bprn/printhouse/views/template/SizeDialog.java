@@ -5,18 +5,17 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.bprn.printhouse.data.entity.StandartSize;
 import ru.bprn.printhouse.data.service.StandartSizeService;
 
-public class SizeDialog extends Dialog {
+public class
+SizeDialog extends Dialog {
     private TextField text;
     private NumberField lengthField;
     private NumberField widthField;
 
     private StandartSize standartSize;
 
-    @Autowired
     private StandartSizeService standartSizeService;
     public SizeDialog (StandartSizeService standartSizeService){
         this.setHeaderTitle("Новый стандартный размер");
@@ -37,16 +36,20 @@ public class SizeDialog extends Dialog {
         dialogLayout.add(text, lengthField, widthField);
         this.add(dialogLayout);
 
-        Button saveButton = new Button("Add", e -> {
+        Button saveButton = new Button("Save", e -> {
             standartSize = new StandartSize();
             standartSize.setName(text.getValue());
             standartSize.setLength(lengthField.getValue());
             standartSize.setWidth(widthField.getValue());
-            standartSizeService.save(standartSize);
+            standartSizeService.saveAndFlush(standartSize);
             this.close();
         });
 
-        Button cancelButton = new Button("Cancel", e -> this.close());
+        Button cancelButton = new Button("Cancel", e -> {
+            standartSize = null;
+            this.close();
+        });
+
         this.getFooter().add(cancelButton);
         this.getFooter().add(saveButton);
     }
