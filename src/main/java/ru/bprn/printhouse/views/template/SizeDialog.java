@@ -41,7 +41,7 @@ SizeDialog extends Dialog {
             standartSize.setName(text.getValue());
             standartSize.setLength(lengthField.getValue());
             standartSize.setWidth(widthField.getValue());
-            standartSizeService.saveAndFlush(standartSize);
+            standartSizeService.save(standartSize);
             this.close();
         });
 

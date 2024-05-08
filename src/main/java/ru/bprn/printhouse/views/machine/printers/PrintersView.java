@@ -34,7 +34,7 @@ public class PrintersView extends VerticalLayout {
         crud.getCrudFormFactory().setUseBeanValidation(true);
         crud.getCrudFormFactory().setVisibleProperties("name", "cost", "clicks", "madeOfClicks", "maxPrintAreaX",
                 "maxPrintAreaY", "priceOfCmykClick", "priceOfBlackClick", "priceOfSpotClick",
-                "quantityColors", "typeOfPrinter", "sizeOfPrintLeaves", "materials", "hasDuplex", "gap.gapTop");
+                "quantityColors", "typeOfPrinter", "sizeOfPrintLeaves", "materials", "hasDuplex");
         crud.getCrudFormFactory().setFieldProvider("quantityColors",
                 new ComboBoxProvider<>(qcService.findAll()));
         crud.getCrudFormFactory().setFieldProvider("typeOfPrinter",

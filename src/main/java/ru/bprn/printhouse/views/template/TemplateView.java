@@ -12,10 +12,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
-import ru.bprn.printhouse.data.entity.Material;
-import ru.bprn.printhouse.data.entity.PrintMashine;
-import ru.bprn.printhouse.data.entity.QuantityColors;
-import ru.bprn.printhouse.data.entity.StandartSize;
+import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.MaterialService;
 import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
@@ -24,6 +21,7 @@ import ru.bprn.printhouse.views.MainLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @PageTitle("Шаблоны работ")
 @Route(value = "templates", layout = MainLayout.class)
@@ -40,13 +38,16 @@ public class TemplateView extends VerticalLayout {
    private StandartSizeService standartSizeService;
 
    private final QuantityColorsService quantityColorsService;
-
    private final ComboBox<StandartSize> standartSizeCombo = new ComboBox<StandartSize>();
+   private final ComboBox<Material> materialCombo = new ComboBox<>();
+   private final ComboBox<SizeOfPrintLeaf> sizeOfPrintLeafCombo = new ComboBox<>();
 
    private SizeDialog dialog;
    private NumberField length;
    private NumberField width;
-   final List<StandartSize> itemsForCombo = new ArrayList<>();
+   private List<StandartSize> itemsForCombo = new ArrayList<>();
+   private List<Material> listOfMaterial = new ArrayList<>();
+   private List<SizeOfPrintLeaf> listSizeOfPrintLeaf = new ArrayList<>();
 
     public TemplateView(PrintMashineService printerService, MaterialService materialService, StandartSizeService standartSizeService, QuantityColorsService quantityColorsService){
         super();
@@ -62,11 +63,11 @@ public class TemplateView extends VerticalLayout {
     private void addMaterialSection() {
         var hLayout = new HorizontalLayout();
 
-        var materialCombo = new ComboBox<Material>();
-        materialCombo.setItems(materialService.findAll());
-        materialCombo.setValue(materialService.findAll().get(0));
+        materialCombo.setItems(listOfMaterial);
+        //materialCombo.setValue(materialService.findAll().get(0));
+        sizeOfPrintLeafCombo.setItems(listSizeOfPrintLeaf);
 
-        hLayout.add(materialCombo);
+        hLayout.add(materialCombo, sizeOfPrintLeafCombo);
         this.add(hLayout);
     }
 
@@ -130,7 +131,10 @@ public class TemplateView extends VerticalLayout {
         if (!listPrintMachine.isEmpty()) {
             printerCombo.setItems(listPrintMachine);
             printerCombo.setValue(listPrintMachine.get(0));
+            updateMaterialCombo(printerCombo.getValue().getMaterials());
         }
+
+        printerCombo.addValueChangeListener(e -> updateMaterialCombo(e.getValue().getMaterials()));
 
         var quantityOfColor = new ComboBox<QuantityColors>();
         quantityOfColor.setItems(quantityColorsService.findAll());
@@ -138,6 +142,16 @@ public class TemplateView extends VerticalLayout {
 
         hLayout.add(printerCombo, quantityOfColor);
         this.add(hLayout);
+    }
+
+    private void updateMaterialCombo(Set<Material> materials) {
+        listOfMaterial.clear();
+        listOfMaterial.addAll(materials);
+        if (!listOfMaterial.isEmpty()) {
+            materialCombo.setItems(listOfMaterial);
+            materialCombo.getDataProvider().refreshAll();
+            materialCombo.setValue(listOfMaterial.get(0));
+        }
     }
 
 }
