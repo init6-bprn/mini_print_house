@@ -28,27 +28,23 @@ import java.util.Set;
 @AnonymousAllowed
 public class TemplateView extends VerticalLayout {
 
-   @Autowired
-   private PrintMashineService printerService;
 
-   @Autowired
-   private MaterialService materialService;
-
-   @Autowired
-   private StandartSizeService standartSizeService;
-
+   final private PrintMashineService printerService;
+   final private MaterialService materialService;
+   final private StandartSizeService standartSizeService;
    private final QuantityColorsService quantityColorsService;
-   private final ComboBox<StandartSize> standartSizeCombo = new ComboBox<StandartSize>();
+   private final ComboBox<StandartSize> sizeOfPaperCombo = new ComboBox<>();
    private final ComboBox<Material> materialCombo = new ComboBox<>();
    private final ComboBox<SizeOfPrintLeaf> sizeOfPrintLeafCombo = new ComboBox<>();
 
    private SizeDialog dialog;
    private NumberField length;
    private NumberField width;
-   private List<StandartSize> itemsForCombo = new ArrayList<>();
-   private List<Material> listOfMaterial = new ArrayList<>();
-   private List<SizeOfPrintLeaf> listSizeOfPrintLeaf = new ArrayList<>();
+   final private List<StandartSize> itemsForCombo = new ArrayList<>();
+   final private List<Material> listOfMaterial = new ArrayList<>();
+   final private List<SizeOfPrintLeaf> listSizeOfPrintLeaf = new ArrayList<>();
 
+    @Autowired
     public TemplateView(PrintMashineService printerService, MaterialService materialService, StandartSizeService standartSizeService, QuantityColorsService quantityColorsService){
         super();
         this.printerService = printerService;
@@ -62,10 +58,18 @@ public class TemplateView extends VerticalLayout {
 
     private void addMaterialSection() {
         var hLayout = new HorizontalLayout();
+        materialCombo.setLabel("Материал для печати:");
+        materialCombo.setItems(materialService.findAll());
+        materialCombo.setAllowCustomValue(false);
 
-        materialCombo.setItems(listOfMaterial);
+        materialCombo.addValueChangeListener(e->{
+            sizeOfPrintLeafCombo.setItems(e.getValue().getSizeOfPrintLeaf());
+        });
         //materialCombo.setValue(materialService.findAll().get(0));
         sizeOfPrintLeafCombo.setItems(listSizeOfPrintLeaf);
+        sizeOfPrintLeafCombo.setAllowCustomValue(false);
+        sizeOfPrintLeafCombo.setLabel("Размер печатного листа:");
+
 
         hLayout.add(materialCombo, sizeOfPrintLeafCombo);
         this.add(hLayout);
@@ -89,13 +93,14 @@ public class TemplateView extends VerticalLayout {
 
         itemsForCombo.addAll(standartSizeService.findAll());
 
-        standartSizeCombo.setItems(itemsForCombo);
-        standartSizeCombo.setLabel("Размер изделия");
-        standartSizeCombo.addValueChangeListener(e -> {
-            length.setValue((double) e.getValue().getLength());
-            width.setValue((double) e.getValue().getWidth());
+        sizeOfPaperCombo.setItems(standartSizeService.findAll());
+        sizeOfPaperCombo.setLabel("Размер изделия");
+        sizeOfPaperCombo.setAllowCustomValue(false);
+        sizeOfPaperCombo.addValueChangeListener(e -> {
+            length.setValue(e.getValue().getLength());
+            width.setValue(e.getValue().getWidth());
         }) ;
-        standartSizeCombo.setValue(standartSizeService.findAll().get(0));
+        //sizeOfPaperCombo.setValue(standartSizeService.findAll().get(0));
 
         dialog = new SizeDialog(standartSizeService);
 
@@ -104,8 +109,8 @@ public class TemplateView extends VerticalLayout {
                if (dialog.getStandartSize()!= null) {
                    itemsForCombo.clear();
                    itemsForCombo.addAll(standartSizeService.findAll());
-                   standartSizeCombo.getDataProvider().refreshAll();
-                   standartSizeCombo.setValue(dialog.getStandartSize());
+                   sizeOfPaperCombo.getDataProvider().refreshAll();
+                   sizeOfPaperCombo.setValue(dialog.getStandartSize());
 
                }
            }
@@ -119,7 +124,7 @@ public class TemplateView extends VerticalLayout {
             dialog.open();
         });
 
-        hLayout.add(quantityField, standartSizeCombo, length, width, addSizeButton, dialog);
+        hLayout.add(quantityField, sizeOfPaperCombo, length, width, addSizeButton, dialog);
         this.add(hLayout);
     }
 
@@ -127,16 +132,19 @@ public class TemplateView extends VerticalLayout {
         var hLayout = new HorizontalLayout();
 
         var printerCombo = new ComboBox<PrintMashine>();
+        printerCombo.setLabel("Принтер:");
+        printerCombo.setAllowCustomValue(false);
         List<PrintMashine> listPrintMachine = printerService.findAll();
         if (!listPrintMachine.isEmpty()) {
             printerCombo.setItems(listPrintMachine);
             printerCombo.setValue(listPrintMachine.get(0));
-            updateMaterialCombo(printerCombo.getValue().getMaterials());
+            updateMaterialCombo(listPrintMachine.get(0).getMaterials());
         }
 
         printerCombo.addValueChangeListener(e -> updateMaterialCombo(e.getValue().getMaterials()));
 
         var quantityOfColor = new ComboBox<QuantityColors>();
+        quantityOfColor.setLabel("Цветность");
         quantityOfColor.setItems(quantityColorsService.findAll());
 
 
