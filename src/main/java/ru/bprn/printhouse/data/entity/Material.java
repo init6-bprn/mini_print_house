@@ -23,6 +23,8 @@ public class Material {
     @EqualsAndHashCode.Include
     private Long id;
 
+    private String article = "";
+
     @NotNull
     @NotEmpty
     private String name = "Paper";
@@ -46,7 +48,11 @@ public class Material {
             inverseJoinColumns = @JoinColumn(name = "material_id", referencedColumnName = "id"))
     private Set<PrintMashine> printers = new HashSet<>();
 
-    private Float priceOfLeaf = 0f;
+    private String measureString = "";
 
-    public String toString(){return this.name;}
+    private Double priceOfLeaf = 0d;
+
+    private int quantity = 0;
+
+    public String toString(){return this.thickness+" "+this.sizeOfPrintLeaf.toString()+" "+this.name;}
 }

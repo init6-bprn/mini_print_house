@@ -46,7 +46,7 @@ public class TemplateView extends VerticalLayout {
 
     @Autowired
     public TemplateView(PrintMashineService printerService, MaterialService materialService, StandartSizeService standartSizeService, QuantityColorsService quantityColorsService){
-        super();
+        //super();
         this.printerService = printerService;
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
@@ -60,10 +60,14 @@ public class TemplateView extends VerticalLayout {
         var hLayout = new HorizontalLayout();
         materialCombo.setLabel("Материал для печати:");
         materialCombo.setItems(materialService.findAll());
+        materialCombo.scrollIntoView();
         materialCombo.setAllowCustomValue(false);
 
         materialCombo.addValueChangeListener(e->{
-            sizeOfPrintLeafCombo.setItems(e.getValue().getSizeOfPrintLeaf());
+            if ( e.getValue()!= null) {
+                sizeOfPrintLeafCombo.setItems(e.getValue().getSizeOfPrintLeaf());
+                //sizeOfPrintLeafCombo.setValue(e.getValue().getSizeOfPrintLeaf());
+            } else sizeOfPrintLeafCombo.setItems();
         });
         //materialCombo.setValue(materialService.findAll().get(0));
         sizeOfPrintLeafCombo.setItems(listSizeOfPrintLeaf);
@@ -131,6 +135,7 @@ public class TemplateView extends VerticalLayout {
     private void addPrinterSection() {
         var hLayout = new HorizontalLayout();
 
+        // Принтеры
         var printerCombo = new ComboBox<PrintMashine>();
         printerCombo.setLabel("Принтер:");
         printerCombo.setAllowCustomValue(false);
@@ -143,12 +148,18 @@ public class TemplateView extends VerticalLayout {
 
         printerCombo.addValueChangeListener(e -> updateMaterialCombo(e.getValue().getMaterials()));
 
-        var quantityOfColor = new ComboBox<QuantityColors>();
-        quantityOfColor.setLabel("Цветность");
-        quantityOfColor.setItems(quantityColorsService.findAll());
+        // Цветность лица
+        var coverQuantityOfColor = new ComboBox<QuantityColors>();
+        coverQuantityOfColor.setLabel("Лицо");
+        coverQuantityOfColor.setItems(quantityColorsService.findAll());
+
+        // Цветность оборота
+        var backQuantityOfColor = new ComboBox<QuantityColors>();
+        backQuantityOfColor.setLabel("Оборот");
+        backQuantityOfColor.setItems(quantityColorsService.findAll());
 
 
-        hLayout.add(printerCombo, quantityOfColor);
+        hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
         this.add(hLayout);
     }
 

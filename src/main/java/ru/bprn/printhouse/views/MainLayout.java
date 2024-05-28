@@ -107,6 +107,9 @@ public class MainLayout extends AppLayout {
         dick = new SideNavItem("Материалы");
         if (accessChecker.hasAccess(MaterialView.class))
             dick.addItem(new SideNavItem("Бумага для цифры", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+
+        if (accessChecker.hasAccess(MaterialView.class))
+            dick.addItem(new SideNavItem("Стоимость отпечатка", CostOfPrintSizeLeafAndColorDictionary.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
         dick = new SideNavItem("Шаблоны");

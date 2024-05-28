@@ -26,12 +26,13 @@ public class MaterialView extends VerticalLayout {
 
         GridCrud<Material> crud = new GridCrud<>(Material.class);
 
-        crud.getGrid().setColumns("typeOfMaterial", "name", "sizeOfPrintLeaf", "thickness");
+        crud.getGrid().setColumns("typeOfMaterial", "name", "sizeOfPrintLeaf", "thickness", "article", "measureString", "priceOfLeaf", "quantity");
         crud.getGrid().setColumnReorderingAllowed(true);
         crud.getGrid().setSortableColumns("name");
 
         crud.getCrudFormFactory().setUseBeanValidation(true);
-        crud.getCrudFormFactory().setVisibleProperties("typeOfMaterial", "name", "sizeOfPrintLeaf", "printers", "thickness", "priceOfLeaf");
+        crud.getCrudFormFactory().setVisibleProperties("typeOfMaterial", "name", "article", "sizeOfPrintLeaf", "thickness", "printers",
+                 "measureString", "priceOfLeaf", "quantity");
 
         crud.getCrudFormFactory().setFieldProvider("typeOfMaterial",
                 new ComboBoxProvider<>(tomService.findAll()));
