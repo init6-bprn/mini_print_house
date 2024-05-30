@@ -79,11 +79,11 @@ public class TemplateView extends VerticalLayout {
         typeOfMaterialCombo.addValueChangeListener(e->{
             if (e.getValue()!=null) {
                 thicknessCombo.setItems(materialService.findAllThicknessByTypeOfMaterial(e.getValue()));
-                if (thicknessCombo.getListDataView().getItemCount()>0) thicknessCombo.setValue(thicknessCombo.getListDataView().getItem(0));
+                comboBoxViewFirstElement(thicknessCombo);
                 sizeOfPrintLeafCombo.setItems(materialService.findAllSizeOfPrintLeafByTypeOfMaterial(e.getValue()));
-                if (sizeOfPrintLeafCombo.getListDataView().getItemCount()>0) sizeOfPrintLeafCombo.setValue(sizeOfPrintLeafCombo.getListDataView().getItem(0));
+                comboBoxViewFirstElement(sizeOfPrintLeafCombo);
                 materialCombo.setItems(materialService.findByFilters(e.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
-                if (materialCombo.getListDataView().getItemCount()>0) materialCombo.setValue(materialCombo.getListDataView().getItem(0));
+                comboBoxViewFirstElement(materialCombo);
             }
         });
 
@@ -94,7 +94,7 @@ public class TemplateView extends VerticalLayout {
         thicknessCombo.addValueChangeListener(e->{
             if (e.getValue()!=null) {
                 materialCombo.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), e.getValue()));
-                if (materialCombo.getListDataView().getItemCount()>0) materialCombo.setValue(materialCombo.getListDataView().getItem(0));
+                comboBoxViewFirstElement(materialCombo);
             }
         });
 
@@ -105,7 +105,7 @@ public class TemplateView extends VerticalLayout {
         sizeOfPrintLeafCombo.addValueChangeListener(e->{
             if (e.getValue()!=null) {
                 materialCombo.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), e.getValue(), thicknessCombo.getValue()));
-                if (materialCombo.getListDataView().getItemCount()>0) materialCombo.setValue(materialCombo.getListDataView().getItem(0));
+                comboBoxViewFirstElement(materialCombo);
             }
         });
 
@@ -149,7 +149,6 @@ public class TemplateView extends VerticalLayout {
             length.setValue(e.getValue().getLength());
             width.setValue(e.getValue().getWidth());
         }) ;
-        //sizeOfPaperCombo.setValue(standartSizeService.findAll().get(0));
 
         dialog = new SizeDialog(standartSizeService);
 
@@ -192,9 +191,9 @@ public class TemplateView extends VerticalLayout {
 
         printerCombo.addValueChangeListener(e -> {
             coverQuantityOfColor.setItems(e.getValue().getQuantityColors());
-            if (coverQuantityOfColor.getListDataView().getItemCount()>0) coverQuantityOfColor.setValue(coverQuantityOfColor.getListDataView().getItem(0));
+            comboBoxViewFirstElement(coverQuantityOfColor);
             backQuantityOfColor.setItems(e.getValue().getQuantityColors());
-            if (backQuantityOfColor.getListDataView().getItemCount()>0) backQuantityOfColor.setValue(backQuantityOfColor.getListDataView().getItem(0));
+            comboBoxViewFirstElement(backQuantityOfColor);
         });
 
         // Цветность лица
@@ -208,6 +207,10 @@ public class TemplateView extends VerticalLayout {
 
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
         this.add(hLayout);
+    }
+
+    private void comboBoxViewFirstElement (ComboBox combo) {
+        if (combo.getListDataView().getItemCount()>0) combo.setValue(combo.getListDataView().getItem(0));
     }
 
 }
