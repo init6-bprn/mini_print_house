@@ -10,6 +10,7 @@ import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 import ru.bprn.printhouse.data.entity.Material;
 import ru.bprn.printhouse.data.entity.PrintMashine;
+import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
@@ -35,8 +36,14 @@ public class PrintersView extends VerticalLayout {
         crud.getCrudFormFactory().setVisibleProperties("name", "cost", "clicks", "madeOfClicks", "maxPrintAreaX",
                 "maxPrintAreaY", "priceOfCmykClick", "priceOfBlackClick", "priceOfSpotClick",
                 "quantityColors", "typeOfPrinter", "sizeOfPrintLeaves", "materials", "hasDuplex");
-        crud.getCrudFormFactory().setFieldProvider("quantityColors",
-                new ComboBoxProvider<>(qcService.findAll()));
+
+        crud.getCrudFormFactory().setFieldProvider("quantityColors",q -> {
+            MultiSelectComboBox<QuantityColors> mCombo = new MultiSelectComboBox<>();
+            mCombo.setItems(qcService.findAll());
+            mCombo.setItemLabelGenerator(QuantityColors::getName);
+            return mCombo;
+        });
+
         crud.getCrudFormFactory().setFieldProvider("typeOfPrinter",
                 new ComboBoxProvider<>(topService.findAll()));
 

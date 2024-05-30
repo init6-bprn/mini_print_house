@@ -68,9 +68,12 @@ public class PrintMashine {
     @JoinColumn(name = "type_of_printer", nullable = false )
     private TypeOfPrinter typeOfPrinter;
 
-    @ManyToOne (fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
-    @JoinColumn(name = "quantity_colors_id", nullable = false)
-    private QuantityColors quantityColors;
+    @ManyToMany (fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "mashines_colors",
+            joinColumns = @JoinColumn(name = "print_mashine_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "quantity_colors_id", referencedColumnName = "id"))
+    private Set<QuantityColors> quantityColors = new HashSet<>();
 
     @NotNull
     @PositiveOrZero
@@ -90,17 +93,7 @@ public class PrintMashine {
             joinColumns = @JoinColumn(name = "print_mashine_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "size_of_print_leaf_id", referencedColumnName = "id"))
     private Set<SizeOfPrintLeaf> sizeOfPrintLeaves = new HashSet<>();
-/*
-    private void addSizeOfPrintLeaf(SizeOfPrintLeaf prnLeaf){
-        this.sizeOfPrintLeaves.add(prnLeaf);
-        prnLeaf.getPrintMashineSet().add(this);
-    }
 
-    private void removeSizeOfPrintLeaf(SizeOfPrintLeaf prnLeaf){
-        this.sizeOfPrintLeaves.remove(prnLeaf);
-        prnLeaf.getPrintMashineSet().remove(this);
-    }
-*/
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "printers", targetEntity = Material.class)
     private Set<Material> materials = new HashSet<>();
 
