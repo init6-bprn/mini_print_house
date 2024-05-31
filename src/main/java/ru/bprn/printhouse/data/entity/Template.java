@@ -56,7 +56,8 @@ public class Template{
     @OneToMany
     private List<AbstractWork> abstractWorkList = new LinkedList<>();
 
-    @Embedded
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "gap", nullable = false )
     private Gap gap;
 
     public Integer calculateTime() {

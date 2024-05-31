@@ -1,20 +1,29 @@
 package ru.bprn.printhouse.data.entity;
 
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Embeddable
+@Entity
+@Table(name = "gap")
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
 @Setter
+@ToString
 
 public class Gap {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    @EqualsAndHashCode.Include
+    private Long id;
+
+    @NotNull
+    private String name = "";
+
     @NotNull
     @PositiveOrZero
     private Integer gapTop = 0;

@@ -91,6 +91,9 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(StandartSizeDictionary.class))
             dick.addItem(new SideNavItem("Размер изделия", StandartSizeDictionary.class, VaadinIcon.RECORDS.create()));
 
+        if (accessChecker.hasAccess(GapDictionary.class))
+            dick.addItem(new SideNavItem("Отступы", GapDictionary.class, VaadinIcon.RECORDS.create()));
+
         nav.addItem(dick);
 
         dick = new SideNavItem("Оборудование");

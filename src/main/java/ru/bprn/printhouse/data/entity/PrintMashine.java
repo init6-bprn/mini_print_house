@@ -37,7 +37,8 @@ public class PrintMashine {
     @PositiveOrZero
     private Integer maxPrintAreaY;
 
-    @Embedded
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "gap", nullable = false )
     private Gap gap;
 
     @NotNull
