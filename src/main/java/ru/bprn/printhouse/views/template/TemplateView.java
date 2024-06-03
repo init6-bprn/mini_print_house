@@ -10,17 +10,21 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Component
 @PageTitle("Шаблоны работ")
 @Route(value = "templates", layout = MainLayout.class)
+@RouteAlias(value = "", layout = MainLayout.class)
+
 @AnonymousAllowed
 public class TemplateView extends VerticalLayout {
 
@@ -30,6 +34,7 @@ public class TemplateView extends VerticalLayout {
    final private StandartSizeService standartSizeService;
    private final QuantityColorsService quantityColorsService;
    private final TypeOfMaterialService typeOfMaterialService;
+   private final GapService gapService;
    private final ThicknessService thicknessService;
    private final SizeOfPrintLeafService sizeOfPrintLeafService;
    private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
@@ -56,7 +61,7 @@ public class TemplateView extends VerticalLayout {
                         StandartSizeService standartSizeService, QuantityColorsService quantityColorsService,
                         CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
                         TypeOfMaterialService typeOfMaterialService, ThicknessService thicknessService,
-                        SizeOfPrintLeafService sizeOfPrintLeafService){
+                        SizeOfPrintLeafService sizeOfPrintLeafService, GapService gapService){
         //super();
         this.printerService = printerService;
         this.materialService = materialService;
@@ -66,9 +71,11 @@ public class TemplateView extends VerticalLayout {
         this.typeOfMaterialService = typeOfMaterialService;
         this.thicknessService = thicknessService;
         this.sizeOfPrintLeafService = sizeOfPrintLeafService;
+        this.gapService = gapService;
         addPrinterSection();
         addMaterialSection();
-        addUserEntering();
+        addSizeOfProduct();
+        addQuantityAndOrientation();
     }
 
     private void addMaterialSection() {
@@ -124,15 +131,8 @@ public class TemplateView extends VerticalLayout {
         this.add(hLayout);
     }
 
-    private void addUserEntering() {
+    private void addSizeOfProduct() {
         var hLayout = new HorizontalLayout();
-        var quantityField = new IntegerField();
-        quantityField.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
-        quantityField.setLabel("Количество:");
-        quantityField.setValue(1);
-        Div quantityPrefix = new Div();
-        quantityPrefix.setText("шт");
-        quantityField.setPrefixComponent(quantityPrefix);
 
         length = new NumberField();
         length.setLabel("Длина");
@@ -165,6 +165,7 @@ public class TemplateView extends VerticalLayout {
         });
 
         var addSizeButton = new Button("Add");
+        //addSizeButton.set("Добавить");
         addSizeButton.addClickListener(e-> {
             dialog.setX(length.getValue());
             dialog.setY(width.getValue());
@@ -172,15 +173,16 @@ public class TemplateView extends VerticalLayout {
             dialog.open();
         });
 
-        hLayout.add(quantityField, sizeOfPaperCombo, length, width, addSizeButton, dialog);
+        var bleedCombo = new ComboBox<Gap>("Припуск");
+        bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
+
+        hLayout.add(sizeOfPaperCombo, length, width, bleedCombo, addSizeButton, dialog);
         this.add(hLayout);
     }
 
     private void addPrinterSection() {
         var hLayout = new HorizontalLayout();
-
         // Принтеры
-
         printerCombo.setLabel("Принтер:");
         printerCombo.setAllowCustomValue(false);
         List<PrintMashine> listPrintMachine = printerService.findAll();
@@ -207,6 +209,22 @@ public class TemplateView extends VerticalLayout {
 
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
         this.add(hLayout);
+    }
+
+    private void addQuantityAndOrientation() {
+        var hLayout = new HorizontalLayout();
+
+        var quantityField = new IntegerField();
+        quantityField.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
+        quantityField.setLabel("Количество:");
+        quantityField.setValue(1);
+        Div quantityPrefix = new Div();
+        quantityPrefix.setText("шт");
+        quantityField.setPrefixComponent(quantityPrefix);
+
+        hLayout.add(quantityField);
+        this.add(hLayout);
+
     }
 
     private void comboBoxViewFirstElement (ComboBox combo) {

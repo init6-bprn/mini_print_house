@@ -14,6 +14,10 @@ public class GapService {
         this.gapRepository = gapRepository;
     }
 
+    public List<Gap> findAllBleeds (String str) {
+        return gapRepository.findAllByNameContainingIgnoreCase(str);
+    }
+
     public List<Gap> findAll(){
         return gapRepository.findAll();
     }

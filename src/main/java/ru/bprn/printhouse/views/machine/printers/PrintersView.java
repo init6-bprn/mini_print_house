@@ -22,9 +22,8 @@ import ru.bprn.printhouse.views.MainLayout;
 public class PrintersView extends VerticalLayout {
 
     @Autowired
-    private MaterialService maService;
-
-    public PrintersView(PrintMashineService pmService, TypeOfPrinterService topService, QuantityColorsService qcService, SizeOfPrintLeafService soplService) {
+    public PrintersView(MaterialService maService, PrintMashineService pmService,TypeOfPrinterService topService,
+                        QuantityColorsService qcService, SizeOfPrintLeafService soplService, GapService gapService) {
         GridCrud<PrintMashine> crud = new GridCrud<>(PrintMashine.class);
 
         crud.getGrid().setColumns("name", "typeOfPrinter", "quantityColors", "madeOfClicks", "maxPrintAreaX",
@@ -35,7 +34,7 @@ public class PrintersView extends VerticalLayout {
         crud.getCrudFormFactory().setUseBeanValidation(true);
         crud.getCrudFormFactory().setVisibleProperties("name", "cost", "clicks", "madeOfClicks", "maxPrintAreaX",
                 "maxPrintAreaY", "priceOfCmykClick", "priceOfBlackClick", "priceOfSpotClick",
-                "quantityColors", "typeOfPrinter", "sizeOfPrintLeaves", "materials", "hasDuplex");
+                "quantityColors", "typeOfPrinter", "sizeOfPrintLeaves", "materials", "gap", "hasDuplex");
 
         crud.getCrudFormFactory().setFieldProvider("quantityColors",q -> {
             MultiSelectComboBox<QuantityColors> mCombo = new MultiSelectComboBox<>();
@@ -62,6 +61,8 @@ public class PrintersView extends VerticalLayout {
             return mCombo;
         });
 
+        crud.getCrudFormFactory().setFieldProvider("gap",
+                new ComboBoxProvider<>(gapService.findAll()));
 
         this.add(crud);
         crud.setOperations(

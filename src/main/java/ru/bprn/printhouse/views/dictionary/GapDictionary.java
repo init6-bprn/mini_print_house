@@ -31,12 +31,12 @@ public class GapDictionary extends VerticalLayout {
             }
         };
         formFactory.setUseBeanValidation(true);
-        formFactory.setVisibleProperties("name", "gapTop", "gapBottom", "gapLeft", "GapRight");
+        formFactory.setVisibleProperties("name", "gapTop", "gapBottom", "gapLeft", "gapRight");
 
         GridCrud<Gap> crud = new GridCrud<>(Gap.class, new HorizontalSplitCrudLayout(), formFactory);
         crud.setClickRowToUpdate(true);
         crud.setUpdateOperationVisible(false);
-        crud.getGrid().setColumns("name", "gapTop", "gapBottom", "gapLeft", "GapRight");
+        crud.getGrid().setColumns("name", "gapTop", "gapBottom", "gapLeft", "gapRight");
 
         setSizeFull();
         this.add(crud);

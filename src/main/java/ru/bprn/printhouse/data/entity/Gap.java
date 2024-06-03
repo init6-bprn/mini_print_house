@@ -12,7 +12,6 @@ import lombok.*;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
 @Setter
-@ToString
 
 public class Gap {
     @Id
@@ -38,5 +37,10 @@ public class Gap {
 
     @NotNull
     @PositiveOrZero
-    private Integer GapRight = 0;
+    private Integer gapRight = 0;
+
+    @Override
+    public String toString(){
+        return name;
+    }
 }

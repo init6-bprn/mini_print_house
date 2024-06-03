@@ -22,9 +22,9 @@ public class CalcView extends VerticalLayout {
         this.printMashineService = printMashineService;
 
         // Создание компонентов интерфейса
-        ComboBox<PrintMashine> equipment = new ComboBox<>("Оборудование");
+        //ComboBox<PrintMashine> equipment = new ComboBox<>("Оборудование");
         // Привязка данных к ComboBox
-        equipment.setItems(this.printMashineService.findAll());
+        //equipment.setItems(this.printMashineService.findAll());
 
         ComboBox<String> printFormat = new ComboBox<>("Формат печати");
         printFormat.setItems("SRA3");
@@ -69,7 +69,7 @@ public class CalcView extends VerticalLayout {
         overage.setValue(0.0);
 
         // Организация компонентов в макете
-        HorizontalLayout topRow = new HorizontalLayout(equipment, printFormat, colorMode);
+        HorizontalLayout topRow = new HorizontalLayout(/*equipment,*/ printFormat, colorMode);
         HorizontalLayout secondRow = new HorizontalLayout(material, grammage);
         HorizontalLayout thirdRow = new HorizontalLayout(layoutComponent, width, height, bleed);
         HorizontalLayout fourthRow = new HorizontalLayout(sheetCount, totalCount, calculationTime);
