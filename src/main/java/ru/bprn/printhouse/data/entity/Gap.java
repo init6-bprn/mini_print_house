@@ -2,7 +2,6 @@ package ru.bprn.printhouse.data.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
 @Entity
@@ -24,19 +23,15 @@ public class Gap {
     private String name = "";
 
     @NotNull
-    @PositiveOrZero
     private Integer gapTop = 0;
 
     @NotNull
-    @PositiveOrZero
     private Integer gapBottom = 0;
 
     @NotNull
-    @PositiveOrZero
     private Integer gapLeft = 0;
 
     @NotNull
-    @PositiveOrZero
     private Integer gapRight = 0;
 
     @Override

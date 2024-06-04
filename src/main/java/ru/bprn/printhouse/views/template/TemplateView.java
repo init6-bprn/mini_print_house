@@ -2,9 +2,12 @@ package ru.bprn.printhouse.views.template;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
@@ -119,6 +122,7 @@ public class TemplateView extends VerticalLayout {
 
         materialCombo.setLabel("Материал для печати:");
         materialCombo.setAllowCustomValue(false);
+        materialCombo.setItems(materialService.findAll());
         materialCombo.addValueChangeListener(e->{
             /*if ( e.getValue()!= null) {
                 sizeOfPrintLeafCombo.setItems(e.getValue().getSizeOfPrintLeaf());
@@ -126,9 +130,30 @@ public class TemplateView extends VerticalLayout {
             } else sizeOfPrintLeafCombo.setItems();*/
         });
 
+        var hLaout2 = new HorizontalLayout();
+
+        Grid<Material> grid = new Grid<>(Material.class, false);
+
+        Grid.Column<Material> typeColumn =
+                grid.addColumn(Material::getTypeOfMaterial).setHeader("KJHKJHKJ");
+        Grid.Column<Material> sizeColumn =
+                grid.addColumn(Material::getSizeOfPrintLeaf).setHeader("KJHKJHKJ");
+        Grid.Column<Material> thicknessColumn =
+                grid.addColumn(Material::getThickness).setHeader("KJHKJHKJ");
+        grid.setSelectionMode(Grid.SelectionMode.MULTI);
+
+        //grid.setItems(materialService.findAll());
+        List<Material> material = materialService.findAll();
+        grid.setItems(material);
+
+        hLaout2.add(grid);
+
+
+
 
         hLayout.add(typeOfMaterialCombo, thicknessCombo, sizeOfPrintLeafCombo, materialCombo);
         this.add(hLayout);
+        this.add(hLaout2);
     }
 
     private void addSizeOfProduct() {
@@ -139,8 +164,6 @@ public class TemplateView extends VerticalLayout {
 
         width = new NumberField();
         width.setLabel("Ширина");
-
-        itemsForCombo.addAll(standartSizeService.findAll());
 
         sizeOfPaperCombo.setItems(standartSizeService.findAll());
         sizeOfPaperCombo.setLabel("Размер изделия");
@@ -155,8 +178,6 @@ public class TemplateView extends VerticalLayout {
         dialog.addOpenedChangeListener(openedChangeEvent -> {
            if (!openedChangeEvent.isOpened()) {
                if (dialog.getStandartSize()!= null) {
-                   itemsForCombo.clear();
-                   itemsForCombo.addAll(standartSizeService.findAll());
                    sizeOfPaperCombo.getDataProvider().refreshAll();
                    sizeOfPaperCombo.setValue(dialog.getStandartSize());
 
@@ -164,8 +185,14 @@ public class TemplateView extends VerticalLayout {
            }
         });
 
+        var label = new NativeLabel("Добавить");
+        label.getStyle().set("padding-top", "var(--lumo-space-s)")
+                .set("font-size", "var(--lumo-font-size-xs)");
         var addSizeButton = new Button("Add");
-        //addSizeButton.set("Добавить");
+        addSizeButton.setAriaLabel("Add");
+        var layout = new VerticalLayout(label, addSizeButton);
+        layout.getThemeList().clear();
+        layout.getThemeList().add("spacing-xs");
         addSizeButton.addClickListener(e-> {
             dialog.setX(length.getValue());
             dialog.setY(width.getValue());
@@ -176,7 +203,7 @@ public class TemplateView extends VerticalLayout {
         var bleedCombo = new ComboBox<Gap>("Припуск");
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
 
-        hLayout.add(sizeOfPaperCombo, length, width, bleedCombo, addSizeButton, dialog);
+        hLayout.add(sizeOfPaperCombo, length, width, bleedCombo, layout, dialog);
         this.add(hLayout);
     }
 
@@ -222,7 +249,13 @@ public class TemplateView extends VerticalLayout {
         quantityPrefix.setText("шт");
         quantityField.setPrefixComponent(quantityPrefix);
 
-        hLayout.add(quantityField);
+        var radioGroup = new RadioButtonGroup<String>();
+        radioGroup.setLabel("Ориентация");
+        radioGroup.setItems("Автоматически", "Вертикальная", "Горизонтальная");
+        radioGroup.setValue("Автоматически");
+        add(radioGroup);
+
+        hLayout.add(radioGroup, quantityField);
         this.add(hLayout);
 
     }
