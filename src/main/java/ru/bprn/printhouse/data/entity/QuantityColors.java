@@ -25,8 +25,9 @@ public class QuantityColors{
     @NotEmpty
     private String name = "";
 
-    // @OneToMany (fetch = FetchType.EAGER, mappedBy = "quantityColors")
+    //@OneToMany (fetch = FetchType.EAGER, mappedBy = "quantityColors")
     //private List<PrintMashine> printMashine;
+
     @Override
     public String toString(){
         return getName();

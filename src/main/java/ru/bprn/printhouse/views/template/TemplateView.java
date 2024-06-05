@@ -44,12 +44,12 @@ public class TemplateView extends VerticalLayout {
    private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
    private final ComboBox<PrintMashine> printerCombo = new ComboBox<>();
    private final ComboBox<StandartSize> sizeOfPaperCombo = new ComboBox<>();
-   private final ComboBox<Material> materialCombo = new ComboBox<>();
    private final ComboBox<SizeOfPrintLeaf> sizeOfPrintLeafCombo = new ComboBox<>();
    private final ComboBox<QuantityColors> coverQuantityOfColor = new ComboBox<>();
    private final ComboBox<QuantityColors> backQuantityOfColor = new ComboBox<>();
    private final ComboBox<TypeOfMaterial> typeOfMaterialCombo = new ComboBox<>();
    private final ComboBox<Thickness> thicknessCombo = new ComboBox<>();
+   private final Grid<Material> grid = new Grid<>(Material.class, false);
    private SizeDialog dialog;
    private NumberField length;
    private NumberField width;
@@ -66,7 +66,6 @@ public class TemplateView extends VerticalLayout {
                         CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
                         TypeOfMaterialService typeOfMaterialService, ThicknessService thicknessService,
                         SizeOfPrintLeafService sizeOfPrintLeafService, GapService gapService){
-        //super();
         this.printerService = printerService;
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
@@ -84,7 +83,6 @@ public class TemplateView extends VerticalLayout {
 
     private void addMaterialSection() {
 
-        typeOfMaterialCombo.setLabel("Тип материала");
         typeOfMaterialCombo.setItems(typeOfMaterialService.findAll());
         typeOfMaterialCombo.setAllowCustomValue(false);
         typeOfMaterialCombo.addValueChangeListener(e->{
@@ -93,51 +91,32 @@ public class TemplateView extends VerticalLayout {
                 comboBoxViewFirstElement(thicknessCombo);
                 sizeOfPrintLeafCombo.setItems(materialService.findAllSizeOfPrintLeafByTypeOfMaterial(e.getValue()));
                 comboBoxViewFirstElement(sizeOfPrintLeafCombo);
-                materialCombo.setItems(materialService.findByFilters(e.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
-                comboBoxViewFirstElement(materialCombo);
             }
+            grid.setItems(materialService.findByFilters(e.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
         });
 
         listThickness = materialService.findAllThicknessByTypeOfMaterial(typeOfMaterialCombo.getValue());
-        thicknessCombo.setLabel("Плотность");
         if (listThickness!=null) thicknessCombo.setItems(listThickness);
         thicknessCombo.setAllowCustomValue(false);
         thicknessCombo.addValueChangeListener(e->{
-            if (e.getValue()!=null) {
-                materialCombo.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), e.getValue()));
-                comboBoxViewFirstElement(materialCombo);
-            }
+            grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), e.getValue()));
         });
 
         listSizeOfPrintLeaf = materialService.findAllSizeOfPrintLeafByTypeOfMaterial(typeOfMaterialCombo.getValue());
         if (listSizeOfPrintLeaf!=null) sizeOfPrintLeafCombo.setItems(listSizeOfPrintLeaf);
         sizeOfPrintLeafCombo.setAllowCustomValue(false);
-        sizeOfPrintLeafCombo.setLabel("Размер печатного листа:");
         sizeOfPrintLeafCombo.addValueChangeListener(e->{
-            if (e.getValue()!=null) {
-                materialCombo.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), e.getValue(), thicknessCombo.getValue()));
-                comboBoxViewFirstElement(materialCombo);
-            }
+            grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), e.getValue(), thicknessCombo.getValue()));
         });
 
-
-        materialCombo.setLabel("Материал для печати:");
-        materialCombo.setAllowCustomValue(false);
-        materialCombo.setItems(materialService.findAll());
-        materialCombo.addValueChangeListener(e->{
-            /*if ( e.getValue()!= null) {
-                sizeOfPrintLeafCombo.setItems(e.getValue().getSizeOfPrintLeaf());
-                //sizeOfPrintLeafCombo.setValue(e.getValue().getSizeOfPrintLeaf());
-            } else sizeOfPrintLeafCombo.setItems();*/
-        });
-
-        Grid<Material> grid = new Grid<>(Material.class, false);
-        grid.setItems(materialService.findAll());
+        grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
         grid.addColumn(Material::getName).setHeader("Название");
         Grid.Column<Material> typeColumn = grid.addColumn(Material::getTypeOfMaterial).setHeader("Тип материала");
         Grid.Column<Material> sizeColumn = grid.addColumn(Material::getSizeOfPrintLeaf).setHeader("Размер печатного листа");
         Grid.Column<Material> thicknessColumn = grid.addColumn(Material::getThickness).setHeader("Плотность");
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
+        //grid.setHeight(400f, Unit.PIXELS);
+        grid.setHeight("270px");
 
         grid.getHeaderRows().clear();
         HeaderRow headerRow = grid.appendHeaderRow();
@@ -205,11 +184,8 @@ public class TemplateView extends VerticalLayout {
         // Принтеры
         printerCombo.setLabel("Принтер:");
         printerCombo.setAllowCustomValue(false);
-        List<PrintMashine> listPrintMachine = printerService.findAll();
-        if (!listPrintMachine.isEmpty()) {
-            printerCombo.setItems(listPrintMachine);
-            printerCombo.setValue(listPrintMachine.get(0));
-        }
+        printerCombo.setItems(printerService.findAll());
+        comboBoxViewFirstElement(printerCombo);
 
         printerCombo.addValueChangeListener(e -> {
             coverQuantityOfColor.setItems(e.getValue().getQuantityColors());
@@ -220,11 +196,17 @@ public class TemplateView extends VerticalLayout {
 
         // Цветность лица
         coverQuantityOfColor.setLabel("Лицо");
-        if (!printerCombo.isEmpty()) coverQuantityOfColor.setItems(printerCombo.getValue().getQuantityColors());
+        if (printerCombo.getValue()!=null) {
+            coverQuantityOfColor.setItems(printerCombo.getValue().getQuantityColors());
+            comboBoxViewFirstElement(coverQuantityOfColor);
+        }
 
         // Цветность оборота
         backQuantityOfColor.setLabel("Оборот");
-        if (!printerCombo.isEmpty()) backQuantityOfColor.setItems(printerCombo.getValue().getQuantityColors());
+        if (printerCombo.getValue()!=null) {
+            backQuantityOfColor.setItems(printerCombo.getValue().getQuantityColors());
+            comboBoxViewFirstElement(backQuantityOfColor);
+        }
 
 
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
@@ -248,9 +230,29 @@ public class TemplateView extends VerticalLayout {
         radioGroup.setValue("Автоматически");
         add(radioGroup);
 
+        radioGroup.addValueChangeListener(e->{
+            switch (e.getValue()) {
+                case "Автоматически": {
+                    int a = getQuantity(sizeOfPrintLeafCombo.getValue().getLength(), length.getValue().intValue())*
+                            getQuantity(sizeOfPrintLeafCombo.getValue().getWidth(), width.getValue().intValue());
+                }
+                case "Вертикальная": {
+
+                }
+                case "Горизонтальная": {
+
+                }
+            }
+
+        });
+
         hLayout.add(radioGroup, quantityField);
         this.add(hLayout);
 
+    }
+
+    private int getQuantity(int sizeLeaf, float sizeElement) {
+        return (int) (sizeLeaf/sizeElement);
     }
 
     private void comboBoxViewFirstElement (ComboBox combo) {

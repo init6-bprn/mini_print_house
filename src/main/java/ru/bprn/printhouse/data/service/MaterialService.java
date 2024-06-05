@@ -34,11 +34,22 @@ public class MaterialService {
     }
 
     public List<Material> findAllByType(TypeOfMaterial typeOfMaterial) {
-        return this.materialRepository.findAllByTypeOfMaterial(typeOfMaterial);
+        if (typeOfMaterial!=null) return this.materialRepository.findAllByTypeOfMaterial(typeOfMaterial);
+        else return this.findAll();
     }
 
+    public List<Material> findAllByTypeAndSize(TypeOfMaterial typeOfMaterial, SizeOfPrintLeaf sizeOfPrintLeaf) {
+        if (typeOfMaterial!=null)
+            if (sizeOfPrintLeaf!=null) return this.materialRepository.findAllByTypeOfMaterialAndSizeOfPrintLeaf(typeOfMaterial, sizeOfPrintLeaf);
+            else return this.materialRepository.findAllByTypeOfMaterial(typeOfMaterial);
+        else return this.findAll();
+    };
+
     public List<Material> findByFilters(TypeOfMaterial typeOfMaterial, SizeOfPrintLeaf sizeOfPrintLeaf, Thickness thickness){
-        return this.materialRepository.findAllByTypeOfMaterialAndSizeOfPrintLeafAndThickness(typeOfMaterial, sizeOfPrintLeaf, thickness);
+        if (typeOfMaterial==null) return findAll();
+        else if (sizeOfPrintLeaf==null) return findAllByType(typeOfMaterial);
+             else if (thickness==null) return  findAllByTypeAndSize(typeOfMaterial, sizeOfPrintLeaf);
+                  else return this.materialRepository.findAllByTypeOfMaterialAndSizeOfPrintLeafAndThickness(typeOfMaterial, sizeOfPrintLeaf, thickness);
     };
 
     public List<SizeOfPrintLeaf> findAllSizeOfPrintLeafByTypeOfMaterial(TypeOfMaterial typeOfMaterial) {

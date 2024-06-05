@@ -12,11 +12,10 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
 
     List<Material> findAllByTypeOfMaterial(TypeOfMaterial typeOfMaterial);
 
+    List<Material> findAllByTypeOfMaterialAndSizeOfPrintLeaf(TypeOfMaterial typeOfMaterial,
+                                                             SizeOfPrintLeaf sizeOfPrintLeaf);
+
     List<Material> findAllByTypeOfMaterialAndSizeOfPrintLeafAndThickness(TypeOfMaterial typeOfMaterial,
                                                                          SizeOfPrintLeaf sizeOfPrintLeaf, Thickness thickness);
 
-    //List<Thickness> findAllThicknessByTypeOfMaterial(TypeOfMaterial typeOfMaterial);
-
-    //@Query("SELECT e FROM User e WHERE e.name LIKE %:name%")
-    //List<SizeOfPrintLeaf> findAllSizeOfPrintLeafByTypeOfMaterial(TypeOfMaterial typeOfMaterial);
 }
