@@ -3,6 +3,7 @@ package ru.bprn.printhouse.views.template;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -82,7 +83,7 @@ public class TemplateView extends VerticalLayout {
     }
 
     private void addMaterialSection() {
-        var hLayout = new HorizontalLayout();
+
         typeOfMaterialCombo.setLabel("Тип материала");
         typeOfMaterialCombo.setItems(typeOfMaterialService.findAll());
         typeOfMaterialCombo.setAllowCustomValue(false);
@@ -130,30 +131,22 @@ public class TemplateView extends VerticalLayout {
             } else sizeOfPrintLeafCombo.setItems();*/
         });
 
-        var hLaout2 = new HorizontalLayout();
-
         Grid<Material> grid = new Grid<>(Material.class, false);
-
-        Grid.Column<Material> typeColumn =
-                grid.addColumn(Material::getTypeOfMaterial).setHeader("KJHKJHKJ");
-        Grid.Column<Material> sizeColumn =
-                grid.addColumn(Material::getSizeOfPrintLeaf).setHeader("KJHKJHKJ");
-        Grid.Column<Material> thicknessColumn =
-                grid.addColumn(Material::getThickness).setHeader("KJHKJHKJ");
+        grid.setItems(materialService.findAll());
+        grid.addColumn(Material::getName).setHeader("Название");
+        Grid.Column<Material> typeColumn = grid.addColumn(Material::getTypeOfMaterial).setHeader("Тип материала");
+        Grid.Column<Material> sizeColumn = grid.addColumn(Material::getSizeOfPrintLeaf).setHeader("Размер печатного листа");
+        Grid.Column<Material> thicknessColumn = grid.addColumn(Material::getThickness).setHeader("Плотность");
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
 
-        //grid.setItems(materialService.findAll());
-        List<Material> material = materialService.findAll();
-        grid.setItems(material);
+        grid.getHeaderRows().clear();
+        HeaderRow headerRow = grid.appendHeaderRow();
 
-        hLaout2.add(grid);
+        headerRow.getCell(typeColumn).setComponent(typeOfMaterialCombo);
+        headerRow.getCell(sizeColumn).setComponent(sizeOfPrintLeafCombo);
+        headerRow.getCell(thicknessColumn).setComponent(thicknessCombo);
 
-
-
-
-        hLayout.add(typeOfMaterialCombo, thicknessCombo, sizeOfPrintLeafCombo, materialCombo);
-        this.add(hLayout);
-        this.add(hLaout2);
+        this.add(grid);
     }
 
     private void addSizeOfProduct() {

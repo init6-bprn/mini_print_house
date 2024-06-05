@@ -1,5 +1,7 @@
 package ru.bprn.printhouse.views.about;
 
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
@@ -7,7 +9,15 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import org.springframework.beans.factory.annotation.Autowired;
+import ru.bprn.printhouse.data.entity.Material;
+import ru.bprn.printhouse.data.entity.TypeOfMaterial;
+import ru.bprn.printhouse.data.service.MaterialService;
+import ru.bprn.printhouse.data.service.TypeOfMaterialService;
 import ru.bprn.printhouse.views.MainLayout;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @PageTitle("About")
 @Route(value = "about", layout = MainLayout.class)
@@ -15,18 +25,15 @@ import ru.bprn.printhouse.views.MainLayout;
 @AnonymousAllowed
 public class AboutView extends VerticalLayout {
 
-    public AboutView() {
-        Image img = new Image("images/empty-plant.png", "placeholder plant");
-        img.setWidth("200px");
-        add(img);
 
-        add(new H2("This place intentionally left empty"));
-        add(new Paragraph("It’s a place where you can grow your own UI 🤗"));
+    public AboutView(MaterialService typeOfMaterialService) {
 
-        setSizeFull();
-        setJustifyContentMode(JustifyContentMode.CENTER);
-        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-        getStyle().set("text-align", "center");
+        Grid<Material> grid = new Grid<>(Material.class, false);
+        grid.setItems(typeOfMaterialService.findAll());
+        grid.addColumn(Material::getName).setHeader("Name");
+
+        add(grid);
+
     }
 
 }
