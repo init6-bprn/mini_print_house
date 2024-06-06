@@ -38,6 +38,11 @@ public class MaterialService {
         else return this.findAll();
     }
 
+    public List<Material> findAllBySize(SizeOfPrintLeaf sizeOfPrintLeaf) {
+        if (sizeOfPrintLeaf!=null) return this.materialRepository.findAllBySizeOfPrintLeaf(sizeOfPrintLeaf);
+        else return findAll();
+    }
+
     public List<Material> findAllByTypeAndSize(TypeOfMaterial typeOfMaterial, SizeOfPrintLeaf sizeOfPrintLeaf) {
         if (typeOfMaterial!=null)
             if (sizeOfPrintLeaf!=null) return this.materialRepository.findAllByTypeOfMaterialAndSizeOfPrintLeaf(typeOfMaterial, sizeOfPrintLeaf);
@@ -46,9 +51,21 @@ public class MaterialService {
     };
 
     public List<Material> findByFilters(TypeOfMaterial typeOfMaterial, SizeOfPrintLeaf sizeOfPrintLeaf, Thickness thickness){
-        if (typeOfMaterial==null) return findAll();
-        else if (sizeOfPrintLeaf==null) return findAllByType(typeOfMaterial);
-             else if (thickness==null) return  findAllByTypeAndSize(typeOfMaterial, sizeOfPrintLeaf);
+        if (typeOfMaterial==null) {
+            if (sizeOfPrintLeaf==null) {
+                if (thickness==null) return materialRepository.findAll();
+                else return materialRepository.findAllByThickness(thickness);
+            }
+            else {
+                if (thickness==null) return materialRepository.findAllBySizeOfPrintLeaf(sizeOfPrintLeaf);
+                else return materialRepository.findAllBySizeOfPrintLeafAndThickness(sizeOfPrintLeaf, thickness);
+            }
+        }
+        else if (sizeOfPrintLeaf==null) {
+                if (thickness==null) return materialRepository.findAllByTypeOfMaterial(typeOfMaterial);
+                else return materialRepository.findAllByTypeOfMaterialAndThickness(typeOfMaterial, thickness);
+             }
+             else if (thickness==null) return  materialRepository.findAllByTypeOfMaterialAndSizeOfPrintLeaf(typeOfMaterial, sizeOfPrintLeaf);
                   else return this.materialRepository.findAllByTypeOfMaterialAndSizeOfPrintLeafAndThickness(typeOfMaterial, sizeOfPrintLeaf, thickness);
     };
 

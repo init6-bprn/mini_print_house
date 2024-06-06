@@ -11,7 +11,6 @@ import ru.bprn.printhouse.data.entity.DigitalPrintTemplate;
 import ru.bprn.printhouse.data.service.DigitalPrintTemplateService;
 import ru.bprn.printhouse.views.MainLayout;
 
-@Component
 @PageTitle("Шаблон для цифровой печати")
 @Route(value = "digital_print_templates", layout = MainLayout.class)
 @AnonymousAllowed

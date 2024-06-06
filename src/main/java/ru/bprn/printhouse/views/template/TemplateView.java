@@ -3,6 +3,7 @@ package ru.bprn.printhouse.views.template;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.NativeLabel;
@@ -11,6 +12,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -24,24 +26,23 @@ import ru.bprn.printhouse.views.MainLayout;
 
 import java.util.ArrayList;
 import java.util.List;
-@Component
+
 @PageTitle("Шаблоны работ")
 @Route(value = "templates", layout = MainLayout.class)
-@RouteAlias(value = "", layout = MainLayout.class)
 
 @AnonymousAllowed
 public class TemplateView extends VerticalLayout {
 
 
-   final private PrintMashineService printerService;
-   final private MaterialService materialService;
-   final private StandartSizeService standartSizeService;
-   private final QuantityColorsService quantityColorsService;
-   private final TypeOfMaterialService typeOfMaterialService;
-   private final GapService gapService;
-   private final ThicknessService thicknessService;
-   private final SizeOfPrintLeafService sizeOfPrintLeafService;
-   private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
+   private PrintMashineService printerService;
+   private MaterialService materialService;
+   private StandartSizeService standartSizeService;
+   private QuantityColorsService quantityColorsService;
+   private TypeOfMaterialService typeOfMaterialService;
+   private GapService gapService;
+   private DigitalPrintTemplateService digitalPrintTemplateService;
+   private SizeOfPrintLeafService sizeOfPrintLeafService;
+   private CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
    private final ComboBox<PrintMashine> printerCombo = new ComboBox<>();
    private final ComboBox<StandartSize> sizeOfPaperCombo = new ComboBox<>();
    private final ComboBox<SizeOfPrintLeaf> sizeOfPrintLeafCombo = new ComboBox<>();
@@ -57,6 +58,7 @@ public class TemplateView extends VerticalLayout {
    final private List<Material> listOfMaterial = new ArrayList<>();
    private List<Thickness> listThickness = new ArrayList<>();
    private List<SizeOfPrintLeaf> listSizeOfPrintLeaf = new ArrayList<>();
+   private DigitalPrintTemplate digitalPrintTemplate = new DigitalPrintTemplate();
 
 
 
@@ -64,20 +66,24 @@ public class TemplateView extends VerticalLayout {
     public TemplateView(PrintMashineService printerService, MaterialService materialService,
                         StandartSizeService standartSizeService, QuantityColorsService quantityColorsService,
                         CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
-                        TypeOfMaterialService typeOfMaterialService, ThicknessService thicknessService,
-                        SizeOfPrintLeafService sizeOfPrintLeafService, GapService gapService){
+                        TypeOfMaterialService typeOfMaterialService,
+                        SizeOfPrintLeafService sizeOfPrintLeafService, GapService gapService, DigitalPrintTemplateService digitalPrintTemplateService){
         this.printerService = printerService;
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
         this.quantityColorsService = quantityColorsService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
         this.typeOfMaterialService = typeOfMaterialService;
-        this.thicknessService = thicknessService;
+        this.digitalPrintTemplateService = digitalPrintTemplateService;
         this.sizeOfPrintLeafService = sizeOfPrintLeafService;
         this.gapService = gapService;
+        TextField textField = new TextField();
+        textField.setLabel("Название шаблона");
+        textField.setValue(digitalPrintTemplate.getName());
+        add(textField);
+        addSizeOfProduct();
         addPrinterSection();
         addMaterialSection();
-        addSizeOfProduct();
         addQuantityAndOrientation();
     }
 
@@ -115,7 +121,7 @@ public class TemplateView extends VerticalLayout {
         Grid.Column<Material> sizeColumn = grid.addColumn(Material::getSizeOfPrintLeaf).setHeader("Размер печатного листа");
         Grid.Column<Material> thicknessColumn = grid.addColumn(Material::getThickness).setHeader("Плотность");
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
-        //grid.setHeight(400f, Unit.PIXELS);
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.setHeight("270px");
 
         grid.getHeaderRows().clear();

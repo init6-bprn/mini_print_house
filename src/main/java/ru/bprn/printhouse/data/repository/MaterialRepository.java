@@ -15,7 +15,18 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
     List<Material> findAllByTypeOfMaterialAndSizeOfPrintLeaf(TypeOfMaterial typeOfMaterial,
                                                              SizeOfPrintLeaf sizeOfPrintLeaf);
 
+    List<Material> findAllByTypeOfMaterialAndThickness(TypeOfMaterial typeOfMaterial,
+                                                             Thickness thickness);
+
     List<Material> findAllByTypeOfMaterialAndSizeOfPrintLeafAndThickness(TypeOfMaterial typeOfMaterial,
                                                                          SizeOfPrintLeaf sizeOfPrintLeaf, Thickness thickness);
+
+    List<Material> findAllBySizeOfPrintLeaf(SizeOfPrintLeaf sizeOfPrintLeaf);
+
+    //List<Material> findAllByThicknessList(List<Thickness> thicknessList);
+
+    List<Material> findAllByThickness(Thickness thickness);
+
+    List<Material> findAllBySizeOfPrintLeafAndThickness(SizeOfPrintLeaf sizeOfPrintLeaf, Thickness thickness);
 
 }
