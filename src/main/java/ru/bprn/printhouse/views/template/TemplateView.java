@@ -14,6 +14,9 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.textfield.TextFieldVariant;
+import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.PropertyId;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
@@ -24,6 +27,7 @@ import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,50 +38,64 @@ import java.util.List;
 public class TemplateView extends VerticalLayout {
 
 
-   private PrintMashineService printerService;
-   private MaterialService materialService;
-   private StandartSizeService standartSizeService;
-   private QuantityColorsService quantityColorsService;
-   private TypeOfMaterialService typeOfMaterialService;
-   private GapService gapService;
-   private DigitalPrintTemplateService digitalPrintTemplateService;
-   private SizeOfPrintLeafService sizeOfPrintLeafService;
-   private CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
+   private final PrintMashineService printerService;
+   private final MaterialService materialService;
+   private final StandartSizeService standartSizeService;
+   private final TypeOfMaterialService typeOfMaterialService;
+   private final GapService gapService;
+
+   @PropertyId("printMashine")
    private final ComboBox<PrintMashine> printerCombo = new ComboBox<>();
+
+   @PropertyId("name")
+   private final TextField textField = new TextField();
+
+   @PropertyId("coverQuantityColors")
+   private final ComboBox<QuantityColors> coverQuantityOfColor = new ComboBox<>();
+
+   @PropertyId("backQuantityColors")
+   private final ComboBox<QuantityColors> backQuantityOfColor = new ComboBox<>();
+
+   @PropertyId("gap")
+   private final ComboBox<Gap> bleedCombo = new ComboBox<>("Припуск");
+
+   @PropertyId("quantity")
+   private final IntegerField quantityField = new IntegerField();
+
+   @PropertyId("rowsOnLeaf")
+   private final IntegerField rowsOnLeaf = new IntegerField("Колонок:");
+
+   @PropertyId("columnsOnLeaf")
+   private final IntegerField columnsOnLeaf = new IntegerField("Столбцов:");
+
+   @PropertyId("quantityOfPrintLeaves")
+   private final IntegerField quantityOfPrintLeaves = new IntegerField("Изделий на листе:");
+
    private final ComboBox<StandartSize> sizeOfPaperCombo = new ComboBox<>();
    private final ComboBox<SizeOfPrintLeaf> sizeOfPrintLeafCombo = new ComboBox<>();
-   private final ComboBox<QuantityColors> coverQuantityOfColor = new ComboBox<>();
-   private final ComboBox<QuantityColors> backQuantityOfColor = new ComboBox<>();
+   private final Grid<Material> grid = new Grid<>(Material.class, false);
    private final ComboBox<TypeOfMaterial> typeOfMaterialCombo = new ComboBox<>();
    private final ComboBox<Thickness> thicknessCombo = new ComboBox<>();
-   private final Grid<Material> grid = new Grid<>(Material.class, false);
    private SizeDialog dialog;
    private NumberField length;
    private NumberField width;
-   final private List<StandartSize> itemsForCombo = new ArrayList<>();
-   final private List<Material> listOfMaterial = new ArrayList<>();
    private List<Thickness> listThickness = new ArrayList<>();
    private List<SizeOfPrintLeaf> listSizeOfPrintLeaf = new ArrayList<>();
    private DigitalPrintTemplate digitalPrintTemplate = new DigitalPrintTemplate();
 
 
-
     @Autowired
     public TemplateView(PrintMashineService printerService, MaterialService materialService,
-                        StandartSizeService standartSizeService, QuantityColorsService quantityColorsService,
-                        CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
-                        TypeOfMaterialService typeOfMaterialService,
-                        SizeOfPrintLeafService sizeOfPrintLeafService, GapService gapService, DigitalPrintTemplateService digitalPrintTemplateService){
+                        StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService,
+                        GapService gapService){
         this.printerService = printerService;
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
-        this.quantityColorsService = quantityColorsService;
-        this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
         this.typeOfMaterialService = typeOfMaterialService;
-        this.digitalPrintTemplateService = digitalPrintTemplateService;
-        this.sizeOfPrintLeafService = sizeOfPrintLeafService;
         this.gapService = gapService;
-        TextField textField = new TextField();
+        Binder<DigitalPrintTemplate> binder = new BeanValidationBinder<>(DigitalPrintTemplate.class,true);
+        binder.bindInstanceFields(this);
+
         textField.setLabel("Название шаблона");
         textField.setValue(digitalPrintTemplate.getName());
         add(textField);
@@ -178,7 +196,7 @@ public class TemplateView extends VerticalLayout {
             dialog.open();
         });
 
-        var bleedCombo = new ComboBox<Gap>("Припуск");
+
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
 
         hLayout.add(sizeOfPaperCombo, length, width, bleedCombo, layout, dialog);
@@ -221,8 +239,6 @@ public class TemplateView extends VerticalLayout {
 
     private void addQuantityAndOrientation() {
         var hLayout = new HorizontalLayout();
-
-        var quantityField = new IntegerField();
         quantityField.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
         quantityField.setLabel("Количество:");
         quantityField.setValue(1);
@@ -237,32 +253,47 @@ public class TemplateView extends VerticalLayout {
         add(radioGroup);
 
         radioGroup.addValueChangeListener(e->{
+            int[] mass1 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength(), sizeOfPrintLeafCombo.getValue().getWidth(),
+                    length.getValue(), width.getValue());
+            int[] mass2 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength(), sizeOfPrintLeafCombo.getValue().getWidth(),
+                     width.getValue(), length.getValue());
             switch (e.getValue()) {
                 case "Автоматически": {
-                    int a = getQuantity(sizeOfPrintLeafCombo.getValue().getLength(), length.getValue().intValue())*
-                            getQuantity(sizeOfPrintLeafCombo.getValue().getWidth(), width.getValue().intValue());
+                    if (mass1[2]>=mass2[2]) setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
+                    else setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
                 }
-                case "Вертикальная": {
-
-                }
-                case "Горизонтальная": {
-
-                }
+                case "Вертикальная": setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
+                case "Горизонтальная": setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
             }
 
         });
 
+        quantityOfPrintLeaves.isReadOnly();
+        rowsOnLeaf.isReadOnly();
+        columnsOnLeaf.isReadOnly();
         hLayout.add(radioGroup, quantityField);
-        this.add(hLayout);
+        var hl = new HorizontalLayout();
+        hl.add(rowsOnLeaf,columnsOnLeaf,quantityOfPrintLeaves);
+        this.add(hLayout,hl);
 
     }
 
-    private int getQuantity(int sizeLeaf, float sizeElement) {
-        return (int) (sizeLeaf/sizeElement);
+    private int[] getQuantity(int sizeLeafX, int sizeLeafY, Double sizeElementX, Double sizeElementY) {
+        int[] mass = new int[3];
+        mass[0] = (int) (sizeLeafX/sizeElementX);
+        mass[1] = (int) (sizeLeafY/sizeElementY);
+        mass[3] = mass[1]*mass[0];
+        return mass;
     }
 
     private void comboBoxViewFirstElement (ComboBox combo) {
         if (combo.getListDataView().getItemCount()>0) combo.setValue(combo.getListDataView().getItem(0));
+    }
+
+    private void setVolumeOnComponents (int col, int row, int quan) {
+        columnsOnLeaf.setValue(col);
+        rowsOnLeaf.setValue(row);
+        quantityOfPrintLeaves.setValue(quan);
     }
 
 }
