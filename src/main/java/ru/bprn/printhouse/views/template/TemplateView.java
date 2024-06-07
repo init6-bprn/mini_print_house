@@ -19,15 +19,12 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.PropertyId;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,10 +54,10 @@ public class TemplateView extends VerticalLayout {
    private final ComboBox<QuantityColors> backQuantityOfColor = new ComboBox<>();
 
    @PropertyId("gap")
-   private final ComboBox<Gap> bleedCombo = new ComboBox<>("Припуск");
+   private final ComboBox<Gap> bleedCombo = new ComboBox<>("Припуск:");
 
    @PropertyId("quantity")
-   private final IntegerField quantityField = new IntegerField();
+   private final IntegerField quantityField = new IntegerField("Количество:");
 
    @PropertyId("rowsOnLeaf")
    private final IntegerField rowsOnLeaf = new IntegerField("Колонок:");
@@ -240,7 +237,6 @@ public class TemplateView extends VerticalLayout {
     private void addQuantityAndOrientation() {
         var hLayout = new HorizontalLayout();
         quantityField.addThemeVariants(TextFieldVariant.LUMO_ALIGN_RIGHT);
-        quantityField.setLabel("Количество:");
         quantityField.setValue(1);
         Div quantityPrefix = new Div();
         quantityPrefix.setText("шт");
@@ -249,28 +245,37 @@ public class TemplateView extends VerticalLayout {
         var radioGroup = new RadioButtonGroup<String>();
         radioGroup.setLabel("Ориентация");
         radioGroup.setItems("Автоматически", "Вертикальная", "Горизонтальная");
-        radioGroup.setValue("Автоматически");
+        radioGroup.setValue("Горизонтальная");
         add(radioGroup);
 
         radioGroup.addValueChangeListener(e->{
-            int[] mass1 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength(), sizeOfPrintLeafCombo.getValue().getWidth(),
-                    length.getValue(), width.getValue());
-            int[] mass2 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength(), sizeOfPrintLeafCombo.getValue().getWidth(),
-                     width.getValue(), length.getValue());
-            switch (e.getValue()) {
-                case "Автоматически": {
-                    if (mass1[2]>=mass2[2]) setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
-                    else setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
-                }
-                case "Вертикальная": setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
-                case "Горизонтальная": setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
-            }
+            if ((sizeOfPrintLeafCombo.getValue()!=null)&(length.getValue()!=null)&(width.getValue()!=null)&(printerCombo.getValue()!=null)&(bleedCombo.getValue()!=null)) {
+                int[] mass1 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength()-printerCombo.getValue().getGap().getGapLeft()-printerCombo.getValue().getGap().getGapRight(),
+                                          sizeOfPrintLeafCombo.getValue().getWidth()-printerCombo.getValue().getGap().getGapTop()-printerCombo.getValue().getGap().getGapBottom(),
+                                       length.getValue()+bleedCombo.getValue().getGapLeft()+bleedCombo.getValue().getGapRight(),
+                                       width.getValue()+bleedCombo.getValue().getGapTop()+bleedCombo.getValue().getGapBottom());
 
+                int[] mass2 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength()-printerCombo.getValue().getGap().getGapLeft()-printerCombo.getValue().getGap().getGapRight(),
+                                          sizeOfPrintLeafCombo.getValue().getWidth()-printerCombo.getValue().getGap().getGapTop()-printerCombo.getValue().getGap().getGapBottom(),
+                                       width.getValue()+bleedCombo.getValue().getGapTop()+bleedCombo.getValue().getGapBottom(),
+                                       length.getValue()+bleedCombo.getValue().getGapLeft()+bleedCombo.getValue().getGapRight());
+
+                switch (e.getValue()) {
+                    case "Автоматически": {
+                        if (mass1[2] >= mass2[2]) setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
+                        else setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
+                    }
+                    case "Вертикальная":
+                        setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
+                    case "Горизонтальная":
+                        setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
+                }
+            }
         });
 
-        quantityOfPrintLeaves.isReadOnly();
-        rowsOnLeaf.isReadOnly();
-        columnsOnLeaf.isReadOnly();
+        quantityOfPrintLeaves.setReadOnly(true);
+        rowsOnLeaf.setReadOnly(true);
+        columnsOnLeaf.setReadOnly(true);
         hLayout.add(radioGroup, quantityField);
         var hl = new HorizontalLayout();
         hl.add(rowsOnLeaf,columnsOnLeaf,quantityOfPrintLeaves);
@@ -282,7 +287,7 @@ public class TemplateView extends VerticalLayout {
         int[] mass = new int[3];
         mass[0] = (int) (sizeLeafX/sizeElementX);
         mass[1] = (int) (sizeLeafY/sizeElementY);
-        mass[3] = mass[1]*mass[0];
+        mass[2] = mass[1]*mass[0];
         return mass;
     }
 

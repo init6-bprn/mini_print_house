@@ -3,6 +3,7 @@ package ru.bprn.printhouse.data.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 
@@ -26,14 +27,15 @@ public class DigitalPrintTemplate{
     private Long id;
 
     @NotBlank
+    @NotEmpty
     @ToString.Include
-    private String name = "";
+    private String name = "Name";
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "gap")
     private Gap gap;
 
-    @NotEmpty
+    @NotNull
     @Positive
     private Integer quantity = 1;
 
@@ -57,15 +59,15 @@ public class DigitalPrintTemplate{
     @JoinColumn(name = "print_mashine")
     private PrintMashine printMashine;
 
-    @NotEmpty
+    @NotNull
     @Positive
     private Integer rowsOnLeaf = 1;
 
-    @NotEmpty
+    @NotNull
     @Positive
     private Integer columnsOnLeaf = 1;
 
-    @NotEmpty
+    @NotNull
     @Positive
     private Integer quantityOfPrintLeaves = 1;
 
