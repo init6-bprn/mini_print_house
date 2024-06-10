@@ -47,7 +47,7 @@ public class DigitalPrintTemplate{
     @JoinColumn(name = "back")
     private QuantityColors backQuantityColors;
 
-
+    @NotNull
     @ManyToMany (fetch = FetchType.EAGER)
     @JoinTable(
             name = "digital_print_template_material",

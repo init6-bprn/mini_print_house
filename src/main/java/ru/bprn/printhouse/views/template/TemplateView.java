@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.views.template;
 
+import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
@@ -68,9 +69,14 @@ public class TemplateView extends VerticalLayout {
    @PropertyId("quantityOfPrintLeaves")
    private final IntegerField quantityOfPrintLeaves = new IntegerField("Изделий на листе:");
 
+   @PropertyId("material")
+   private final Grid<Material> grid = new Grid<>(Material.class, false);
+
+   private final RadioButtonGroup<String> radioGroup = new RadioButtonGroup<String>("Ориентация");
+
+
    private final ComboBox<StandartSize> sizeOfPaperCombo = new ComboBox<>();
    private final ComboBox<SizeOfPrintLeaf> sizeOfPrintLeafCombo = new ComboBox<>();
-   private final Grid<Material> grid = new Grid<>(Material.class, false);
    private final ComboBox<TypeOfMaterial> typeOfMaterialCombo = new ComboBox<>();
    private final ComboBox<Thickness> thicknessCombo = new ComboBox<>();
    private SizeDialog dialog;
@@ -128,6 +134,7 @@ public class TemplateView extends VerticalLayout {
         sizeOfPrintLeafCombo.setAllowCustomValue(false);
         sizeOfPrintLeafCombo.addValueChangeListener(e->{
             grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), e.getValue(), thicknessCombo.getValue()));
+            calculateAndSetQuantity();
         });
 
         grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
@@ -154,9 +161,11 @@ public class TemplateView extends VerticalLayout {
 
         length = new NumberField();
         length.setLabel("Длина");
+        length.addValueChangeListener(e->calculateAndSetQuantity());
 
         width = new NumberField();
         width.setLabel("Ширина");
+        width.addValueChangeListener(e->calculateAndSetQuantity());
 
         sizeOfPaperCombo.setItems(standartSizeService.findAll());
         sizeOfPaperCombo.setLabel("Размер изделия");
@@ -164,6 +173,7 @@ public class TemplateView extends VerticalLayout {
         sizeOfPaperCombo.addValueChangeListener(e -> {
             length.setValue(e.getValue().getLength());
             width.setValue(e.getValue().getWidth());
+            calculateAndSetQuantity();
         }) ;
 
         dialog = new SizeDialog(standartSizeService);
@@ -195,6 +205,7 @@ public class TemplateView extends VerticalLayout {
 
 
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
+        bleedCombo.addValueChangeListener(e-> calculateAndSetQuantity());
 
         hLayout.add(sizeOfPaperCombo, length, width, bleedCombo, layout, dialog);
         this.add(hLayout);
@@ -242,36 +253,10 @@ public class TemplateView extends VerticalLayout {
         quantityPrefix.setText("шт");
         quantityField.setPrefixComponent(quantityPrefix);
 
-        var radioGroup = new RadioButtonGroup<String>();
-        radioGroup.setLabel("Ориентация");
         radioGroup.setItems("Автоматически", "Вертикальная", "Горизонтальная");
-        radioGroup.setValue("Горизонтальная");
+        radioGroup.setValue("Автоматически");
+        radioGroup.addValueChangeListener(e-> calculateAndSetQuantity());
         add(radioGroup);
-
-        radioGroup.addValueChangeListener(e->{
-            if ((sizeOfPrintLeafCombo.getValue()!=null)&(length.getValue()!=null)&(width.getValue()!=null)&(printerCombo.getValue()!=null)&(bleedCombo.getValue()!=null)) {
-                int[] mass1 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength()-printerCombo.getValue().getGap().getGapLeft()-printerCombo.getValue().getGap().getGapRight(),
-                                          sizeOfPrintLeafCombo.getValue().getWidth()-printerCombo.getValue().getGap().getGapTop()-printerCombo.getValue().getGap().getGapBottom(),
-                                       length.getValue()+bleedCombo.getValue().getGapLeft()+bleedCombo.getValue().getGapRight(),
-                                       width.getValue()+bleedCombo.getValue().getGapTop()+bleedCombo.getValue().getGapBottom());
-
-                int[] mass2 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength()-printerCombo.getValue().getGap().getGapLeft()-printerCombo.getValue().getGap().getGapRight(),
-                                          sizeOfPrintLeafCombo.getValue().getWidth()-printerCombo.getValue().getGap().getGapTop()-printerCombo.getValue().getGap().getGapBottom(),
-                                       width.getValue()+bleedCombo.getValue().getGapTop()+bleedCombo.getValue().getGapBottom(),
-                                       length.getValue()+bleedCombo.getValue().getGapLeft()+bleedCombo.getValue().getGapRight());
-
-                switch (e.getValue()) {
-                    case "Автоматически": {
-                        if (mass1[2] >= mass2[2]) setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
-                        else setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
-                    }
-                    case "Вертикальная":
-                        setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
-                    case "Горизонтальная":
-                        setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
-                }
-            }
-        });
 
         quantityOfPrintLeaves.setReadOnly(true);
         rowsOnLeaf.setReadOnly(true);
@@ -291,6 +276,34 @@ public class TemplateView extends VerticalLayout {
         return mass;
     }
 
+    private void calculateAndSetQuantity(){
+        if ((sizeOfPrintLeafCombo.getValue()!=null)&(length.getValue()!=null)&(width.getValue()!=null)&(printerCombo.getValue()!=null)&(bleedCombo.getValue()!=null)) {
+            int[] mass1 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength()-printerCombo.getValue().getGap().getGapLeft()-printerCombo.getValue().getGap().getGapRight(),
+                    sizeOfPrintLeafCombo.getValue().getWidth()-printerCombo.getValue().getGap().getGapTop()-printerCombo.getValue().getGap().getGapBottom(),
+                    length.getValue()+bleedCombo.getValue().getGapLeft()+bleedCombo.getValue().getGapRight(),
+                    width.getValue()+bleedCombo.getValue().getGapTop()+bleedCombo.getValue().getGapBottom());
+
+            int[] mass2 = getQuantity(sizeOfPrintLeafCombo.getValue().getLength()-printerCombo.getValue().getGap().getGapLeft()-printerCombo.getValue().getGap().getGapRight(),
+                    sizeOfPrintLeafCombo.getValue().getWidth()-printerCombo.getValue().getGap().getGapTop()-printerCombo.getValue().getGap().getGapBottom(),
+                    width.getValue()+bleedCombo.getValue().getGapTop()+bleedCombo.getValue().getGapBottom(),
+                    length.getValue()+bleedCombo.getValue().getGapLeft()+bleedCombo.getValue().getGapRight());
+
+            switch (radioGroup.getValue()) {
+                case "Автоматически":
+                    if (mass1[2] >= mass2[2]) setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
+                    else setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
+                    break;
+                case "Вертикальная":
+                    setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
+                    break;
+                case "Горизонтальная":
+                    setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
+                    break;
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private void comboBoxViewFirstElement (ComboBox combo) {
         if (combo.getListDataView().getItemCount()>0) combo.setValue(combo.getListDataView().getItem(0));
     }
