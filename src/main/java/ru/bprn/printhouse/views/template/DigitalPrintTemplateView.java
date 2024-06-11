@@ -7,11 +7,15 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -27,6 +31,7 @@ import ru.bprn.printhouse.views.MainLayout;
 public class DigitalPrintTemplateView extends VerticalLayout {
 
     private DigitalPrintTemplateService digitalPrintTemplateService;
+    private TabSheet tabSheet = new TabSheet();
 
     public DigitalPrintTemplateView (DigitalPrintTemplateService digitalPrintTemplateService){
         this.digitalPrintTemplateService = digitalPrintTemplateService;
@@ -34,7 +39,7 @@ public class DigitalPrintTemplateView extends VerticalLayout {
         grid.setItems(digitalPrintTemplateService.findAll());
         grid.setHeight("200px");
 
-        TabSheet tabSheet = new TabSheet();
+        //((Tabs) tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst().get()).getComponentCount();
 
         Button closeAllButton = new Button("Close all");
         closeAllButton.addClickListener(e-> tabSheet.getChildren().forEach(tabSheet::remove));
@@ -44,11 +49,27 @@ public class DigitalPrintTemplateView extends VerticalLayout {
         MenuBar menuBar = new MenuBar();
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.PLUS));
         SubMenu subMenu = item.getSubMenu();
-        subMenu.addItem("Цифровая печать", menuItemClickEvent -> tabSheet.add("Цифровая печать", new VerticalLayout()));
+        subMenu.addItem("Цифровая печать", menuItemClickEvent -> tabSheet.add(createTab("Цифровая печать"), new VerticalLayout()));
         subMenu.addItem("Резка", menuItemClickEvent -> tabSheet.add("Резка", new VerticalLayout()));
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add("Верстка", new VerticalLayout()));
         tabSheet.setSuffixComponent(menuBar);
 
         add(grid,tabSheet);
     }
+
+    private Tab createTab (String str){
+        var tab = new Tab(str);
+        var la = new HorizontalLayout();
+        var leftBtn = new Button(VaadinIcon.CHEVRON_CIRCLE_LEFT_O.create());
+
+        var closeBtn = new Button(VaadinIcon.CLOSE_CIRCLE_O.create());
+        closeBtn.addClickListener(e->tabSheet.remove(tab));
+
+        var rightBtn = new Button(VaadinIcon.CHEVRON_CIRCLE_RIGHT_O.create());
+
+        la.add(leftBtn, closeBtn, rightBtn);
+        tab.add(la);
+        return tab;
+    }
+
 }
