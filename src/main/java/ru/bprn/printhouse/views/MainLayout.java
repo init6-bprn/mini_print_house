@@ -25,7 +25,6 @@ import ru.bprn.printhouse.views.machine.printers.PrintSpeedMaterialDensityView;
 import ru.bprn.printhouse.views.machine.printers.PrintersView;
 import ru.bprn.printhouse.views.material.MaterialView;
 import ru.bprn.printhouse.views.template.DigitalPrintTemplateView;
-import ru.bprn.printhouse.views.template.TemplateView;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -117,8 +116,8 @@ public class MainLayout extends AppLayout {
         nav.addItem(dick);
 
         dick = new SideNavItem("Шаблоны");
-        if (accessChecker.hasAccess(TemplateView.class))
-            dick.addItem(new SideNavItem("Шаблоны работ", TemplateView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        //if (accessChecker.hasAccess(TemplateView.class))
+        //    dick.addItem(new SideNavItem("Шаблоны работ", TemplateView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         if (accessChecker.hasAccess(DigitalPrintTemplateView.class))
             dick.addItem(new SideNavItem("Шаблоны печати", DigitalPrintTemplateView.class, LineAwesomeIcon.GLOBE_SOLID.create()));

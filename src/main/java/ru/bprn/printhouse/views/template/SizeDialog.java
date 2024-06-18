@@ -5,22 +5,20 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import lombok.Getter;
 import ru.bprn.printhouse.data.entity.StandartSize;
 import ru.bprn.printhouse.data.service.StandartSizeService;
 
 public class
 SizeDialog extends Dialog {
-    private TextField text;
-    private NumberField lengthField;
-    private NumberField widthField;
-
+    private final TextField text;
+    private final NumberField lengthField;
+    private final NumberField widthField;
+    @Getter
     private StandartSize standartSize;
 
-    private StandartSizeService standartSizeService;
     public SizeDialog (StandartSizeService standartSizeService){
         this.setHeaderTitle("Новый стандартный размер");
-        this.standartSizeService = standartSizeService;
-
         VerticalLayout dialogLayout = new VerticalLayout();
 
         text = new TextField();
@@ -53,19 +51,16 @@ SizeDialog extends Dialog {
         this.getFooter().add(cancelButton);
         this.getFooter().add(saveButton);
     }
-    public void setX (Double x){
+    public void setX(Double x){
         lengthField.setValue(x);
     }
 
-    public void setY (Double y){
+    public void setY(Double y){
         widthField.setValue(y);
     }
 
-    public void setName (String name){
+    public void setName(String name){
         text.setValue(name);
     }
 
-    public StandartSize getStandartSize(){
-        return standartSize;
-    }
 }

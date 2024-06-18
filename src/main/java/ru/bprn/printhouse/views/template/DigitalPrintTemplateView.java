@@ -2,7 +2,6 @@ package ru.bprn.printhouse.views.template;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -16,12 +15,11 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import org.springframework.beans.factory.annotation.Autowired;
 import ru.bprn.printhouse.data.entity.DigitalPrintTemplate;
-import ru.bprn.printhouse.data.entity.StandartSize;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
@@ -36,8 +34,9 @@ public class DigitalPrintTemplateView extends VerticalLayout {
     private final TypeOfMaterialService typeOfMaterialService;
     private final GapService gapService;
     private DigitalPrintTemplateService digitalPrintTemplateService;
-    private TabSheet tabSheet = new TabSheet();
+    private final TabSheet tabSheet = new TabSheet();
 
+    @Autowired
     public DigitalPrintTemplateView (PrintMashineService printerService, MaterialService materialService, StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, GapService gapService, DigitalPrintTemplateService digitalPrintTemplateService){
         this.printerService = printerService;
         this.materialService = materialService;
@@ -55,30 +54,21 @@ public class DigitalPrintTemplateView extends VerticalLayout {
         closeAllButton.addClickListener(e-> tabSheet.getChildren().forEach(tabSheet::remove));
 
         tabSheet.setPrefixComponent(closeAllButton);
-        tabSheet.add("Настройки", createSettingtab());
+        tabSheet.setWidthFull();
+        StartTemplateTabVerticalLayout startTab = new StartTemplateTabVerticalLayout(standartSizeService, typeOfMaterialService, materialService, gapService);
+        tabSheet.add("Настройки", startTab);
 
         MenuBar menuBar = new MenuBar();
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.PLUS));
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> tabSheet.add(createTab("Цифровая печать"),
-                new TemplateView(printerService, materialService, standartSizeService, typeOfMaterialService, gapService)));
+                new TemplateView(startTab.getMaterial(), startTab.getSize(), startTab.getBleed(), printerService)));
         subMenu.addItem("Резка", menuItemClickEvent -> tabSheet.add(createTab("Резка"), new VerticalLayout()));
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
         tabSheet.setSuffixComponent(menuBar);
 
         add(grid,tabSheet);
     }
-
-    private VerticalLayout createSettingtab() {
-        var la = new VerticalLayout();
-        var nameOfTemplate = new TextField("Название шаблона: ");
-        var nameOfProduct = new TextField("Название изделия");
-        var sizeOfProductCombo = new ComboBox<StandartSize>("Размер");
-        sizeOfProductCombo.setItems(standartSizeService.findAll());
-
-        la.add(nameOfTemplate, nameOfProduct, sizeOfProductCombo);
-        return la;
-    };
 
     private Tab createTab (String str){
         var tab = new Tab();
