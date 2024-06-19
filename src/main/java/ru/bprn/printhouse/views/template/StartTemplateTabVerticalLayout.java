@@ -8,14 +8,16 @@ import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import ru.bprn.printhouse.data.entity.*;
-import ru.bprn.printhouse.data.service.GapService;
-import ru.bprn.printhouse.data.service.MaterialService;
-import ru.bprn.printhouse.data.service.StandartSizeService;
-import ru.bprn.printhouse.data.service.TypeOfMaterialService;
+import ru.bprn.printhouse.data.service.*;
 
 import java.util.List;
 
@@ -25,6 +27,7 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
     private final TypeOfMaterialService typeOfMaterialService;
     private final MaterialService materialService;
     private final GapService gapService;
+    private final ImposeCaseService imposeCaseService;
     @Getter
     private Material material;
     @Getter
@@ -33,21 +36,28 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
     private Gap bleed;
     @Getter
     private String name = "";
+    @Getter
+    private Integer complect = 1;
+    @Getter
+    private ImposeCase impose;
+
 
     private final TextField nameOfTemplate = new TextField("Название шаблона: ");
 
     public StartTemplateTabVerticalLayout(StandartSizeService standartSizeService, TypeOfMaterialService TypeOfMaterialService,
-                                          MaterialService materialService, GapService gapService ){
+                                          MaterialService materialService, GapService gapService, ImposeCaseService imposeCaseService){
         this.standartSizeService = standartSizeService;
         this.typeOfMaterialService = TypeOfMaterialService;
         this.materialService = materialService;
         this.gapService = gapService;
+        this.imposeCaseService = imposeCaseService;
 
         setSizeFull();
         nameOfTemplate.setSizeFull();
         this.add(nameOfTemplate);
 
         addSizeOfProductSection();
+        addSetOfSheetsSection();
         addMaterialSection();
 
         name = setDefaultName();
@@ -113,6 +123,22 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         });
 
         this.add(grid);
+    }
+
+    private void addSetOfSheetsSection(){
+        var ha = new HorizontalLayout();
+        var sheetsQuantity = new IntegerField("Страниц/Листов в комплекте:");
+        sheetsQuantity.setValue(1);
+        sheetsQuantity.addValueChangeListener(e->{
+            complect = e.getValue();
+        });
+        var imposeCaseCombo = new ComboBox<ImposeCase>("Вариант спуска полос:");
+        imposeCaseCombo.setItems(imposeCaseService.findAll());
+        imposeCaseCombo.addValueChangeListener(e->{
+            impose = e.getValue();
+        });
+        ha.add(imposeCaseCombo,sheetsQuantity);
+        this.add(ha);
     }
 
     private <T> void comboBoxViewFirstElement(ComboBox<T> combo) {

@@ -37,7 +37,9 @@ public class DigitalPrintTemplateView extends VerticalLayout {
     private final TabSheet tabSheet = new TabSheet();
 
     @Autowired
-    public DigitalPrintTemplateView (PrintMashineService printerService, MaterialService materialService, StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, GapService gapService, DigitalPrintTemplateService digitalPrintTemplateService){
+    public DigitalPrintTemplateView (PrintMashineService printerService, MaterialService materialService,
+                                     StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, GapService gapService,
+                                     DigitalPrintTemplateService digitalPrintTemplateService, ImposeCaseService imposeCaseService){
         this.printerService = printerService;
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
@@ -55,7 +57,7 @@ public class DigitalPrintTemplateView extends VerticalLayout {
 
         tabSheet.setPrefixComponent(closeAllButton);
         tabSheet.setWidthFull();
-        StartTemplateTabVerticalLayout startTab = new StartTemplateTabVerticalLayout(standartSizeService, typeOfMaterialService, materialService, gapService);
+        StartTemplateTabVerticalLayout startTab = new StartTemplateTabVerticalLayout(standartSizeService, typeOfMaterialService, materialService, gapService, imposeCaseService);
         tabSheet.add("Настройки", startTab);
 
         MenuBar menuBar = new MenuBar();

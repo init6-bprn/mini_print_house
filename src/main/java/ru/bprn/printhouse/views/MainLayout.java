@@ -94,6 +94,9 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(GapDictionary.class))
             dick.addItem(new SideNavItem("Отступы", GapDictionary.class, VaadinIcon.RECORDS.create()));
 
+        if (accessChecker.hasAccess(ImposeCaseDictionary.class))
+            dick.addItem(new SideNavItem("Спуск полос", ImposeCaseDictionary.class, VaadinIcon.RECORDS.create()));
+
         nav.addItem(dick);
 
         dick = new SideNavItem("Оборудование");
