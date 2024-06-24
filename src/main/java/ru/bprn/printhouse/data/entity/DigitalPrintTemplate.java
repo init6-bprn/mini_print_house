@@ -27,7 +27,6 @@ public class DigitalPrintTemplate{
     private Long id;
 
     @NotBlank
-    @NotEmpty
     @ToString.Include
     private String name = "Name";
 
@@ -37,38 +36,17 @@ public class DigitalPrintTemplate{
 
     @NotNull
     @Positive
-    private Integer quantity = 1;
+    private Integer pagePerProduct = 1;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "cover")
-    private QuantityColors coverQuantityColors;
+    @ManyToOne (fetch = FetchType.EAGER)
+    @JoinColumn(name = "material")
+    private Material material;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "back")
-    private QuantityColors backQuantityColors;
+    @ManyToOne (fetch = FetchType.EAGER)
+    @JoinColumn(name = "standart_size")
+    private StandartSize size;
 
-    @NotNull
-    @ManyToMany (fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "digital_print_template_material",
-            joinColumns = @JoinColumn(name = "material_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "digital_print_template_id", referencedColumnName = "id"))
-    private Set<Material> material = new HashSet<>();
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "print_mashine")
-    private PrintMashine printMashine;
-
-    @NotNull
-    @Positive
-    private Integer rowsOnLeaf = 1;
-
-    @NotNull
-    @Positive
-    private Integer columnsOnLeaf = 1;
-
-    @NotNull
-    @Positive
-    private Integer quantityOfPrintLeaves = 1;
+    @NotBlank
+    private String pipeWorkflow = "";
 
 }

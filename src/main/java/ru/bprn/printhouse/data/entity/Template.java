@@ -29,37 +29,38 @@ public class Template{
     @NotBlank
     private String name = "";
 
-    @NotEmpty
-    @PositiveOrZero
-    private Integer sizeX = 0;
+    @ManyToOne (fetch = FetchType.EAGER)
+    @JoinColumn (name = "standart_size")
+    private StandartSize standartSize;
 
     @NotEmpty
     @PositiveOrZero
-    private Integer sizeY = 0;
+    private Double sizeX = 0d;
 
     @NotEmpty
-    @Positive
-    private Float bleed = 2f;
+    @PositiveOrZero
+    private Double sizeY = 0d;
 
     @ManyToOne (fetch = FetchType.EAGER)
-    @JoinColumn (name = "material")
+    @JoinColumn (name = "material", nullable = false)
     private Material material;
 
     @NotEmpty
     @Positive
-    private Integer quantity = 1;
-
-    @NotEmpty
-    @Positive
     private Integer quantityOfLeaves = 1;
-
+/*
     @OneToMany
     private List<AbstractWork> abstractWorkList = new LinkedList<>();
-
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
-    @JoinColumn(name = "gap", nullable = false )
+*/
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "gap", nullable = false)
     private Gap gap;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "impose_case", nullable = false)
+    private ImposeCase imposeCase;
+
+/*
     public Integer calculateTime() {
         return 0;
 
@@ -73,5 +74,11 @@ public class Template{
         return price;
     }
 
+    private void setName() {
+        if ((material!=null)&(standartSize!=null)&(gap!=null))
+             name = standartSize.getName()+" - "+material.getName()+" - "+material.getThickness().toString()+"г. - "+material.getSizeOfPrintLeaf()+" - "+gap.getName();
+        else name = "";
+    }
+*/
 
 }

@@ -10,6 +10,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
@@ -46,12 +47,21 @@ public class DigitalPrintTemplateView extends VerticalLayout {
         this.typeOfMaterialService = typeOfMaterialService;
         this.gapService = gapService;
         this.digitalPrintTemplateService = digitalPrintTemplateService;
+
+        addGridSection();
+        addTabSheetSection();
+
+    }
+
+    private void addGridSection(){
         Grid<DigitalPrintTemplate> grid = new Grid<>(DigitalPrintTemplate.class);
         grid.setItems(digitalPrintTemplateService.findAll());
         grid.setHeight("200px");
+        this.add(grid);
 
-        //((Tabs) tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst().get()).getComponentCount();
+    }
 
+    private void addTabSheetSection(){
         Button closeAllButton = new Button("Close all");
         closeAllButton.addClickListener(e-> tabSheet.getChildren().forEach(tabSheet::remove));
 
@@ -69,7 +79,13 @@ public class DigitalPrintTemplateView extends VerticalLayout {
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
         tabSheet.setSuffixComponent(menuBar);
 
-        add(grid,tabSheet);
+        tabSheet.addSelectedChangeListener(selectedChangeEvent -> {
+            Tab tabb = selectedChangeEvent.getPreviousTab();
+            VerticalLayout vl = (VerticalLayout) selectedChangeEvent.getSource().getComponent(tabb);
+
+            Notification.show("Надо проверить "+vl.getClass().toString());
+        });
+        this.add(tabSheet);
     }
 
     private Tab createTab (String str){

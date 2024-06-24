@@ -11,11 +11,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.spring.annotation.SpringComponent;
-import com.vaadin.flow.spring.annotation.UIScope;
-import lombok.Getter;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
@@ -28,29 +23,19 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
     private final MaterialService materialService;
     private final GapService gapService;
     private final ImposeCaseService imposeCaseService;
-    @Getter
-    private Material material;
-    @Getter
-    private StandartSize size;
-    @Getter
-    private Gap bleed;
-    @Getter
-    private String name = "";
-    @Getter
-    private Integer complect = 1;
-    @Getter
-    private ImposeCase impose;
 
+    private final Template template;
 
     private final TextField nameOfTemplate = new TextField("Название шаблона: ");
 
-    public StartTemplateTabVerticalLayout(StandartSizeService standartSizeService, TypeOfMaterialService TypeOfMaterialService,
+    public StartTemplateTabVerticalLayout(Template template, StandartSizeService standartSizeService, TypeOfMaterialService TypeOfMaterialService,
                                           MaterialService materialService, GapService gapService, ImposeCaseService imposeCaseService){
         this.standartSizeService = standartSizeService;
         this.typeOfMaterialService = TypeOfMaterialService;
         this.materialService = materialService;
         this.gapService = gapService;
         this.imposeCaseService = imposeCaseService;
+        this.template = template;
 
         setSizeFull();
         nameOfTemplate.setSizeFull();
@@ -60,8 +45,7 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         addSetOfSheetsSection();
         addMaterialSection();
 
-        name = setDefaultName();
-        nameOfTemplate.setValue(name);
+        nameOfTemplate.setValue(setDefaultName());
     }
 
     private void addMaterialSection() {
@@ -106,8 +90,8 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         grid.setHeight("270px");
         List<Material> list = materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue());
         grid.setItems(list);
-        list.stream().findFirst().ifPresent(value -> material = value);
-        grid.select(material);
+        list.stream().findFirst().ifPresent(template::setMaterial);
+        grid.select(template.getMaterial());
 
         grid.getHeaderRows().clear();
         HeaderRow headerRow = grid.appendHeaderRow();
@@ -117,9 +101,8 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         headerRow.getCell(thicknessColumn).setComponent(thicknessCombo);
 
         grid.addSelectionListener(selectionEvent -> {
-            selectionEvent.getFirstSelectedItem().ifPresent(value -> material = value);
-            name = setDefaultName();
-            nameOfTemplate.setValue(name);
+            selectionEvent.getFirstSelectedItem().ifPresent(template::setMaterial);
+            nameOfTemplate.setValue(setDefaultName());
         });
 
         this.add(grid);
@@ -127,17 +110,23 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
 
     private void addSetOfSheetsSection(){
         var ha = new HorizontalLayout();
-        var sheetsQuantity = new IntegerField("Страниц/Листов в комплекте:");
+
+        var sheetsQuantity = new IntegerField("Страниц в тетради");
         sheetsQuantity.setValue(1);
-        sheetsQuantity.addValueChangeListener(e->{
-            complect = e.getValue();
-        });
+        sheetsQuantity.addValueChangeListener(e->template.setQuantityOfLeaves(e.getValue()));
+
         var imposeCaseCombo = new ComboBox<ImposeCase>("Вариант спуска полос:");
         imposeCaseCombo.setItems(imposeCaseService.findAll());
         imposeCaseCombo.addValueChangeListener(e->{
-            impose = e.getValue();
+            template.setImposeCase(e.getValue());
+            if (template.getImposeCase().getName().equals("Однолистовое")) {
+                sheetsQuantity.setValue(1);
+                sheetsQuantity.setEnabled(false);
+            }
+            else sheetsQuantity.setEnabled(true);
         });
-        ha.add(imposeCaseCombo,sheetsQuantity);
+
+        ha.add(imposeCaseCombo, sheetsQuantity);
         this.add(ha);
     }
 
@@ -152,24 +141,25 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
 
         var length = new NumberField();
         length.setLabel("Длина");
-        length.addValueChangeListener(e->{});
+        length.addValueChangeListener(e->template.setSizeX(e.getValue()));
 
         var width = new NumberField();
         width.setLabel("Ширина");
-        width.addValueChangeListener(e->{});
+        width.addValueChangeListener(e->template.setSizeY(e.getValue()));
 
         var sizeOfPaperCombo = new ComboBox<StandartSize>();
         sizeOfPaperCombo.setItems(standartSizeService.findAll());
         comboBoxViewFirstElement(sizeOfPaperCombo);
-        size=sizeOfPaperCombo.getValue();
+        template.setStandartSize(sizeOfPaperCombo.getValue());
         sizeOfPaperCombo.setLabel("Размер изделия");
         sizeOfPaperCombo.setAllowCustomValue(false);
         sizeOfPaperCombo.addValueChangeListener(e -> {
-            size = e.getValue();
-            length.setValue(size.getLength());
-            width.setValue(size.getWidth());
-            name = setDefaultName();
-            nameOfTemplate.setValue(name);
+            template.setStandartSize(e.getValue());
+            template.setSizeX(e.getValue().getLength());
+            template.setSizeY(e.getValue().getWidth());
+            length.setValue(template.getSizeX());
+            width.setValue(template.getSizeY());
+            nameOfTemplate.setValue(setDefaultName());
         }) ;
 
         var dialog = new SizeDialog(standartSizeService);
@@ -202,11 +192,10 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         var bleedCombo = new ComboBox<Gap>("Припуск");
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
         comboBoxViewFirstElement(bleedCombo);
-        bleed = bleedCombo.getValue();
+        template.setGap(bleedCombo.getValue());
         bleedCombo.addValueChangeListener(e->{
-            bleed = e.getValue();
-            name = setDefaultName();
-            nameOfTemplate.setValue(name);
+            template.setGap(e.getValue());
+            nameOfTemplate.setValue(setDefaultName());
         });
 
         hLayout.add(sizeOfPaperCombo, length, width, bleedCombo, layout, dialog);
@@ -214,8 +203,13 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
     }
 
     private String setDefaultName() {
-        if ((size!=null)&(material!=null)&(bleed!=null)) return size.getName()+" - "+material.getName()+" - "+material.getThickness().toString()+"г. - "+material.getSizeOfPrintLeaf()+" - "+bleed.getName();
-        else return "";
+        if ((template.getStandartSize()!=null)&(template.getMaterial()!=null)&(template.getGap()!=null)) {
+            template.setName(template.getStandartSize().getName()+" - "+template.getMaterial().getName()+" - "+
+                    template.getMaterial().getThickness().toString()+"г. - "+template.getMaterial().getSizeOfPrintLeaf()+
+                    " - "+template.getGap().getName());
+        }
+        else template.setName("Заполните все поля!");
+        return template.getName();
     }
 
 }
