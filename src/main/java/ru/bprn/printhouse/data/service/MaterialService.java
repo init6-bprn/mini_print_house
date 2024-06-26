@@ -1,5 +1,7 @@
 package ru.bprn.printhouse.data.service;
 
+import com.vaadin.flow.spring.annotation.SpringComponent;
+import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.data.entity.Material;
 import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
@@ -12,6 +14,8 @@ import java.util.List;
 import java.util.Set;
 
 @Service
+@SpringComponent
+@UIScope
 public class MaterialService {
 
     private MaterialRepository materialRepository;

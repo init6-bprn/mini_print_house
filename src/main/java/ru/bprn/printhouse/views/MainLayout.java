@@ -12,8 +12,10 @@ import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import ru.bprn.printhouse.data.entity.User;
@@ -32,6 +34,8 @@ import java.util.Optional;
 /**
  * The main view is a top-level placeholder for other views.
  */
+@Route("")
+@AnonymousAllowed
 public class MainLayout extends AppLayout {
 
     private H2 viewTitle;

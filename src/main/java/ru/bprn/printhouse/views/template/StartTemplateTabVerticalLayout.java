@@ -11,16 +11,21 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.flow.spring.annotation.UIScope;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
 import java.util.List;
 
+@UIScope
+@AnonymousAllowed
 public class StartTemplateTabVerticalLayout extends VerticalLayout{
 
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
-    private final MaterialService materialService;
+    private MaterialService materialService;
+
     private final GapService gapService;
     private final ImposeCaseService imposeCaseService;
 

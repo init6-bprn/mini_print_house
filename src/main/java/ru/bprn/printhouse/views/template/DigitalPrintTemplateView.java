@@ -19,8 +19,7 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import org.springframework.beans.factory.annotation.Autowired;
-import ru.bprn.printhouse.data.entity.DigitalPrintTemplate;
+import ru.bprn.printhouse.data.entity.Template;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
@@ -29,24 +28,24 @@ import ru.bprn.printhouse.views.MainLayout;
 @AnonymousAllowed
 public class DigitalPrintTemplateView extends VerticalLayout {
 
-    private final PrintMashineService printerService;
-    private final MaterialService materialService;
+    private MaterialService materialService;
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
     private final GapService gapService;
-    private DigitalPrintTemplateService digitalPrintTemplateService;
+    private final TemplateService templateService;
+    private final ImposeCaseService imposeCaseService;
     private final TabSheet tabSheet = new TabSheet();
+    private Template template = new Template();
 
-    @Autowired
-    public DigitalPrintTemplateView (PrintMashineService printerService, MaterialService materialService,
-                                     StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, GapService gapService,
-                                     DigitalPrintTemplateService digitalPrintTemplateService, ImposeCaseService imposeCaseService){
-        this.printerService = printerService;
+    public DigitalPrintTemplateView (StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
+                                     TemplateService templateService, ImposeCaseService imposeCaseService){
+        //this.printerService = printerService;
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
         this.typeOfMaterialService = typeOfMaterialService;
         this.gapService = gapService;
-        this.digitalPrintTemplateService = digitalPrintTemplateService;
+        this.templateService = templateService;
+        this.imposeCaseService = imposeCaseService;
 
         addGridSection();
         addTabSheetSection();
@@ -54,10 +53,15 @@ public class DigitalPrintTemplateView extends VerticalLayout {
     }
 
     private void addGridSection(){
-        Grid<DigitalPrintTemplate> grid = new Grid<>(DigitalPrintTemplate.class);
-        grid.setItems(digitalPrintTemplateService.findAll());
+        Grid<Template> grid = new Grid<>(Template.class);
+        grid.setItems(this.templateService.findAll());
         grid.setHeight("200px");
+        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         this.add(grid);
+        grid.addSelectionListener(selectionEvent -> {
+            if (selectionEvent.getFirstSelectedItem().isPresent())
+                     template = selectionEvent.getFirstSelectedItem().get();
+        });
 
     }
 
@@ -67,14 +71,17 @@ public class DigitalPrintTemplateView extends VerticalLayout {
 
         tabSheet.setPrefixComponent(closeAllButton);
         tabSheet.setWidthFull();
-        StartTemplateTabVerticalLayout startTab = new StartTemplateTabVerticalLayout(standartSizeService, typeOfMaterialService, materialService, gapService, imposeCaseService);
+        StartTemplateTabVerticalLayout startTab = new StartTemplateTabVerticalLayout(template, standartSizeService,
+                                                      typeOfMaterialService, materialService, gapService, imposeCaseService);
+
         tabSheet.add("Настройки", startTab);
 
         MenuBar menuBar = new MenuBar();
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.PLUS));
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> tabSheet.add(createTab("Цифровая печать"),
-                new TemplateView(startTab.getMaterial(), startTab.getSize(), startTab.getBleed(), printerService)));
+                new VerticalLayout()));
+                //new TemplateView(startTab.getMaterial(), startTab.getSize(), startTab.getBleed(), printerService)));
         subMenu.addItem("Резка", menuItemClickEvent -> tabSheet.add(createTab("Резка"), new VerticalLayout()));
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
         tabSheet.setSuffixComponent(menuBar);
@@ -98,15 +105,17 @@ public class DigitalPrintTemplateView extends VerticalLayout {
         var leftBtn = new Button(VaadinIcon.CHEVRON_CIRCLE_LEFT_O.create());
         leftBtn.addThemeVariants(ButtonVariant.LUMO_SMALL);
         leftBtn.addClickListener(e->{
-            Tabs tabs = (Tabs) tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst().get();
-            int i =  tabSheet.getIndexOf(tab);
-            tabs.setSelectedIndex(i);
-            tab.setSelected(true);
-            if (i>0) {
-                Tab twoTab = tabSheet.getTabAt(i);
-                tabs.setSelectedIndex(i-1);
-                tabs.addTabAtIndex(i-1,twoTab);
-                tabs.setSelectedTab(tab);
+            if (tabSheet.getChildren().anyMatch(Tabs.class::isInstance)) {
+                Tabs tabs = (Tabs) tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst().get();
+                int i = tabSheet.getIndexOf(tab);
+                tabs.setSelectedIndex(i);
+                tab.setSelected(true);
+                if (i > 0) {
+                    Tab twoTab = tabSheet.getTabAt(i);
+                    tabs.setSelectedIndex(i - 1);
+                    tabs.addTabAtIndex(i - 1, twoTab);
+                    tabs.setSelectedTab(tab);
+                }
             }
         });
 
@@ -123,16 +132,18 @@ public class DigitalPrintTemplateView extends VerticalLayout {
         var rightBtn = new Button(VaadinIcon.CHEVRON_CIRCLE_RIGHT_O.create());
         rightBtn.addThemeVariants(ButtonVariant.LUMO_SMALL);
         rightBtn.addClickListener(e->{
-            Tabs tabs = (Tabs) tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst().get();
-            int j = tabs.getComponentCount();
-            int i =  tabSheet.getIndexOf(tab);
-            tabs.setSelectedIndex(i);
-            tab.setSelected(true);
-            if (i+1<j) {
-                Tab twoTab = tabSheet.getTabAt(i+1);
+            if (tabSheet.getChildren().anyMatch(Tabs.class::isInstance)) {
+                Tabs tabs = (Tabs) tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst().get();
+                int j = tabs.getComponentCount();
+                int i = tabSheet.getIndexOf(tab);
                 tabs.setSelectedIndex(i);
-                tabs.addTabAtIndex(i,twoTab);
-                tabs.setSelectedTab(tab);
+                tab.setSelected(true);
+                if (i + 1 < j) {
+                    Tab twoTab = tabSheet.getTabAt(i + 1);
+                    tabs.setSelectedIndex(i);
+                    tabs.addTabAtIndex(i, twoTab);
+                    tabs.setSelectedTab(tab);
+                }
             }
         });
 
