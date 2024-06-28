@@ -53,7 +53,38 @@ public class DigitalPrintTemplateView extends VerticalLayout {
     }
 
     private void addGridSection(){
+
         Grid<Template> grid = new Grid<>(Template.class);
+
+        var dialog = new ConfirmDialog("Вы уверены, что хотите удалить этот workflow?" , "",
+                "Да",confirmEvent -> {if (template!=null) templateService.delete(template);},
+                "Нет", cancelEvent -> cancelEvent.getSource().close());
+
+        var hl = new HorizontalLayout();
+        var createButton = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> {});
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        var updateButton  = new Button(VaadinIcon.EDIT.create(), buttonClickEvent -> {
+            template = grid.getSelectedItems().stream().findFirst().orElse(null);
+        });
+        updateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+
+        var duplicateButton = new Button(VaadinIcon.COPY_O.create(), buttonClickEvent -> {
+            template = grid.getSelectedItems().stream().findFirst().orElse(null);
+            if (template!=null) ;
+        });
+        duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+
+        var deleteButton = new Button(VaadinIcon.CLOSE.create(), buttonClickEvent -> {
+            template = grid.getSelectedItems().stream().findFirst().orElse(null);
+            dialog.open();
+        });
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+
+
+        hl.add(createButton, updateButton, duplicateButton, deleteButton);
+        add(hl);
+
         grid.setItems(this.templateService.findAll());
         grid.setHeight("200px");
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
@@ -81,7 +112,6 @@ public class DigitalPrintTemplateView extends VerticalLayout {
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> tabSheet.add(createTab("Цифровая печать"),
                 new VerticalLayout()));
-                //new TemplateView(startTab.getMaterial(), startTab.getSize(), startTab.getBleed(), printerService)));
         subMenu.addItem("Резка", menuItemClickEvent -> tabSheet.add(createTab("Резка"), new VerticalLayout()));
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
         tabSheet.setSuffixComponent(menuBar);
