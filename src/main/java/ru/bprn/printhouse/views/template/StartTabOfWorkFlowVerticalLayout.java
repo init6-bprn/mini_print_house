@@ -11,19 +11,16 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
-import lombok.Setter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
-import java.util.List;
-
 @UIScope
 @AnonymousAllowed
-public class StartTemplateTabVerticalLayout extends VerticalLayout{
+public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout{
 
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
@@ -32,23 +29,23 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
     private final ImposeCaseService imposeCaseService;
 
     @Getter
-    private Binder<Template> templateBinder;
+    private BeanValidationBinder<WorkFlow> templateBinder;
 
     private final TextField nameOfTemplate = new TextField("Название шаблона: ");
 
-    public StartTemplateTabVerticalLayout(StandartSizeService standartSizeService, TypeOfMaterialService TypeOfMaterialService,
-                                          MaterialService materialService, GapService gapService, ImposeCaseService imposeCaseService){
+    public StartTabOfWorkFlowVerticalLayout(StandartSizeService standartSizeService, TypeOfMaterialService TypeOfMaterialService,
+                                            MaterialService materialService, GapService gapService, ImposeCaseService imposeCaseService){
         this.standartSizeService = standartSizeService;
         this.typeOfMaterialService = TypeOfMaterialService;
         this.materialService = materialService;
         this.gapService = gapService;
         this.imposeCaseService = imposeCaseService;
 
-        templateBinder = new Binder<>(Template.class);
+        templateBinder = new BeanValidationBinder<>(WorkFlow.class);
 
         setSizeUndefined();
         nameOfTemplate.setSizeFull();
-        templateBinder.bind(nameOfTemplate, Template::getName, Template::setName);
+        templateBinder.bind(nameOfTemplate, WorkFlow::getName, WorkFlow::setName);
         this.add(nameOfTemplate);
 
         addSizeOfProductSection();
@@ -98,7 +95,9 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         grid.setHeight("270px");
         grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
 
-        templateBinder.bind(grid.asSingleSelect(), Template::getMaterial, Template::setMaterial);
+        templateBinder.forField(grid.asSingleSelect()).asRequired().bind(WorkFlow::getMaterial, WorkFlow::setMaterial);
+
+        //templateBinder.bind(grid.asSingleSelect(), WorkFlow::getMaterial, WorkFlow::setMaterial);
 
         grid.getHeaderRows().clear();
         HeaderRow headerRow = grid.appendHeaderRow();
@@ -119,17 +118,20 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
 
         var sheetsQuantity = new IntegerField("Страниц в тетради");
         sheetsQuantity.setValue(1);
-        templateBinder.bind(sheetsQuantity, Template::getQuantityOfLeaves, Template::setQuantityOfLeaves);
+        templateBinder.bind(sheetsQuantity, WorkFlow::getQuantityOfLeaves, WorkFlow::setQuantityOfLeaves);
 
         var imposeCaseCombo = new ComboBox<ImposeCase>("Вариант спуска полос:");
         imposeCaseCombo.setItems(imposeCaseService.findAll());
-        templateBinder.bind(imposeCaseCombo, Template::getImposeCase, Template::setImposeCase);
+        templateBinder.forField(imposeCaseCombo).asRequired().bind(WorkFlow::getImposeCase, WorkFlow::setImposeCase);
+        //templateBinder.bind(imposeCaseCombo, WorkFlow::getImposeCase, WorkFlow::setImposeCase);
+
         imposeCaseCombo.addValueChangeListener(e->{
-            if (e.getValue().getName().equals("Однолистовое")) {
-                sheetsQuantity.setValue(1);
-                sheetsQuantity.setEnabled(false);
+            if (e.getValue()!=null) {
+                if (e.getValue().getName().equals("Однолистовое")) {
+                    sheetsQuantity.setValue(1);
+                    sheetsQuantity.setEnabled(false);
+                } else sheetsQuantity.setEnabled(true);
             }
-            else sheetsQuantity.setEnabled(true);
         });
 
         ha.add(imposeCaseCombo, sheetsQuantity);
@@ -147,15 +149,17 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
 
         var length = new NumberField();
         length.setLabel("Длина");
-        templateBinder.bind(length, Template::getSizeX, Template::setSizeX);
+        templateBinder.bind(length, WorkFlow::getSizeX, WorkFlow::setSizeX);
 
         var width = new NumberField();
         width.setLabel("Ширина");
-        templateBinder.bind(length, Template::getSizeY, Template::setSizeY);
+        templateBinder.bind(length, WorkFlow::getSizeY, WorkFlow::setSizeY);
 
         var sizeOfPaperCombo = new ComboBox<StandartSize>();
         sizeOfPaperCombo.setItems(standartSizeService.findAll());
-        templateBinder.bind(sizeOfPaperCombo, Template::getStandartSize, Template::setStandartSize);
+
+        templateBinder.forField(sizeOfPaperCombo).asRequired().bind(WorkFlow::getStandartSize, WorkFlow::setStandartSize);
+        //templateBinder.bind(sizeOfPaperCombo, WorkFlow::getStandartSize, WorkFlow::setStandartSize);
 
         sizeOfPaperCombo.setLabel("Размер изделия");
         sizeOfPaperCombo.setAllowCustomValue(false);
@@ -172,7 +176,7 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         dialog.addOpenedChangeListener(openedChangeEvent -> {
             if (!openedChangeEvent.isOpened()) {
                 if (dialog.getStandartSize()!= null) {
-                    sizeOfPaperCombo.getDataProvider().refreshAll();
+                    sizeOfPaperCombo.setItems(standartSizeService.findAll());
                     sizeOfPaperCombo.setValue(dialog.getStandartSize());
 
                 }
@@ -198,7 +202,9 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
 
         var bleedCombo = new ComboBox<Gap>("Припуск");
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
-        templateBinder.bind(bleedCombo, Template::getGap,Template::setGap);
+
+        templateBinder.forField(bleedCombo).asRequired().bind(WorkFlow::getGap, WorkFlow::setGap);
+        //templateBinder.bind(bleedCombo, WorkFlow::getGap,WorkFlow::setGap);
         bleedCombo.addValueChangeListener(e->{
             nameOfTemplate.setValue(setDefaultName());
         });

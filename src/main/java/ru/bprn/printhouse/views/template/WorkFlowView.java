@@ -7,7 +7,6 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.SortOrderProvider;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -20,40 +19,37 @@ import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.data.entity.Template;
+import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
-import java.util.Optional;
-
-@PageTitle("Шаблон для цифровой печати")
-@Route(value = "digital_print_templates", layout = MainLayout.class)
+@PageTitle("Создание и редактирование рабочих цепочек (WorkFlow)")
+@Route(value = "workflows", layout = MainLayout.class)
 @AnonymousAllowed
-public class DigitalPrintTemplateView extends SplitLayout {
+public class WorkFlowView extends SplitLayout {
 
     private MaterialService materialService;
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
     private final GapService gapService;
-    private final TemplateService templateService;
+    private final WorkFlowService workFlowService;
     private final ImposeCaseService imposeCaseService;
     private final TabSheet tabSheet = new TabSheet();
-    private Template template;
-    private StartTemplateTabVerticalLayout startTab;
+    private WorkFlow workFlow;
+    private StartTabOfWorkFlowVerticalLayout startTab;
 
-    private Grid<Template> templateGrid = new Grid<>(Template.class, false);
+    private Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
-    public DigitalPrintTemplateView (StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
-                                     TemplateService templateService, ImposeCaseService imposeCaseService){
+    public WorkFlowView(StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
+                        WorkFlowService workFlowService, ImposeCaseService imposeCaseService){
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
         this.typeOfMaterialService = typeOfMaterialService;
         this.gapService = gapService;
-        this.templateService = templateService;
+        this.workFlowService = workFlowService;
         this.imposeCaseService = imposeCaseService;
 
         this.setOrientation(Orientation.VERTICAL);
@@ -70,7 +66,10 @@ public class DigitalPrintTemplateView extends SplitLayout {
         vl.setSizeUndefined();
 
         var dialog = new ConfirmDialog("Вы уверены, что хотите удалить этот workflow?" , "",
-                "Да",confirmEvent -> {if (template!=null) templateService.delete(template);},
+                "Да", confirmEvent -> {if (workFlow !=null) {
+            workFlowService.delete(workFlow);
+                        templateGrid.getListDataView().removeItem(workFlow);
+                }},
                 "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         var hl = new HorizontalLayout();
@@ -78,16 +77,16 @@ public class DigitalPrintTemplateView extends SplitLayout {
             this.getPrimaryComponent().setVisible(false);
             this.getSecondaryComponent().getElement().setEnabled(true);
             this.setSplitterPosition(0);
-            template= new Template();
-            startTab.getTemplateBinder().setBean(template);
+            workFlow = new WorkFlow();
+            startTab.getTemplateBinder().setBean(workFlow);
         });
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         var updateButton  = new Button(VaadinIcon.EDIT.create(), buttonClickEvent -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
-                template = optTemp.get();
-                startTab.getTemplateBinder().readBean(template);
+                workFlow = optTemp.get();
+                startTab.getTemplateBinder().setBean(workFlow);
                 this.getPrimaryComponent().setVisible(false);
                 this.getSecondaryComponent().getElement().setEnabled(true);
                 this.setSplitterPosition(0);
@@ -99,17 +98,17 @@ public class DigitalPrintTemplateView extends SplitLayout {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 var ishueTemplate = optTemp.get();
-                template = new Template();
-                template.setName(ishueTemplate.getName());
-                template.setStandartSize(ishueTemplate.getStandartSize());
-                template.setSizeX(ishueTemplate.getSizeX());
-                template.setSizeY(ishueTemplate.getSizeY());
-                template.setImposeCase(ishueTemplate.getImposeCase());
-                template.setMaterial(ishueTemplate.getMaterial());
-                template.setGap(ishueTemplate.getGap());
-                template.setQuantityOfLeaves(ishueTemplate.getQuantityOfLeaves());
+                workFlow = new WorkFlow();
+                workFlow.setName(ishueTemplate.getName());
+                workFlow.setStandartSize(ishueTemplate.getStandartSize());
+                workFlow.setSizeX(ishueTemplate.getSizeX());
+                workFlow.setSizeY(ishueTemplate.getSizeY());
+                workFlow.setImposeCase(ishueTemplate.getImposeCase());
+                workFlow.setMaterial(ishueTemplate.getMaterial());
+                workFlow.setGap(ishueTemplate.getGap());
+                workFlow.setQuantityOfLeaves(ishueTemplate.getQuantityOfLeaves());
 
-                startTab.getTemplateBinder().readBean(template);
+                startTab.getTemplateBinder().setBean(workFlow);
                 this.getPrimaryComponent().setVisible(false);
                 this.getSecondaryComponent().getElement().setEnabled(true);
                 this.setSplitterPosition(0);
@@ -120,7 +119,7 @@ public class DigitalPrintTemplateView extends SplitLayout {
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), buttonClickEvent -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
-                template = optTemp.get();
+                workFlow = optTemp.get();
                 dialog.open();
             }
         });
@@ -130,20 +129,23 @@ public class DigitalPrintTemplateView extends SplitLayout {
         hl.add(createButton, updateButton, duplicateButton, deleteButton);
         vl.add(hl);
 
-        templateGrid.addColumn(Template::getName).setHeader("Имя");
-        templateGrid.addColumn(Template::getStandartSize).setHeader("Размер");
-        templateGrid.addColumn(Template::getMaterial).setHeader("Материал");
+        templateGrid.addColumn(WorkFlow::getName).setHeader("Имя");
+        templateGrid.addColumn(WorkFlow::getStandartSize).setHeader("Размер");
+        templateGrid.addColumn(WorkFlow::getMaterial).setHeader("Материал");
 
-        templateGrid.setItems(this.templateService.findAll());
+        templateGrid.setItems(this.workFlowService.findAll());
         templateGrid.setHeight("200px");
         templateGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         templateGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         vl.add(templateGrid);
+
         templateGrid.addSelectionListener(selectionEvent -> {
             if (selectionEvent.getFirstSelectedItem().isPresent())
-                     template = selectionEvent.getFirstSelectedItem().get();
+                     workFlow = selectionEvent.getFirstSelectedItem().get();
         });
+
+        templateGrid.addItemDoubleClickListener(__->updateButton.click());
         return vl;
     }
 
@@ -153,29 +155,18 @@ public class DigitalPrintTemplateView extends SplitLayout {
         confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         confirmButton.addClickListener(e-> {
             var binder = startTab.getTemplateBinder();
-            Notification.show("готовимся к записи");
-            binder.validate();
             if (binder.isValid()) {
-                Notification.show("Бин валидный!");
-                try {
-                    binder.writeBean(template);
-                    Notification.show("Записали!");
-                    binder.readBean(template);
-                } catch (ValidationException ex) {
-                    Notification.show("Запись не удалась!");
-                    throw new RuntimeException(ex);
-
-                }
+                workFlowService.save(binder.getBean());
                 this.getPrimaryComponent().setVisible(true);
                 this.getSecondaryComponent().getElement().setEnabled(false);
                 this.setSplitterPosition(35.0);
-                this.templateGrid.getDataProvider().refreshAll();
+                this.templateGrid.setItems(workFlowService.findAll());
             } else Notification.show("Заполните все требуемые поля!");
         });
 
         var cancelButton = new Button("Отмена");
         cancelButton.addClickListener(buttonClickEvent -> {
-           // startTab.getTemplateBinder()
+           startTab.getTemplateBinder().removeBean();
            this.getPrimaryComponent().setVisible(true);
            this.getSecondaryComponent().getElement().setEnabled(false);
            this.setSplitterPosition(35.0);
@@ -185,7 +176,7 @@ public class DigitalPrintTemplateView extends SplitLayout {
         tabSheet.setSuffixComponent(new HorizontalLayout(cancelButton,confirmButton));
         var vel = new VerticalLayout();
         tabSheet.setWidthFull();
-        startTab = new StartTemplateTabVerticalLayout(standartSizeService,
+        startTab = new StartTabOfWorkFlowVerticalLayout(standartSizeService,
                                                       typeOfMaterialService, materialService, gapService, imposeCaseService);
 
         tabSheet.add("Настройки", startTab);

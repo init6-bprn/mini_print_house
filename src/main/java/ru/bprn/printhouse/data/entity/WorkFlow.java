@@ -1,15 +1,8 @@
 package ru.bprn.printhouse.data.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.*;
-import ru.bprn.printhouse.data.AbstractWork;
-
-import java.util.LinkedList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -18,8 +11,8 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "template")
-public class Template{
+@Table(name = "workflow")
+public class WorkFlow {
     @Id
     @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,11 +26,9 @@ public class Template{
     @JoinColumn (name = "standart_size", nullable = false)
     private StandartSize standartSize;
 
-    @NotEmpty
     @PositiveOrZero
     private Double sizeX = 0d;
 
-    @NotEmpty
     @PositiveOrZero
     private Double sizeY = 0d;
 
@@ -45,13 +36,9 @@ public class Template{
     @JoinColumn (name = "material", nullable = false)
     private Material material;
 
-    @NotEmpty
     @Positive
     private Integer quantityOfLeaves = 1;
-/*
-    @OneToMany
-    private List<AbstractWork> abstractWorkList = new LinkedList<>();
-*/
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "gap", nullable = false)
     private Gap gap;
@@ -60,20 +47,6 @@ public class Template{
     @JoinColumn(name = "impose_case", nullable = false)
     private ImposeCase imposeCase;
 
-/*
-    public Integer calculateTime() {
-        return 0;
-
-    }
-
-    public Double calculateCost() {
-        Double price = 0d;
-        for (AbstractWork aw: abstractWorkList) {
-            price += aw.calculateCost();
-        };
-        return price;
-    }
-*/
     public void setName(String name) {
         if (name.equals("auto")) {
             if ((this.getStandartSize() != null) & (this.getMaterial() != null) & (this.getGap() != null)) {
