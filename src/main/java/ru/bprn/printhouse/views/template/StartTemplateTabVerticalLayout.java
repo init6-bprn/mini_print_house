@@ -11,8 +11,11 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
+import lombok.Getter;
+import lombok.Setter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
@@ -24,33 +27,33 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
 
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
-    private MaterialService materialService;
-
+    private final MaterialService materialService;
     private final GapService gapService;
     private final ImposeCaseService imposeCaseService;
 
-    private final Template template;
+    @Getter
+    private Binder<Template> templateBinder;
 
     private final TextField nameOfTemplate = new TextField("Название шаблона: ");
 
-    public StartTemplateTabVerticalLayout(Template template, StandartSizeService standartSizeService, TypeOfMaterialService TypeOfMaterialService,
+    public StartTemplateTabVerticalLayout(StandartSizeService standartSizeService, TypeOfMaterialService TypeOfMaterialService,
                                           MaterialService materialService, GapService gapService, ImposeCaseService imposeCaseService){
         this.standartSizeService = standartSizeService;
         this.typeOfMaterialService = TypeOfMaterialService;
         this.materialService = materialService;
         this.gapService = gapService;
         this.imposeCaseService = imposeCaseService;
-        this.template = template;
 
-        setSizeFull();
+        templateBinder = new Binder<>(Template.class);
+
+        setSizeUndefined();
         nameOfTemplate.setSizeFull();
+        templateBinder.bind(nameOfTemplate, Template::getName, Template::setName);
         this.add(nameOfTemplate);
 
         addSizeOfProductSection();
         addSetOfSheetsSection();
         addMaterialSection();
-
-        nameOfTemplate.setValue(setDefaultName());
     }
 
     private void addMaterialSection() {
@@ -93,10 +96,9 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.setHeight("270px");
-        List<Material> list = materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue());
-        grid.setItems(list);
-        list.stream().findFirst().ifPresent(template::setMaterial);
-        grid.select(template.getMaterial());
+        grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
+
+        templateBinder.bind(grid.asSingleSelect(), Template::getMaterial, Template::setMaterial);
 
         grid.getHeaderRows().clear();
         HeaderRow headerRow = grid.appendHeaderRow();
@@ -106,7 +108,6 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         headerRow.getCell(thicknessColumn).setComponent(thicknessCombo);
 
         grid.addSelectionListener(selectionEvent -> {
-            selectionEvent.getFirstSelectedItem().ifPresent(template::setMaterial);
             nameOfTemplate.setValue(setDefaultName());
         });
 
@@ -118,13 +119,13 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
 
         var sheetsQuantity = new IntegerField("Страниц в тетради");
         sheetsQuantity.setValue(1);
-        sheetsQuantity.addValueChangeListener(e->template.setQuantityOfLeaves(e.getValue()));
+        templateBinder.bind(sheetsQuantity, Template::getQuantityOfLeaves, Template::setQuantityOfLeaves);
 
         var imposeCaseCombo = new ComboBox<ImposeCase>("Вариант спуска полос:");
         imposeCaseCombo.setItems(imposeCaseService.findAll());
+        templateBinder.bind(imposeCaseCombo, Template::getImposeCase, Template::setImposeCase);
         imposeCaseCombo.addValueChangeListener(e->{
-            template.setImposeCase(e.getValue());
-            if (template.getImposeCase().getName().equals("Однолистовое")) {
+            if (e.getValue().getName().equals("Однолистовое")) {
                 sheetsQuantity.setValue(1);
                 sheetsQuantity.setEnabled(false);
             }
@@ -146,25 +147,24 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
 
         var length = new NumberField();
         length.setLabel("Длина");
-        length.addValueChangeListener(e->template.setSizeX(e.getValue()));
+        templateBinder.bind(length, Template::getSizeX, Template::setSizeX);
 
         var width = new NumberField();
         width.setLabel("Ширина");
-        width.addValueChangeListener(e->template.setSizeY(e.getValue()));
+        templateBinder.bind(length, Template::getSizeY, Template::setSizeY);
 
         var sizeOfPaperCombo = new ComboBox<StandartSize>();
         sizeOfPaperCombo.setItems(standartSizeService.findAll());
-        comboBoxViewFirstElement(sizeOfPaperCombo);
-        template.setStandartSize(sizeOfPaperCombo.getValue());
+        templateBinder.bind(sizeOfPaperCombo, Template::getStandartSize, Template::setStandartSize);
+
         sizeOfPaperCombo.setLabel("Размер изделия");
         sizeOfPaperCombo.setAllowCustomValue(false);
         sizeOfPaperCombo.addValueChangeListener(e -> {
-            template.setStandartSize(e.getValue());
-            template.setSizeX(e.getValue().getLength());
-            template.setSizeY(e.getValue().getWidth());
-            length.setValue(template.getSizeX());
-            width.setValue(template.getSizeY());
-            nameOfTemplate.setValue(setDefaultName());
+            if (e.getValue()!=null) {
+                length.setValue(e.getValue().getLength());
+                width.setValue(e.getValue().getWidth());
+                nameOfTemplate.setValue(setDefaultName());
+            }
         }) ;
 
         var dialog = new SizeDialog(standartSizeService);
@@ -188,18 +188,18 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
         layout.getThemeList().clear();
         layout.getThemeList().add("spacing-xs");
         addSizeButton.addClickListener(e-> {
-            dialog.setX(length.getValue());
-            dialog.setY(width.getValue());
-            dialog.setModal(true);
-            dialog.open();
+            if ((length.getValue()!=null)&&(width.getValue()!=null)) {
+                dialog.setX(length.getValue());
+                dialog.setY(width.getValue());
+                dialog.setModal(true);
+                dialog.open();
+            }
         });
 
         var bleedCombo = new ComboBox<Gap>("Припуск");
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
-        comboBoxViewFirstElement(bleedCombo);
-        template.setGap(bleedCombo.getValue());
+        templateBinder.bind(bleedCombo, Template::getGap,Template::setGap);
         bleedCombo.addValueChangeListener(e->{
-            template.setGap(e.getValue());
             nameOfTemplate.setValue(setDefaultName());
         });
 
@@ -208,13 +208,11 @@ public class StartTemplateTabVerticalLayout extends VerticalLayout{
     }
 
     private String setDefaultName() {
-        if ((template.getStandartSize()!=null)&(template.getMaterial()!=null)&(template.getGap()!=null)) {
-            template.setName(template.getStandartSize().getName()+" - "+template.getMaterial().getName()+" - "+
-                    template.getMaterial().getThickness().toString()+"г. - "+template.getMaterial().getSizeOfPrintLeaf()+
-                    " - "+template.getGap().getName());
+        if (templateBinder.getBean()!= null) {
+            templateBinder.getBean().setName("auto");
+            return templateBinder.getBean().getName();
         }
-        else template.setName("Заполните все поля!");
-        return template.getName();
+        return  "null";
     }
 
 }

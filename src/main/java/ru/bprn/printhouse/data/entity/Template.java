@@ -27,10 +27,10 @@ public class Template{
     private Long id;
 
     @NotBlank
-    private String name = "";
+    private String name = "auto";
 
     @ManyToOne (fetch = FetchType.EAGER)
-    @JoinColumn (name = "standart_size")
+    @JoinColumn (name = "standart_size", nullable = false)
     private StandartSize standartSize;
 
     @NotEmpty
@@ -73,12 +73,16 @@ public class Template{
         };
         return price;
     }
-
-    private void setName() {
-        if ((material!=null)&(standartSize!=null)&(gap!=null))
-             name = standartSize.getName()+" - "+material.getName()+" - "+material.getThickness().toString()+"г. - "+material.getSizeOfPrintLeaf()+" - "+gap.getName();
-        else name = "";
-    }
 */
-
+    public void setName(String name) {
+        if (name.equals("auto")) {
+            if ((this.getStandartSize() != null) & (this.getMaterial() != null) & (this.getGap() != null)) {
+                this.name = this.getStandartSize().getName() + " - " + this.getMaterial().getName() + " - " +
+                        this.getMaterial().getThickness().toString() + "г. - " + this.getMaterial().getSizeOfPrintLeaf() +
+                        " - " + this.getGap().getName();
+            }
+            else this.name = name;
+        }
+        else this.name = name;
+    }
 }

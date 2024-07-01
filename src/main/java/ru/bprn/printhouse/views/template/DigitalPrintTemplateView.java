@@ -6,16 +6,21 @@ import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.SortOrderProvider;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -23,10 +28,12 @@ import ru.bprn.printhouse.data.entity.Template;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
+import java.util.Optional;
+
 @PageTitle("Шаблон для цифровой печати")
 @Route(value = "digital_print_templates", layout = MainLayout.class)
 @AnonymousAllowed
-public class DigitalPrintTemplateView extends VerticalLayout {
+public class DigitalPrintTemplateView extends SplitLayout {
 
     private MaterialService materialService;
     private final StandartSizeService standartSizeService;
@@ -35,11 +42,13 @@ public class DigitalPrintTemplateView extends VerticalLayout {
     private final TemplateService templateService;
     private final ImposeCaseService imposeCaseService;
     private final TabSheet tabSheet = new TabSheet();
-    private Template template = new Template();
+    private Template template;
+    private StartTemplateTabVerticalLayout startTab;
+
+    private Grid<Template> templateGrid = new Grid<>(Template.class, false);
 
     public DigitalPrintTemplateView (StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
                                      TemplateService templateService, ImposeCaseService imposeCaseService){
-        //this.printerService = printerService;
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
         this.typeOfMaterialService = typeOfMaterialService;
@@ -47,62 +56,136 @@ public class DigitalPrintTemplateView extends VerticalLayout {
         this.templateService = templateService;
         this.imposeCaseService = imposeCaseService;
 
-        addGridSection();
-        addTabSheetSection();
+        this.setOrientation(Orientation.VERTICAL);
+        addToPrimary(addGridSection());
+        addToSecondary(addTabSheetSection());
+        this.getSecondaryComponent().getElement().setEnabled(false);
+        this.setSizeFull();
+        this.setSplitterPosition(35.0);
 
     }
 
-    private void addGridSection(){
-
-        Grid<Template> grid = new Grid<>(Template.class);
+    private VerticalLayout addGridSection(){
+        var vl = new VerticalLayout();
+        vl.setSizeUndefined();
 
         var dialog = new ConfirmDialog("Вы уверены, что хотите удалить этот workflow?" , "",
                 "Да",confirmEvent -> {if (template!=null) templateService.delete(template);},
                 "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         var hl = new HorizontalLayout();
-        var createButton = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> {});
+        var createButton = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> {
+            this.getPrimaryComponent().setVisible(false);
+            this.getSecondaryComponent().getElement().setEnabled(true);
+            this.setSplitterPosition(0);
+            template= new Template();
+            startTab.getTemplateBinder().setBean(template);
+        });
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         var updateButton  = new Button(VaadinIcon.EDIT.create(), buttonClickEvent -> {
-            template = grid.getSelectedItems().stream().findFirst().orElse(null);
+            var optTemp = templateGrid.getSelectedItems().stream().findFirst();
+            if (optTemp.isPresent()) {
+                template = optTemp.get();
+                startTab.getTemplateBinder().readBean(template);
+                this.getPrimaryComponent().setVisible(false);
+                this.getSecondaryComponent().getElement().setEnabled(true);
+                this.setSplitterPosition(0);
+            }
         });
         updateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
         var duplicateButton = new Button(VaadinIcon.COPY_O.create(), buttonClickEvent -> {
-            template = grid.getSelectedItems().stream().findFirst().orElse(null);
-            if (template!=null) ;
+            var optTemp = templateGrid.getSelectedItems().stream().findFirst();
+            if (optTemp.isPresent()) {
+                var ishueTemplate = optTemp.get();
+                template = new Template();
+                template.setName(ishueTemplate.getName());
+                template.setStandartSize(ishueTemplate.getStandartSize());
+                template.setSizeX(ishueTemplate.getSizeX());
+                template.setSizeY(ishueTemplate.getSizeY());
+                template.setImposeCase(ishueTemplate.getImposeCase());
+                template.setMaterial(ishueTemplate.getMaterial());
+                template.setGap(ishueTemplate.getGap());
+                template.setQuantityOfLeaves(ishueTemplate.getQuantityOfLeaves());
+
+                startTab.getTemplateBinder().readBean(template);
+                this.getPrimaryComponent().setVisible(false);
+                this.getSecondaryComponent().getElement().setEnabled(true);
+                this.setSplitterPosition(0);
+            }
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), buttonClickEvent -> {
-            template = grid.getSelectedItems().stream().findFirst().orElse(null);
-            dialog.open();
+            var optTemp = templateGrid.getSelectedItems().stream().findFirst();
+            if (optTemp.isPresent()) {
+                template = optTemp.get();
+                dialog.open();
+            }
         });
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
 
         hl.add(createButton, updateButton, duplicateButton, deleteButton);
-        add(hl);
+        vl.add(hl);
 
-        grid.setItems(this.templateService.findAll());
-        grid.setHeight("200px");
-        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
-        this.add(grid);
-        grid.addSelectionListener(selectionEvent -> {
+        templateGrid.addColumn(Template::getName).setHeader("Имя");
+        templateGrid.addColumn(Template::getStandartSize).setHeader("Размер");
+        templateGrid.addColumn(Template::getMaterial).setHeader("Материал");
+
+        templateGrid.setItems(this.templateService.findAll());
+        templateGrid.setHeight("200px");
+        templateGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        templateGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+
+        vl.add(templateGrid);
+        templateGrid.addSelectionListener(selectionEvent -> {
             if (selectionEvent.getFirstSelectedItem().isPresent())
                      template = selectionEvent.getFirstSelectedItem().get();
         });
-
+        return vl;
     }
 
-    private void addTabSheetSection(){
-        Button closeAllButton = new Button("Close all");
-        closeAllButton.addClickListener(e-> tabSheet.getChildren().forEach(tabSheet::remove));
+    private VerticalLayout addTabSheetSection(){
 
-        tabSheet.setPrefixComponent(closeAllButton);
+        var confirmButton = new Button("Сохранить");
+        confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        confirmButton.addClickListener(e-> {
+            var binder = startTab.getTemplateBinder();
+            Notification.show("готовимся к записи");
+            binder.validate();
+            if (binder.isValid()) {
+                Notification.show("Бин валидный!");
+                try {
+                    binder.writeBean(template);
+                    Notification.show("Записали!");
+                    binder.readBean(template);
+                } catch (ValidationException ex) {
+                    Notification.show("Запись не удалась!");
+                    throw new RuntimeException(ex);
+
+                }
+                this.getPrimaryComponent().setVisible(true);
+                this.getSecondaryComponent().getElement().setEnabled(false);
+                this.setSplitterPosition(35.0);
+                this.templateGrid.getDataProvider().refreshAll();
+            } else Notification.show("Заполните все требуемые поля!");
+        });
+
+        var cancelButton = new Button("Отмена");
+        cancelButton.addClickListener(buttonClickEvent -> {
+           // startTab.getTemplateBinder()
+           this.getPrimaryComponent().setVisible(true);
+           this.getSecondaryComponent().getElement().setEnabled(false);
+           this.setSplitterPosition(35.0);
+        });
+
+
+        tabSheet.setSuffixComponent(new HorizontalLayout(cancelButton,confirmButton));
+        var vel = new VerticalLayout();
         tabSheet.setWidthFull();
-        StartTemplateTabVerticalLayout startTab = new StartTemplateTabVerticalLayout(template, standartSizeService,
+        startTab = new StartTemplateTabVerticalLayout(standartSizeService,
                                                       typeOfMaterialService, materialService, gapService, imposeCaseService);
 
         tabSheet.add("Настройки", startTab);
@@ -114,7 +197,7 @@ public class DigitalPrintTemplateView extends VerticalLayout {
                 new VerticalLayout()));
         subMenu.addItem("Резка", menuItemClickEvent -> tabSheet.add(createTab("Резка"), new VerticalLayout()));
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
-        tabSheet.setSuffixComponent(menuBar);
+        tabSheet.setPrefixComponent(menuBar);
 
         tabSheet.addSelectedChangeListener(selectedChangeEvent -> {
             Tab tabb = selectedChangeEvent.getPreviousTab();
@@ -122,14 +205,15 @@ public class DigitalPrintTemplateView extends VerticalLayout {
 
             Notification.show("Надо проверить "+vl.getClass().toString());
         });
-        this.add(tabSheet);
+        vel.add(tabSheet);
+        return vel;
     }
 
     private Tab createTab (String str){
         var tab = new Tab();
         var la = new HorizontalLayout();
         var vla = new VerticalLayout();
-        vla.setAlignItems(Alignment.CENTER);
+        vla.setAlignItems(FlexComponent.Alignment.CENTER);
         vla.add(new Span(str));
 
         var leftBtn = new Button(VaadinIcon.CHEVRON_CIRCLE_LEFT_O.create());
