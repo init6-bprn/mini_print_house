@@ -13,18 +13,11 @@ import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.views.MainLayout;
 
-@PageTitle("Шаблоны работ")
-@Route(value = "templates", layout = MainLayout.class)
 
 @AnonymousAllowed
 public class TemplateView extends VerticalLayout {
 
-
-    private final Material material;
-    private final StandartSize size;
-    private final Gap bleed;
     private final PrintMashineService printerService;
-    private final SizeOfPrintLeaf sizeOfPrintLeaf;
 
     @PropertyId("printMashine")
     private final ComboBox<PrintMashine> printerCombo = new ComboBox<>();
@@ -40,13 +33,9 @@ public class TemplateView extends VerticalLayout {
 
     private final RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>("Ориентация");
 
-    public TemplateView(Material material, StandartSize size, Gap bleed,
-            PrintMashineService printerService){
-        this.material = material;
-        this.size = size;
-        this.bleed = bleed;
+    public TemplateView(PrintMashineService printerService){
+
         this.printerService = printerService;
-        this.sizeOfPrintLeaf = this.material.getSizeOfPrintLeaf();
 
         //Binder<DigitalPrintTemplate> binder = new BeanValidationBinder<>(DigitalPrintTemplate.class,true);
         //binder.bindInstanceFields(this);
@@ -95,7 +84,7 @@ public class TemplateView extends VerticalLayout {
 
         radioGroup.setItems("Автоматически", "Вертикальная", "Горизонтальная");
         radioGroup.setValue("Автоматически");
-        radioGroup.addValueChangeListener(e-> calculateAndSetQuantity());
+       // radioGroup.addValueChangeListener(e-> calculateAndSetQuantity());
         add(radioGroup);
 
         quantityOfPrintLeaves.setReadOnly(true);
@@ -115,7 +104,7 @@ public class TemplateView extends VerticalLayout {
         mass[2] = mass[1]*mass[0];
         return mass;
     }
-
+/*
     private void calculateAndSetQuantity(){
         if ((sizeOfPrintLeaf!=null)&(size!=null)&(printerCombo.getValue()!=null)&(bleed!=null)) {
             int[] mass1 = getQuantity(sizeOfPrintLeaf.getLength()-printerCombo.getValue().getGap().getGapLeft()-printerCombo.getValue().getGap().getGapRight(),
@@ -142,7 +131,7 @@ public class TemplateView extends VerticalLayout {
             }
         }
     }
-
+*/
     private <T> void comboBoxViewFirstElement (ComboBox<T> combo) {
         if (combo.getListDataView().getItemCount()>0) combo.setValue(combo.getListDataView().getItem(0));
     }

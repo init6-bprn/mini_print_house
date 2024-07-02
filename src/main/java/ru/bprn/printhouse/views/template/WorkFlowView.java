@@ -31,6 +31,7 @@ import ru.bprn.printhouse.views.MainLayout;
 @AnonymousAllowed
 public class WorkFlowView extends SplitLayout {
 
+    private final PrintMashineService printMashineService;
     private MaterialService materialService;
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
@@ -43,8 +44,9 @@ public class WorkFlowView extends SplitLayout {
 
     private Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
-    public WorkFlowView(StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
+    public WorkFlowView(PrintMashineService printMashineService, StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
                         WorkFlowService workFlowService, ImposeCaseService imposeCaseService){
+        this.printMashineService = printMashineService;
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
         this.typeOfMaterialService = typeOfMaterialService;
@@ -185,7 +187,7 @@ public class WorkFlowView extends SplitLayout {
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.PLUS));
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> tabSheet.add(createTab("Цифровая печать"),
-                new VerticalLayout()));
+                new TemplateView(printMashineService)));
         subMenu.addItem("Резка", menuItemClickEvent -> tabSheet.add(createTab("Резка"), new VerticalLayout()));
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
         tabSheet.setPrefixComponent(menuBar);
