@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.views.template;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -25,6 +26,8 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
+
+import java.util.List;
 
 @PageTitle("Создание и редактирование рабочих цепочек (WorkFlow)")
 @Route(value = "workflows", layout = MainLayout.class)
@@ -156,14 +159,25 @@ public class WorkFlowView extends SplitLayout {
         var confirmButton = new Button("Сохранить");
         confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         confirmButton.addClickListener(e-> {
-            var binder = startTab.getTemplateBinder();
-            if (binder.isValid()) {
-                workFlowService.save(binder.getBean());
+            HasBinder hb;
+            boolean flag = false;
+            List<Component> list = tabSheet.getChildren().filter(Tab.class::isInstance).toList();
+            for (Component comp : list) {
+                hb = (HasBinder) tabSheet.getComponent((Tab) comp);
+                if (!hb.isValid()) {
+                    Notification.show("Заполните все требуемые поля!");
+                    tabSheet.setSelectedTab((Tab) comp);
+                    flag = true;
+                }
+                if (flag) break;
+            }
+            if (!flag) {
+                workFlowService.save(startTab.getTemplateBinder().getBean());
                 this.getPrimaryComponent().setVisible(true);
                 this.getSecondaryComponent().getElement().setEnabled(false);
                 this.setSplitterPosition(35.0);
                 this.templateGrid.setItems(workFlowService.findAll());
-            } else Notification.show("Заполните все требуемые поля!");
+            }
         });
 
         var cancelButton = new Button("Отмена");
@@ -187,16 +201,21 @@ public class WorkFlowView extends SplitLayout {
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.PLUS));
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> tabSheet.add(createTab("Цифровая печать"),
-                new TemplateView(printMashineService)));
+                new PrintingTabOfWorkFlowVerticalLayout(printMashineService)));
         subMenu.addItem("Резка", menuItemClickEvent -> tabSheet.add(createTab("Резка"), new VerticalLayout()));
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
         tabSheet.setPrefixComponent(menuBar);
 
         tabSheet.addSelectedChangeListener(selectedChangeEvent -> {
-            Tab tabb = selectedChangeEvent.getPreviousTab();
-            VerticalLayout vl = (VerticalLayout) selectedChangeEvent.getSource().getComponent(tabb);
+            /*
+            HasBinder hb = (HasBinder) tabSheet.getComponent(selectedChangeEvent.getPreviousTab());
+            if (!hb.isValid()) {
+                Notification.show("Остаёмся на вкладке, правим ошибки!");
+                tabSheet.setSelectedTab(selectedChangeEvent.getPreviousTab());
 
-            Notification.show("Надо проверить "+vl.getClass().toString());
+            }
+
+             */
         });
         vel.add(tabSheet);
         return vel;

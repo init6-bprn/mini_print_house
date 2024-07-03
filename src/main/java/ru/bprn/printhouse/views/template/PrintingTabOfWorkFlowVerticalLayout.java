@@ -5,22 +5,20 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.PropertyId;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.data.entity.*;
+import lombok.Getter;
+import ru.bprn.printhouse.data.entity.DigitalPrinting;
+import ru.bprn.printhouse.data.entity.PrintMashine;
+import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.service.PrintMashineService;
-import ru.bprn.printhouse.views.MainLayout;
 
 
 @AnonymousAllowed
-public class TemplateView extends VerticalLayout {
+public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder {
 
     private final PrintMashineService printerService;
-
-    @PropertyId("printMashine")
-    private final ComboBox<PrintMashine> printerCombo = new ComboBox<>();
 
     @PropertyId("rowsOnLeaf")
     private final IntegerField rowsOnLeaf = new IntegerField("Колонок:");
@@ -33,46 +31,51 @@ public class TemplateView extends VerticalLayout {
 
     private final RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>("Ориентация");
 
-    public TemplateView(PrintMashineService printerService){
+    @Getter
+    private final BeanValidationBinder<DigitalPrinting> templateBinder;
+
+    public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService){
 
         this.printerService = printerService;
 
-        //Binder<DigitalPrintTemplate> binder = new BeanValidationBinder<>(DigitalPrintTemplate.class,true);
-        //binder.bindInstanceFields(this);
+        templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
 
         addPrinterSection();
         addQuantityAndOrientation();
     }
 
     private void addPrinterSection() {
+
         var hLayout = new HorizontalLayout();
+
         var coverQuantityOfColor = new ComboBox<QuantityColors>();
+        templateBinder.forField(coverQuantityOfColor).asRequired().bind(DigitalPrinting::getQuantityColorsCover, DigitalPrinting::setQuantityColorsCover);
+
         var backQuantityOfColor = new ComboBox<QuantityColors>();
+        templateBinder.forField(backQuantityOfColor).asRequired().bind(DigitalPrinting::getQuantityColorsBack, DigitalPrinting::setQuantityColorsBack);
+
         // Принтеры
+        var printerCombo = new ComboBox<PrintMashine>();
         printerCombo.setLabel("Принтер:");
         printerCombo.setAllowCustomValue(false);
         printerCombo.setItems(printerService.findAll());
-        comboBoxViewFirstElement(printerCombo);
+        templateBinder.forField(printerCombo).asRequired().bind(DigitalPrinting::getPrintMashine, DigitalPrinting::setPrintMashine);
 
         // Цветность лица
         coverQuantityOfColor.setLabel("Лицо");
         if (printerCombo.getValue()!=null) {
             coverQuantityOfColor.setItems(printerCombo.getValue().getQuantityColors());
-            comboBoxViewFirstElement(coverQuantityOfColor);
         }
 
         // Цветность оборота
         backQuantityOfColor.setLabel("Оборот");
         if (printerCombo.getValue()!=null) {
             backQuantityOfColor.setItems(printerCombo.getValue().getQuantityColors());
-            comboBoxViewFirstElement(backQuantityOfColor);
         }
 
         printerCombo.addValueChangeListener(e -> {
             coverQuantityOfColor.setItems(e.getValue().getQuantityColors());
-            comboBoxViewFirstElement(coverQuantityOfColor);
             backQuantityOfColor.setItems(e.getValue().getQuantityColors());
-            comboBoxViewFirstElement(backQuantityOfColor);
         });
 
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
@@ -142,4 +145,8 @@ public class TemplateView extends VerticalLayout {
         quantityOfPrintLeaves.setValue(quan);
     }
 
+    @Override
+    public Boolean isValid() {
+        return templateBinder.isValid();
+    }
 }
