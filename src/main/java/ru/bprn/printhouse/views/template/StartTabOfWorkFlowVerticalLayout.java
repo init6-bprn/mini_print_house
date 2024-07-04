@@ -1,5 +1,7 @@
 package ru.bprn.printhouse.views.template;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
@@ -15,31 +17,36 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
 @UIScope
 @AnonymousAllowed
-public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder{
+public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder, HasVolumeAsString{
 
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
     private final MaterialService materialService;
     private final GapService gapService;
     private final ImposeCaseService imposeCaseService;
+    private ObjectMapper objectMapper;
 
     @Getter
     private final BeanValidationBinder<WorkFlow> templateBinder;
 
     private final TextField nameOfTemplate = new TextField("Название шаблона: ");
-
+    @Autowired
     public StartTabOfWorkFlowVerticalLayout(StandartSizeService standartSizeService, TypeOfMaterialService TypeOfMaterialService,
-                                            MaterialService materialService, GapService gapService, ImposeCaseService imposeCaseService){
+                                            MaterialService materialService, GapService gapService,
+                                            ImposeCaseService imposeCaseService){
         this.standartSizeService = standartSizeService;
         this.typeOfMaterialService = TypeOfMaterialService;
         this.materialService = materialService;
         this.gapService = gapService;
         this.imposeCaseService = imposeCaseService;
+        objectMapper = new ObjectMapper();
 
         templateBinder = new BeanValidationBinder<>(WorkFlow.class);
 
@@ -219,6 +226,23 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
     @Override
     public Boolean isValid() {
         return templateBinder.isValid();
+    }
+    @Override
+    public String getVolumeAsString(){
+        try {
+            return this.getClass().getSimpleName() + objectMapper.writeValueAsString(templateBinder.getBean());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+    @Override
+    public void setVolumeAsString(String str){
+        try {
+            templateBinder.setBean(objectMapper.readValue(str, WorkFlow.class));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

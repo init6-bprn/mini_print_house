@@ -1,5 +1,7 @@
 package ru.bprn.printhouse.views.template;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -12,13 +14,15 @@ import lombok.Getter;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.QuantityColors;
+import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.PrintMashineService;
 
 
 @AnonymousAllowed
-public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder {
+public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder, HasVolumeAsString {
 
     private final PrintMashineService printerService;
+    private ObjectMapper objectMapper;
 
     @PropertyId("rowsOnLeaf")
     private final IntegerField rowsOnLeaf = new IntegerField("Колонок:");
@@ -37,7 +41,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
     public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService){
 
         this.printerService = printerService;
-
+        objectMapper = new ObjectMapper();
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
 
         addPrinterSection();
@@ -148,5 +152,23 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
     @Override
     public Boolean isValid() {
         return templateBinder.isValid();
+    }
+
+    @Override
+    public String getVolumeAsString(){
+        try {
+            return this.getClass().getSimpleName() + objectMapper.writeValueAsString(templateBinder.getBean());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+    @Override
+    public void setVolumeAsString(String str){
+        try {
+            templateBinder.setBean(objectMapper.readValue(str, DigitalPrinting.class));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -1,6 +1,8 @@
 package ru.bprn.printhouse.views.template;
 
+import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -27,7 +29,9 @@ import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
+import java.awt.event.ComponentEvent;
 import java.util.List;
+import java.util.Optional;
 
 @PageTitle("Создание и редактирование рабочих цепочек (WorkFlow)")
 @Route(value = "workflows", layout = MainLayout.class)
@@ -35,7 +39,7 @@ import java.util.List;
 public class WorkFlowView extends SplitLayout {
 
     private final PrintMashineService printMashineService;
-    private MaterialService materialService;
+    private final MaterialService materialService;
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
     private final GapService gapService;
@@ -49,6 +53,7 @@ public class WorkFlowView extends SplitLayout {
 
     public WorkFlowView(PrintMashineService printMashineService, StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
                         WorkFlowService workFlowService, ImposeCaseService imposeCaseService){
+
         this.printMashineService = printMashineService;
         this.materialService = materialService;
         this.standartSizeService = standartSizeService;
@@ -158,27 +163,8 @@ public class WorkFlowView extends SplitLayout {
 
         var confirmButton = new Button("Сохранить");
         confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        confirmButton.addClickListener(e-> {
-            HasBinder hb;
-            boolean flag = false;
-            List<Component> list = tabSheet.getChildren().filter(Tab.class::isInstance).toList();
-            for (Component comp : list) {
-                hb = (HasBinder) tabSheet.getComponent((Tab) comp);
-                if (!hb.isValid()) {
-                    Notification.show("Заполните все требуемые поля!");
-                    tabSheet.setSelectedTab((Tab) comp);
-                    flag = true;
-                }
-                if (flag) break;
-            }
-            if (!flag) {
-                workFlowService.save(startTab.getTemplateBinder().getBean());
-                this.getPrimaryComponent().setVisible(true);
-                this.getSecondaryComponent().getElement().setEnabled(false);
-                this.setSplitterPosition(35.0);
-                this.templateGrid.setItems(workFlowService.findAll());
-            }
-        });
+
+        confirmButton.addClickListener(this::validateAndSaveBean);
 
         var cancelButton = new Button("Отмена");
         cancelButton.addClickListener(buttonClickEvent -> {
@@ -206,17 +192,6 @@ public class WorkFlowView extends SplitLayout {
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
         tabSheet.setPrefixComponent(menuBar);
 
-        tabSheet.addSelectedChangeListener(selectedChangeEvent -> {
-            /*
-            HasBinder hb = (HasBinder) tabSheet.getComponent(selectedChangeEvent.getPreviousTab());
-            if (!hb.isValid()) {
-                Notification.show("Остаёмся на вкладке, правим ошибки!");
-                tabSheet.setSelectedTab(selectedChangeEvent.getPreviousTab());
-
-            }
-
-             */
-        });
         vel.add(tabSheet);
         return vel;
     }
@@ -277,6 +252,38 @@ public class WorkFlowView extends SplitLayout {
         vla.add(la);
         tab.add(vla);
         return tab;
+    }
+
+    private void validateAndSaveBean(ClickEvent<Button> e) {
+        HasBinder hb;
+        boolean flag = false;
+        Optional<Component> component =tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
+
+        if (component.isPresent()) {
+            var tabs = (Tabs) component.get();
+            List<Component> list = tabs.getChildren().filter(Tab.class::isInstance).toList();
+
+            if (!list.isEmpty()) {
+                for (Component comp : list) {
+                    hb = (HasBinder) tabSheet.getComponent((Tab) comp);
+                    if (!hb.isValid()) {
+                        Notification.show("Заполните все требуемые поля!");
+                        tabSheet.setSelectedTab((Tab) comp);
+                        flag = true;
+                    }
+                    if (flag) break;
+                }
+
+                if (!flag) {
+                    workFlowService.save(startTab.getTemplateBinder().getBean());
+                    this.getPrimaryComponent().setVisible(true);
+                    this.getSecondaryComponent().getElement().setEnabled(false);
+                    this.setSplitterPosition(35.0);
+                    this.templateGrid.setItems(workFlowService.findAll());
+                    Notification.show("Мимо!!");
+                }
+            }
+        }
     }
 
 }
