@@ -18,13 +18,12 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
 @UIScope
 @AnonymousAllowed
-public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder, HasVolumeAsString{
+public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder{
 
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
@@ -227,6 +226,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
     public Boolean isValid() {
         return templateBinder.isValid();
     }
+
     @Override
     public String getVolumeAsString(){
         try {

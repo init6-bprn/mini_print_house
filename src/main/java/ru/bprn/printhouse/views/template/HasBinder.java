@@ -1,9 +1,10 @@
 package ru.bprn.printhouse.views.template;
 
 public interface HasBinder {
-    //public <T> BeanValidationBinder<T> getBinder();
 
     public Boolean isValid();
 
-    //public setBean()
+    public String getVolumeAsString();
+
+    public void setVolumeAsString(String str);
 }

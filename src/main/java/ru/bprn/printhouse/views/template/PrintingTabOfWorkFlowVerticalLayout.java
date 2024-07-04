@@ -14,12 +14,11 @@ import lombok.Getter;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.QuantityColors;
-import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.PrintMashineService;
 
 
 @AnonymousAllowed
-public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder, HasVolumeAsString {
+public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder {
 
     private final PrintMashineService printerService;
     private ObjectMapper objectMapper;
@@ -157,7 +156,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
     @Override
     public String getVolumeAsString(){
         try {
-            return this.getClass().getSimpleName() + objectMapper.writeValueAsString(templateBinder.getBean());
+            return objectMapper.writeValueAsString(templateBinder.getBean());
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

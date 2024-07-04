@@ -47,6 +47,8 @@ public class WorkFlow {
     @JoinColumn(name = "impose_case", nullable = false)
     private ImposeCase imposeCase;
 
+    private String strJSON = "";
+
     public void setName(String name) {
         if (name.equals("auto")) {
             if ((this.getStandartSize() != null) & (this.getMaterial() != null) & (this.getGap() != null)) {

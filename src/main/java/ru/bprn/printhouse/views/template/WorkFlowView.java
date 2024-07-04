@@ -2,7 +2,6 @@ package ru.bprn.printhouse.views.template;
 
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -29,7 +28,7 @@ import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
-import java.awt.event.ComponentEvent;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -97,6 +96,8 @@ public class WorkFlowView extends SplitLayout {
             if (optTemp.isPresent()) {
                 workFlow = optTemp.get();
                 startTab.getTemplateBinder().setBean(workFlow);
+                populateTabSheet(getParseStringMap(workFlow.getStrJSON()));
+
                 this.getPrimaryComponent().setVisible(false);
                 this.getSecondaryComponent().getElement().setEnabled(true);
                 this.setSplitterPosition(0);
@@ -107,18 +108,20 @@ public class WorkFlowView extends SplitLayout {
         var duplicateButton = new Button(VaadinIcon.COPY_O.create(), buttonClickEvent -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
-                var ishueTemplate = optTemp.get();
+                var issueTemplate = optTemp.get();
                 workFlow = new WorkFlow();
-                workFlow.setName(ishueTemplate.getName());
-                workFlow.setStandartSize(ishueTemplate.getStandartSize());
-                workFlow.setSizeX(ishueTemplate.getSizeX());
-                workFlow.setSizeY(ishueTemplate.getSizeY());
-                workFlow.setImposeCase(ishueTemplate.getImposeCase());
-                workFlow.setMaterial(ishueTemplate.getMaterial());
-                workFlow.setGap(ishueTemplate.getGap());
-                workFlow.setQuantityOfLeaves(ishueTemplate.getQuantityOfLeaves());
+                workFlow.setName(issueTemplate.getName());
+                workFlow.setStandartSize(issueTemplate.getStandartSize());
+                workFlow.setSizeX(issueTemplate.getSizeX());
+                workFlow.setSizeY(issueTemplate.getSizeY());
+                workFlow.setImposeCase(issueTemplate.getImposeCase());
+                workFlow.setMaterial(issueTemplate.getMaterial());
+                workFlow.setGap(issueTemplate.getGap());
+                workFlow.setQuantityOfLeaves(issueTemplate.getQuantityOfLeaves());
 
                 startTab.getTemplateBinder().setBean(workFlow);
+                populateTabSheet(getParseStringMap(workFlow.getStrJSON()));
+
                 this.getPrimaryComponent().setVisible(false);
                 this.getSecondaryComponent().getElement().setEnabled(true);
                 this.setSplitterPosition(0);
@@ -262,27 +265,65 @@ public class WorkFlowView extends SplitLayout {
         if (component.isPresent()) {
             var tabs = (Tabs) component.get();
             List<Component> list = tabs.getChildren().filter(Tab.class::isInstance).toList();
-
+            var listWorkflow = new ArrayList<String[]>();
             if (!list.isEmpty()) {
                 for (Component comp : list) {
                     hb = (HasBinder) tabSheet.getComponent((Tab) comp);
+                    listWorkflow.add(new String[]{hb.getClass().getName(), hb.getVolumeAsString()});
                     if (!hb.isValid()) {
                         Notification.show("Заполните все требуемые поля!");
                         tabSheet.setSelectedTab((Tab) comp);
+                        listWorkflow.clear();
                         flag = true;
                     }
                     if (flag) break;
                 }
 
                 if (!flag) {
-                    workFlowService.save(startTab.getTemplateBinder().getBean());
+                    var wf = startTab.getTemplateBinder().getBean();
+                    wf.setStrJSON(addKeyVolumeToMap(listWorkflow));
+                    workFlowService.save(wf);
                     this.getPrimaryComponent().setVisible(true);
                     this.getSecondaryComponent().getElement().setEnabled(false);
                     this.setSplitterPosition(35.0);
                     this.templateGrid.setItems(workFlowService.findAll());
-                    Notification.show("Мимо!!");
                 }
             }
+        }
+    }
+
+
+    private List<String[]> getParseStringMap(String str) {
+        var list = new ArrayList<String[]>();
+        if (str!= null) {
+            if (!str.isBlank()) {
+                String[] arrayStr = str.split("-");
+                for (String s : arrayStr) {
+                    list.add(s.split("@"));
+                }
+            }
+        }
+        return list;
+    }
+
+    private String addKeyVolumeToMap(List<String[]> list) {
+        var builder = new StringBuilder();
+        for (String[] str: list) {
+            builder.append(str[0]).append("@").append(str[1]).append("-");
+        }
+        return builder.toString();
+    }
+
+    private void populateTabSheet(List<String[]> list) {
+        for (String[] str: list) {
+            switch (str[0]) {
+                case "PrintingTabOfWorkFlowVerticalLayout" :
+                    var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService);
+                    tabComp.setVolumeAsString(str[1]);
+                    tabSheet.add(createTab("Цифровая печать"), tabComp);
+                break;
+            }
+
         }
     }
 
