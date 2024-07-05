@@ -8,7 +8,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.binder.PropertyId;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
@@ -21,19 +20,7 @@ import ru.bprn.printhouse.data.service.PrintMashineService;
 public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder {
 
     private final PrintMashineService printerService;
-    private ObjectMapper objectMapper;
-
-    @PropertyId("rowsOnLeaf")
-    private final IntegerField rowsOnLeaf = new IntegerField("Колонок:");
-
-    @PropertyId("columnsOnLeaf")
-    private final IntegerField columnsOnLeaf = new IntegerField("Столбцов:");
-
-    @PropertyId("quantityOfPrintLeaves")
-    private final IntegerField quantityOfPrintLeaves = new IntegerField("Изделий на листе:");
-
-    private final RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>("Ориентация");
-
+    private final ObjectMapper objectMapper;
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
 
@@ -87,6 +74,10 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
 
     private void addQuantityAndOrientation() {
         var hLayout = new HorizontalLayout();
+        var radioGroup = new RadioButtonGroup<>("Ориентация");
+        var rowsOnLeaf = new IntegerField("Колонок:");
+        var columnsOnLeaf = new IntegerField("Столбцов:");
+        var quantityOfPrintLeaves = new IntegerField("Изделий на листе:");
 
         radioGroup.setItems("Автоматически", "Вертикальная", "Горизонтальная");
         radioGroup.setValue("Автоматически");
@@ -141,13 +132,13 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
     private <T> void comboBoxViewFirstElement (ComboBox<T> combo) {
         if (combo.getListDataView().getItemCount()>0) combo.setValue(combo.getListDataView().getItem(0));
     }
-
+/*
     private void setVolumeOnComponents (int col, int row, int quan) {
         columnsOnLeaf.setValue(col);
         rowsOnLeaf.setValue(row);
         quantityOfPrintLeaves.setValue(quan);
     }
-
+*/
     @Override
     public Boolean isValid() {
         return templateBinder.isValid();
