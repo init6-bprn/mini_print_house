@@ -1,5 +1,7 @@
 package ru.bprn.printhouse.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -9,14 +11,16 @@ import lombok.*;
 import java.util.HashSet;
 import java.util.Set;
 
- @Data
- @EqualsAndHashCode (onlyExplicitlyIncluded = true)
- @NoArgsConstructor
- @AllArgsConstructor
- @Getter
- @Setter
-
+@Data
+@EqualsAndHashCode (onlyExplicitlyIncluded = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 @Entity
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 public class PrintMashine {
 
     @EqualsAndHashCode.Include

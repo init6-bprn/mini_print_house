@@ -28,9 +28,11 @@ import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 @PageTitle("Создание и редактирование рабочих цепочек (WorkFlow)")
 @Route(value = "workflows", layout = MainLayout.class)
@@ -281,7 +283,8 @@ public class WorkFlowView extends SplitLayout {
 
                 if (!flag) {
                     var wf = startTab.getTemplateBinder().getBean();
-                    wf.setStrJSON(addKeyVolumeToMap(listWorkflow));
+                    //wf.setStrJSON(addKeyVolumeToMap(listWorkflow));
+                    System.out.println(addKeyVolumeToMap(listWorkflow));
                     workFlowService.save(wf);
                     this.getPrimaryComponent().setVisible(true);
                     this.getSecondaryComponent().getElement().setEnabled(false);

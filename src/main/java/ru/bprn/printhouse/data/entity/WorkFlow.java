@@ -1,5 +1,7 @@
 package ru.bprn.printhouse.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -12,6 +14,9 @@ import lombok.*;
 @Setter
 @Entity
 @Table(name = "workflow")
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
 public class WorkFlow {
     @Id
     @EqualsAndHashCode.Include
@@ -47,6 +52,7 @@ public class WorkFlow {
     @JoinColumn(name = "impose_case", nullable = false)
     private ImposeCase imposeCase;
 
+    @Lob
     private String strJSON = "";
 
     public void setName(String name) {
