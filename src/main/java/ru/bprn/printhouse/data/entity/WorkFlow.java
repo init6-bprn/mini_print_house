@@ -16,7 +16,8 @@ import lombok.*;
 @Table(name = "workflow")
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
+        property = "id",
+        scope = WorkFlow.class)
 public class WorkFlow {
     @Id
     @EqualsAndHashCode.Include
@@ -52,7 +53,7 @@ public class WorkFlow {
     @JoinColumn(name = "impose_case", nullable = false)
     private ImposeCase imposeCase;
 
-    @Lob
+    @Column(columnDefinition = "mediumtext")
     private String strJSON = "";
 
     public void setName(String name) {

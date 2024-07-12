@@ -14,19 +14,21 @@ import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.service.PrintMashineService;
-
+import ru.bprn.printhouse.data.service.QuantityColorsService;
 
 @AnonymousAllowed
 public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder {
 
     private final PrintMashineService printerService;
+    private final QuantityColorsService quantityColorsService;
     private final ObjectMapper objectMapper;
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
 
-    public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService){
+    public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService, QuantityColorsService quantityColorsService){
 
         this.printerService = printerService;
+        this.quantityColorsService = quantityColorsService;
         objectMapper = new ObjectMapper();
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
 
@@ -40,9 +42,11 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
 
         var coverQuantityOfColor = new ComboBox<QuantityColors>();
         templateBinder.forField(coverQuantityOfColor).asRequired().bind(DigitalPrinting::getQuantityColorsCover, DigitalPrinting::setQuantityColorsCover);
+        coverQuantityOfColor.setItems(quantityColorsService.findAll());
 
         var backQuantityOfColor = new ComboBox<QuantityColors>();
         templateBinder.forField(backQuantityOfColor).asRequired().bind(DigitalPrinting::getQuantityColorsBack, DigitalPrinting::setQuantityColorsBack);
+        backQuantityOfColor.setItems(quantityColorsService.findAll());
 
         // Принтеры
         var printerCombo = new ComboBox<PrintMashine>();
@@ -53,19 +57,17 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
 
         // Цветность лица
         coverQuantityOfColor.setLabel("Лицо");
-        if (printerCombo.getValue()!=null) {
-            coverQuantityOfColor.setItems(printerCombo.getValue().getQuantityColors());
-        }
 
         // Цветность оборота
         backQuantityOfColor.setLabel("Оборот");
-        if (printerCombo.getValue()!=null) {
-            backQuantityOfColor.setItems(printerCombo.getValue().getQuantityColors());
-        }
 
         printerCombo.addValueChangeListener(e -> {
+            var oldValue = coverQuantityOfColor.getValue();
             coverQuantityOfColor.setItems(e.getValue().getQuantityColors());
+            coverQuantityOfColor.setValue(oldValue);
+            var oldValue2 = backQuantityOfColor.getValue();
             backQuantityOfColor.setItems(e.getValue().getQuantityColors());
+            backQuantityOfColor.setValue(oldValue2);
         });
 
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
@@ -156,7 +158,9 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
     @Override
     public void setVolumeAsString(String str){
         try {
-            templateBinder.setBean(objectMapper.readValue(str, DigitalPrinting.class));
+            if (!str.equals("null")) templateBinder.setBean(objectMapper.readValue(str, DigitalPrinting.class));
+            else templateBinder.setBean(new DigitalPrinting());
+
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

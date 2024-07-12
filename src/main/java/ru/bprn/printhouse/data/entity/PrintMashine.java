@@ -20,7 +20,8 @@ import java.util.Set;
 @Entity
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
+        property = "id",
+        scope = PrintMashine.class)
 public class PrintMashine {
 
     @EqualsAndHashCode.Include

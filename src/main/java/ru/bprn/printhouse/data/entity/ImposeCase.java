@@ -16,7 +16,8 @@ import lombok.*;
 @Setter
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
+        property = "id",
+        scope = ImposeCase.class)
 public class ImposeCase {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

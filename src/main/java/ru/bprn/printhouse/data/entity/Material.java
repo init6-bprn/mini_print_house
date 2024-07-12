@@ -19,7 +19,8 @@ import java.util.Set;
 @Setter
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
+        property = "id",
+        scope = Material.class)
 public class Material {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

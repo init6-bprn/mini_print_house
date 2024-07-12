@@ -15,7 +15,8 @@ import lombok.*;
 @Setter
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
+        property = "id",
+        scope = Gap.class)
 public class Gap {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

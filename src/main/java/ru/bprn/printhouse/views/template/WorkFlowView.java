@@ -24,15 +24,14 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 @PageTitle("Создание и редактирование рабочих цепочек (WorkFlow)")
 @Route(value = "workflows", layout = MainLayout.class)
@@ -46,6 +45,7 @@ public class WorkFlowView extends SplitLayout {
     private final GapService gapService;
     private final WorkFlowService workFlowService;
     private final ImposeCaseService imposeCaseService;
+    private final QuantityColorsService quantityColorsService;
     private final TabSheet tabSheet = new TabSheet();
     private WorkFlow workFlow;
     private StartTabOfWorkFlowVerticalLayout startTab;
@@ -53,7 +53,7 @@ public class WorkFlowView extends SplitLayout {
     private Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
     public WorkFlowView(PrintMashineService printMashineService, StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
-                        WorkFlowService workFlowService, ImposeCaseService imposeCaseService){
+                        WorkFlowService workFlowService, ImposeCaseService imposeCaseService, QuantityColorsService quantityColorsService){
 
         this.printMashineService = printMashineService;
         this.materialService = materialService;
@@ -62,6 +62,7 @@ public class WorkFlowView extends SplitLayout {
         this.gapService = gapService;
         this.workFlowService = workFlowService;
         this.imposeCaseService = imposeCaseService;
+        this.quantityColorsService = quantityColorsService;
 
         this.setOrientation(Orientation.VERTICAL);
         addToPrimary(addGridSection());
@@ -174,6 +175,12 @@ public class WorkFlowView extends SplitLayout {
         var cancelButton = new Button("Отмена");
         cancelButton.addClickListener(buttonClickEvent -> {
            startTab.getTemplateBinder().removeBean();
+           Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
+           if (component.isPresent()) {
+               var tabs = (Tabs) component.get();
+               List<Component> list = tabs.getChildren().filter(Tab.class::isInstance).toList();
+               for (int i=1;  i<list.size(); i++) tabSheet.remove(i);
+           }
            this.getPrimaryComponent().setVisible(true);
            this.getSecondaryComponent().getElement().setEnabled(false);
            this.setSplitterPosition(35.0);
@@ -191,8 +198,12 @@ public class WorkFlowView extends SplitLayout {
         MenuBar menuBar = new MenuBar();
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.PLUS));
         SubMenu subMenu = item.getSubMenu();
-        subMenu.addItem("Цифровая печать", menuItemClickEvent -> tabSheet.add(createTab("Цифровая печать"),
-                new PrintingTabOfWorkFlowVerticalLayout(printMashineService)));
+        subMenu.addItem("Цифровая печать", menuItemClickEvent -> {
+                var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService);
+                digitalPrinting.getTemplateBinder().setBean(new DigitalPrinting());
+                tabSheet.add(createTab("Цифровая печать"), digitalPrinting);
+            }
+        );
         subMenu.addItem("Резка", menuItemClickEvent -> tabSheet.add(createTab("Резка"), new VerticalLayout()));
         subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
         tabSheet.setPrefixComponent(menuBar);
@@ -262,7 +273,7 @@ public class WorkFlowView extends SplitLayout {
     private void validateAndSaveBean(ClickEvent<Button> e) {
         HasBinder hb;
         boolean flag = false;
-        Optional<Component> component =tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
+        Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
 
         if (component.isPresent()) {
             var tabs = (Tabs) component.get();
@@ -270,22 +281,24 @@ public class WorkFlowView extends SplitLayout {
             var listWorkflow = new ArrayList<String[]>();
             if (!list.isEmpty()) {
                 for (Component comp : list) {
-                    hb = (HasBinder) tabSheet.getComponent((Tab) comp);
-                    listWorkflow.add(new String[]{hb.getClass().getName(), hb.getVolumeAsString()});
-                    if (!hb.isValid()) {
-                        Notification.show("Заполните все требуемые поля!");
-                        tabSheet.setSelectedTab((Tab) comp);
-                        listWorkflow.clear();
-                        flag = true;
+                    if (!(tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout)) {
+                        hb = (HasBinder) tabSheet.getComponent((Tab) comp);
+                        listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getVolumeAsString()});
+                        if (!hb.isValid()) {
+                            Notification.show("Заполните все требуемые поля!");
+                            tabSheet.setSelectedTab((Tab) comp);
+                            listWorkflow.clear();
+                            flag = true;
+                        }
+                        if (flag) break;
                     }
-                    if (flag) break;
                 }
 
                 if (!flag) {
                     var wf = startTab.getTemplateBinder().getBean();
-                    //wf.setStrJSON(addKeyVolumeToMap(listWorkflow));
-                    System.out.println(addKeyVolumeToMap(listWorkflow));
+                    wf.setStrJSON(addKeyVolumeToMap(listWorkflow));
                     workFlowService.save(wf);
+                    for (int i=1;  i<list.size(); i++) tabSheet.remove(i);
                     this.getPrimaryComponent().setVisible(true);
                     this.getSecondaryComponent().getElement().setEnabled(false);
                     this.setSplitterPosition(35.0);
@@ -321,7 +334,8 @@ public class WorkFlowView extends SplitLayout {
         for (String[] str: list) {
             switch (str[0]) {
                 case "PrintingTabOfWorkFlowVerticalLayout" :
-                    var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService);
+                    var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService);
+                    tabComp.getTemplateBinder().setBean(new DigitalPrinting());
                     tabComp.setVolumeAsString(str[1]);
                     tabSheet.add(createTab("Цифровая печать"), tabComp);
                 break;
