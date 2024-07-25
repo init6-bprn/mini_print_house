@@ -10,6 +10,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.QuantityColors;

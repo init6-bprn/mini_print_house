@@ -227,7 +227,7 @@ public class WorkFlowView extends SplitLayout {
                 int i = tabSheet.getIndexOf(tab);
                 tabs.setSelectedIndex(i);
                 tab.setSelected(true);
-                if (i > 0) {
+                if (i > 1) {
                     Tab twoTab = tabSheet.getTabAt(i);
                     tabs.setSelectedIndex(i - 1);
                     tabs.addTabAtIndex(i - 1, twoTab);
@@ -281,7 +281,7 @@ public class WorkFlowView extends SplitLayout {
             var listWorkflow = new ArrayList<String[]>();
             if (!list.isEmpty()) {
                 for (Component comp : list) {
-                    if (!(tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout)) {
+                    if (!((tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout))) {
                         hb = (HasBinder) tabSheet.getComponent((Tab) comp);
                         listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getVolumeAsString()});
                         if (!hb.isValid()) {
@@ -327,6 +327,7 @@ public class WorkFlowView extends SplitLayout {
         for (String[] str: list) {
             builder.append(str[0]).append("@").append(str[1]).append("-");
         }
+        if (!builder.isEmpty()) builder.deleteCharAt(builder.lastIndexOf("-"));
         return builder.toString();
     }
 

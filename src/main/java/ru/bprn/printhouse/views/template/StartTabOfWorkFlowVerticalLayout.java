@@ -14,10 +14,14 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.server.VaadinContext;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import ru.bprn.printhouse.Application;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
@@ -57,6 +61,9 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         addSizeOfProductSection();
         addSetOfSheetsSection();
         addMaterialSection();
+
+        final VaadinContext context = VaadinSession.getCurrent().getService().getContext();
+        //context.
     }
 
     private void addMaterialSection() {
