@@ -298,7 +298,10 @@ public class WorkFlowView extends SplitLayout {
                     var wf = startTab.getTemplateBinder().getBean();
                     wf.setStrJSON(addKeyVolumeToMap(listWorkflow));
                     workFlowService.save(wf);
-                    for (int i=1;  i<list.size(); i++) tabSheet.remove(i);
+                    for (Component comp: list)
+                        if (!((tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout)))
+                            tabSheet.remove((Tab) comp);
+                    //for (int i=list.size()-1;  i>0; i--) tabSheet.remove(i);
                     this.getPrimaryComponent().setVisible(true);
                     this.getSecondaryComponent().getElement().setEnabled(false);
                     this.setSplitterPosition(35.0);
