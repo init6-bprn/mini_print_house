@@ -159,7 +159,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
         var width = new NumberField();
         width.setLabel("Ширина");
-        templateBinder.bind(length, WorkFlow::getSizeY, WorkFlow::setSizeY);
+        templateBinder.bind(width, WorkFlow::getSizeY, WorkFlow::setSizeY);
 
         var sizeOfPaperCombo = new ComboBox<StandartSize>();
         sizeOfPaperCombo.setItems(standartSizeService.findAll());
@@ -208,7 +208,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var bleedCombo = new ComboBox<Gap>("Припуск");
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
 
-        templateBinder.forField(bleedCombo).asRequired().bind(WorkFlow::getGap, WorkFlow::setGap);
+        templateBinder.forField(bleedCombo).asRequired().bind(WorkFlow::getBleed, WorkFlow::setBleed);
         bleedCombo.addValueChangeListener(e->{
             nameOfTemplate.setValue(setDefaultName());
         });
@@ -231,10 +231,31 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var rowsOnLeaf = new IntegerField("Колонок:");
         var columnsOnLeaf = new IntegerField("Столбцов:");
         var quantityOfPrintLeaves = new IntegerField("Изделий на листе:");
+        var quantityOfProduction = new IntegerField("Тираж:");
+        var quantityProductionsOnLeaf = new IntegerField("Листаж:");
+        var gapComboBox = new ComboBox<Gap>("Отступы от краев материала:");
+
+        gapComboBox.setItems(gapService.findAllByNameNotContaining("Bleed"));
+        gapComboBox.setValue(gapService.findByName("Zero"));
+
+        templateBinder.bind(gapComboBox, WorkFlow::getGap, WorkFlow::setGap);
 
         radioGroup.setItems("Автоматически", "Вертикальная", "Горизонтальная");
         radioGroup.setValue("Автоматически");
-        radioGroup.addValueChangeListener(e-> calculateAndSetQuantity());
+
+        templateBinder.bind(rowsOnLeaf, WorkFlow::getListRows, WorkFlow::setListRows);
+        templateBinder.bind(columnsOnLeaf, WorkFlow::getListColumns, WorkFlow::setListColumns);
+        templateBinder.bind(quantityOfPrintLeaves, WorkFlow::getQuantityOfPrintLeaves, WorkFlow::setQuantityOfPrintLeaves);
+        templateBinder.bind(quantityOfProduction, WorkFlow::getQuantityOfProduct, WorkFlow::setQuantityOfProduct);
+        templateBinder.bind(quantityProductionsOnLeaf, WorkFlow::getQuantityProductionsOnLeaf, WorkFlow::setQuantityProductionsOnLeaf);
+        //templateBinder.bind(radioGroup, WorkFlow::getOrientation, WorkFlow::setOrientation);
+
+        radioGroup.addValueChangeListener(e-> {
+            var mass = calculateAndSetQuantity(e.getValue().toString());
+            rowsOnLeaf.setValue(mass[0]);
+            columnsOnLeaf.setValue(mass[1]);
+            quantityOfPrintLeaves.setValue(mass[2]);
+        });
         add(radioGroup);
 
         quantityOfPrintLeaves.setReadOnly(true);
@@ -242,14 +263,16 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         columnsOnLeaf.setReadOnly(true);
         hLayout.add(radioGroup);
         var hl = new HorizontalLayout();
-        hl.add(rowsOnLeaf,columnsOnLeaf,quantityOfPrintLeaves);
+        hl.add(rowsOnLeaf,columnsOnLeaf,quantityOfPrintLeaves, quantityOfProduction, quantityProductionsOnLeaf, gapComboBox);
         this.add(hLayout,hl);
 
     }
 
 
-    private void calculateAndSetQuantity(){
+    private int[] calculateAndSetQuantity(String str){
         var bean = templateBinder.getBean();
+        int[] mass = {1,1,1};
+
         if (bean!=null){
             if ((bean.getMaterial().getSizeOfPrintLeaf()!=null)
                     & (bean.getSizeX()!=null)
@@ -257,27 +280,28 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
                     & (bean.getGap()!=null)) {
                 int printSizeX = bean.getMaterial().getSizeOfPrintLeaf().getLength() - bean.getGap().getGapLeft() - bean.getGap().getGapRight();
                 int printSizeY = bean.getMaterial().getSizeOfPrintLeaf().getWidth() - bean.getGap().getGapTop() - bean.getGap().getGapBottom();
-                Double fullSizeX = bean.getSizeY() + bean.getGap().getGapTop() + bean.getGap().getGapBottom();
-                Double fullSizeY = bean.getSizeX() + bean.getGap().getGapLeft() + bean.getGap().getGapRight();
+                Double fullSizeX = bean.getSizeY() + bean.getBleed().getGapTop() + bean.getBleed().getGapBottom();
+                Double fullSizeY = bean.getSizeX() + bean.getBleed().getGapLeft() + bean.getBleed().getGapRight();
 
-                int[] mass1 = getQuantity(printSizeX, printSizeY, fullSizeX, fullSizeY);
-                int[] mass2 = getQuantity(printSizeX, printSizeY, fullSizeY, fullSizeX);
+                var mass1 = getQuantity(printSizeX, printSizeY, fullSizeX, fullSizeY);
+                var mass2 = getQuantity(printSizeX, printSizeY, fullSizeY, fullSizeX);
 
-                switch (radioGroup.getValue()) {
+                switch (str) {
                     case "Автоматически":
-                        if (mass1[2] >= mass2[2]) setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
-                        else setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
+                        if (mass1[2] >= mass2[2]) mass = mass1;
+                            else mass = mass2;
                         break;
                     case "Вертикальная":
-                        setVolumeOnComponents(mass1[0], mass1[1], mass1[2]);
+                        mass = mass1;
                         break;
                     case "Горизонтальная":
-                        setVolumeOnComponents(mass2[0], mass2[1], mass2[2]);
+                        mass = mass2;
                         break;
                 }
 
             }
         }
+        return mass;
     }
 
 
@@ -288,15 +312,6 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         mass[2] = mass[1]*mass[0];
         return mass;
     }
-
-
-    private void setVolumeOnComponents (int col, int row, int quan) {
-        columnsOnLeaf.setValue(col);
-        rowsOnLeaf.setValue(row);
-        quantityOfPrintLeaves.setValue(quan);
-    }
-
-
 
     @Override
     public Boolean isValid() {

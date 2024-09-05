@@ -43,7 +43,14 @@ public class WorkFlow {
     private Material material;
 
     @Positive
-    private Integer quantityOfLeaves = 1;
+    private Integer quantityOfPrintLeaves = 1;
+
+    @Positive
+    private  int quantityOfLeaves = 1;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "bleed", nullable = false)
+    private Gap bleed;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "gap", nullable = false)
@@ -55,6 +62,23 @@ public class WorkFlow {
 
     @Column(columnDefinition = "mediumtext")
     private String strJSON = "";
+
+    @PositiveOrZero
+    private Integer quantityOfProduct = 0;
+
+    @Positive
+    private int listRows = 1;
+
+    @Positive
+    private int listColumns = 1;
+
+    @Positive
+    private int quantityProductionsOnLeaf = 1;
+
+    @NotBlank
+    private String orientation = "Автоматически";
+
+
 
     public void setName(String name) {
         if (name.equals("auto")) {

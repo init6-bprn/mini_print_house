@@ -13,4 +13,9 @@ public interface GapRepository extends JpaRepository<Gap, Long> {
     <S extends Gap> List<S> findAll(Example<S> example);
 
     List<Gap> findAllByNameContainingIgnoreCase(String name);
+
+    List<Gap> findAllByNameNotContainingIgnoreCase(String name);
+
+    Gap findFirstByName(String name);
+
 }

@@ -18,9 +18,13 @@ public class GapService {
         return gapRepository.findAllByNameContainingIgnoreCase(str);
     }
 
+    public List<Gap> findAllByNameNotContaining (String str) {return  gapRepository.findAllByNameNotContainingIgnoreCase(str);}
+
     public List<Gap> findAll(){
         return gapRepository.findAll();
     }
+
+    public Gap findByName (String name) {return gapRepository.findFirstByName(name) ;}
 
     public Gap save(Gap gap) {
         return this.gapRepository.save(gap);

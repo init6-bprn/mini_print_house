@@ -120,7 +120,15 @@ public class WorkFlowView extends SplitLayout {
                 workFlow.setImposeCase(issueTemplate.getImposeCase());
                 workFlow.setMaterial(issueTemplate.getMaterial());
                 workFlow.setGap(issueTemplate.getGap());
+                workFlow.setQuantityOfPrintLeaves(issueTemplate.getQuantityOfPrintLeaves());
+                workFlow.setBleed(issueTemplate.getBleed());
+                workFlow.setListColumns(issueTemplate.getListColumns());
+                workFlow.setListRows(issueTemplate.getListRows());
+                workFlow.setStrJSON(issueTemplate.getStrJSON());
+                workFlow.setQuantityOfProduct(issueTemplate.getQuantityOfProduct());
+                workFlow.setQuantityProductionsOnLeaf(issueTemplate.getQuantityProductionsOnLeaf());
                 workFlow.setQuantityOfLeaves(issueTemplate.getQuantityOfLeaves());
+                workFlow.setOrientation(issueTemplate.getOrientation());
 
                 startTab.getTemplateBinder().setBean(workFlow);
                 populateTabSheet(getParseStringMap(workFlow.getStrJSON()));
