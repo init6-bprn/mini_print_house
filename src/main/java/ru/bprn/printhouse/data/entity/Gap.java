@@ -43,4 +43,11 @@ public class Gap {
     public String toString(){
         return name;
     }
+
+    public Gap (int top, int bottom, int left, int right) {
+        gapTop = top;
+        gapBottom = bottom;
+        gapLeft = left;
+        gapRight = right;
+    }
 }

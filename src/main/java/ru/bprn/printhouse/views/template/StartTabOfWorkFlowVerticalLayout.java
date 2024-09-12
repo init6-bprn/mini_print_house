@@ -271,6 +271,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
     private int[] calculateAndSetQuantity(String str){
         var bean = templateBinder.getBean();
+        Gap margins = this.getMargins();
         int[] mass = {1,1,1};
 
         if (bean!=null){
@@ -278,8 +279,8 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
                     & (bean.getSizeX()!=null)
                     & (bean.getSizeY()!=null)
                     & (bean.getGap()!=null)) {
-                int printSizeX = bean.getMaterial().getSizeOfPrintLeaf().getLength() - bean.getGap().getGapLeft() - bean.getGap().getGapRight();
-                int printSizeY = bean.getMaterial().getSizeOfPrintLeaf().getWidth() - bean.getGap().getGapTop() - bean.getGap().getGapBottom();
+                int printSizeX = bean.getMaterial().getSizeOfPrintLeaf().getLength() - margins.getGapLeft() - margins.getGapRight();
+                int printSizeY = bean.getMaterial().getSizeOfPrintLeaf().getWidth() - margins.getGapTop() - margins.getGapBottom();
                 Double fullSizeX = bean.getSizeY() + bean.getBleed().getGapTop() + bean.getBleed().getGapBottom();
                 Double fullSizeY = bean.getSizeX() + bean.getBleed().getGapLeft() + bean.getBleed().getGapRight();
 
@@ -302,6 +303,18 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
             }
         }
         return mass;
+    }
+
+    private Gap getMargins() {
+        var margins = new Gap(0,0,0,0);
+
+        this.getChildren().filter(HasMargins.class::isInstance).forEach(component -> {
+            if (margins.getGapTop() < ((HasMargins) component).getMargins().getGapTop()) margins.setGapTop(((HasMargins) component).getMargins().getGapTop());
+            if (margins.getGapBottom() < ((HasMargins) component).getMargins().getGapBottom()) margins.setGapBottom(((HasMargins) component).getMargins().getGapBottom());
+            if (margins.getGapLeft() < ((HasMargins) component).getMargins().getGapLeft()) margins.setGapLeft(((HasMargins) component).getMargins().getGapLeft());
+            if (margins.getGapRight() < ((HasMargins) component).getMargins().getGapRight()) margins.setGapRight(((HasMargins) component).getMargins().getGapRight());
+        });
+        return margins;
     }
 
 

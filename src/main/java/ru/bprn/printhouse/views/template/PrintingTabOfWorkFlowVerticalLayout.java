@@ -5,24 +5,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import lombok.Getter;
-import org.springframework.beans.factory.annotation.Autowired;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
+import ru.bprn.printhouse.data.entity.Gap;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
 
 @AnonymousAllowed
-public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder {
+public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder, HasMargins {
 
     private final PrintMashineService printerService;
     private final QuantityColorsService quantityColorsService;
     private final ObjectMapper objectMapper;
+
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
 
@@ -102,5 +101,10 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Gap getMargins() {
+        return templateBinder.getBean().getPrintMashine().getGap();
     }
 }
