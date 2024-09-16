@@ -9,7 +9,7 @@ import java.util.List;
 @Service
 public class DigitalPrintTemplateService {
 
-    private DigitalPrintTemplateRepository digitalPrintTemplateRepository;
+    private final DigitalPrintTemplateRepository digitalPrintTemplateRepository;
 
     public DigitalPrintTemplateService(DigitalPrintTemplateRepository digitalPrintTemplateRepository) {this.digitalPrintTemplateRepository = digitalPrintTemplateRepository;}
 

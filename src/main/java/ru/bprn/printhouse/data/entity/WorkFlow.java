@@ -26,17 +26,17 @@ public class WorkFlow {
     private Long id;
 
     @NotBlank
-    private String name = "auto";
+    private String name = "Стандартное название";
 
     @ManyToOne (fetch = FetchType.EAGER)
     @JoinColumn (name = "standart_size", nullable = false)
     private StandartSize standartSize;
 
-    @PositiveOrZero
-    private Double sizeX = 0d;
+    @Positive
+    private Double sizeX = 1.0;
 
-    @PositiveOrZero
-    private Double sizeY = 0d;
+    @Positive
+    private Double sizeY = 1.0;
 
     @ManyToOne (fetch = FetchType.EAGER)
     @JoinColumn (name = "material", nullable = false)
@@ -46,15 +46,11 @@ public class WorkFlow {
     private Integer quantityOfPrintLeaves = 1;
 
     @Positive
-    private  int quantityOfLeaves = 1;
+    private int quantityOfLeaves = 1;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bleed", nullable = false)
     private Gap bleed;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "gap", nullable = false)
-    private Gap gap;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "impose_case", nullable = false)
@@ -78,17 +74,28 @@ public class WorkFlow {
     @NotBlank
     private String orientation = "Автоматически";
 
+    @PositiveOrZero
+    private int leftGap = 0;
 
+    @PositiveOrZero
+    private int rightGap = 0;
 
-    public void setName(String name) {
-        if (name.equals("auto")) {
-            if ((this.getStandartSize() != null) & (this.getMaterial() != null) & (this.getGap() != null)) {
-                this.name = this.getStandartSize().getName() + " - " + this.getMaterial().getName() + " - " +
-                        this.getMaterial().getThickness().toString() + "г. - " + this.getMaterial().getSizeOfPrintLeaf() +
-                        " - " + this.getGap().getName();
-            }
-            else this.name = name;
-        }
-        else this.name = name;
-    }
+    @PositiveOrZero
+    private int topGap = 0;
+
+    @PositiveOrZero
+    private int bottomGap = 0;
+
+    @PositiveOrZero
+    private Double printSizeX = .0;
+
+    @PositiveOrZero
+    private Double printSizeY = .0;
+
+    @PositiveOrZero
+    private double fullProductSizeX = .0;
+
+    @PositiveOrZero
+    private double fullProductSizeY = .0;
+
 }

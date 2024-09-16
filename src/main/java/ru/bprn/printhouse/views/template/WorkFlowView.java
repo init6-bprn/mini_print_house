@@ -1,5 +1,7 @@
 package ru.bprn.printhouse.views.template;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.TokenBuffer;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -29,8 +31,10 @@ import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @PageTitle("Создание и редактирование рабочих цепочек (WorkFlow)")
@@ -113,22 +117,18 @@ public class WorkFlowView extends SplitLayout {
             if (optTemp.isPresent()) {
                 var issueTemplate = optTemp.get();
                 workFlow = new WorkFlow();
-                workFlow.setName(issueTemplate.getName());
-                workFlow.setStandartSize(issueTemplate.getStandartSize());
-                workFlow.setSizeX(issueTemplate.getSizeX());
-                workFlow.setSizeY(issueTemplate.getSizeY());
-                workFlow.setImposeCase(issueTemplate.getImposeCase());
-                workFlow.setMaterial(issueTemplate.getMaterial());
-                workFlow.setGap(issueTemplate.getGap());
-                workFlow.setQuantityOfPrintLeaves(issueTemplate.getQuantityOfPrintLeaves());
-                workFlow.setBleed(issueTemplate.getBleed());
-                workFlow.setListColumns(issueTemplate.getListColumns());
-                workFlow.setListRows(issueTemplate.getListRows());
-                workFlow.setStrJSON(issueTemplate.getStrJSON());
-                workFlow.setQuantityOfProduct(issueTemplate.getQuantityOfProduct());
-                workFlow.setQuantityProductionsOnLeaf(issueTemplate.getQuantityProductionsOnLeaf());
-                workFlow.setQuantityOfLeaves(issueTemplate.getQuantityOfLeaves());
-                workFlow.setOrientation(issueTemplate.getOrientation());
+                var objMapper = new ObjectMapper();
+                TokenBuffer tb = new TokenBuffer(objMapper, false);
+                try {
+                    objMapper.writeValue(tb, issueTemplate);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                try {
+                    workFlow = objMapper.readValue(tb.asParser(), WorkFlow.class);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
                 startTab.getTemplateBinder().setBean(workFlow);
                 populateTabSheet(getParseStringMap(workFlow.getStrJSON()));

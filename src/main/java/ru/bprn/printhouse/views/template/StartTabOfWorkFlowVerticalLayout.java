@@ -3,6 +3,7 @@ package ru.bprn.printhouse.views.template;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -15,6 +16,7 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
@@ -36,7 +38,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
     @Getter
     private final BeanValidationBinder<WorkFlow> templateBinder;
 
-    private final TextField nameOfTemplate = new TextField("Название шаблона: ");
+    private final Checkbox autoNamed = new Checkbox("Задать имя автоматически");
 
     @Autowired
     public StartTabOfWorkFlowVerticalLayout(StandartSizeService standartSizeService, TypeOfMaterialService TypeOfMaterialService,
@@ -52,15 +54,51 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         templateBinder = new BeanValidationBinder<>(WorkFlow.class);
 
         setSizeUndefined();
-        nameOfTemplate.setSizeFull();
-        templateBinder.bind(nameOfTemplate, WorkFlow::getName, WorkFlow::setName);
-        this.add(nameOfTemplate);
 
+        addNameOfTemplate();
         addSizeOfProductSection();
         addSetOfSheetsSection();
         addMaterialSection();
         addQuantityAndOrientation();
     }
+
+    private  void addNameOfTemplate() {
+        var nameOfTemplate = new TextField("Название шаблона: ");
+
+        nameOfTemplate.setReadOnly(true);
+        autoNamed.setValue(true);
+        autoNamed.addValueChangeListener(e->{
+            if (e.getValue()) {
+                nameOfTemplate.setReadOnly(true);
+                setDefaultName();
+                templateBinder.refreshFields();
+            }
+            else nameOfTemplate.setReadOnly(false);
+        });
+        nameOfTemplate.setSizeFull();
+        nameOfTemplate.setValueChangeMode(ValueChangeMode.EAGER);
+        templateBinder.bind(nameOfTemplate, WorkFlow::getName, WorkFlow::setName);
+        this.add(nameOfTemplate, autoNamed);
+    }
+
+    private String setDefaultName() {
+        var bean = templateBinder.getBean();
+        var stringName = new StringBuilder();
+
+        if (bean.getStandartSize() != null) stringName.append(bean.getStandartSize().getName()).append(" - ");
+        else if (bean.getSizeX() != null && bean.getSizeY() != null) {
+                 stringName.append(bean.getSizeX()).append("x").append(bean.getSizeY()).append(" - ");
+             }
+            else stringName.append("Неизвестный размер - ");
+
+        if (bean.getMaterial()!=null) stringName.append(bean.getMaterial().getName()).append("-")
+                .append(bean.getMaterial().getThickness()).append("-")
+                .append(bean.getMaterial().getSizeOfPrintLeaf());
+        else stringName.append("неизвестный материал - ");
+
+        return  stringName.toString();
+    }
+
 
     private void addMaterialSection() {
 
@@ -114,7 +152,10 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         headerRow.getCell(thicknessColumn).setComponent(thicknessCombo);
 
         grid.addSelectionListener(selectionEvent -> {
-            nameOfTemplate.setValue(setDefaultName());
+            if (autoNamed.getValue()) {
+                templateBinder.getBean().setName(setDefaultName());
+                templateBinder.refreshFields();
+            }
         });
 
         this.add(grid);
@@ -156,10 +197,12 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var length = new NumberField();
         length.setLabel("Длина");
         templateBinder.bind(length, WorkFlow::getSizeX, WorkFlow::setSizeX);
+        length.addValueChangeListener(e->setFullProductSize());
 
         var width = new NumberField();
         width.setLabel("Ширина");
         templateBinder.bind(width, WorkFlow::getSizeY, WorkFlow::setSizeY);
+        length.addValueChangeListener(e->setFullProductSize());
 
         var sizeOfPaperCombo = new ComboBox<StandartSize>();
         sizeOfPaperCombo.setItems(standartSizeService.findAll());
@@ -172,7 +215,11 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
             if (e.getValue()!=null) {
                 length.setValue(e.getValue().getLength());
                 width.setValue(e.getValue().getWidth());
-                nameOfTemplate.setValue(setDefaultName());
+                if (autoNamed.getValue()) {
+                    templateBinder.getBean().setName(setDefaultName());
+                    templateBinder.refreshFields();
+                }
+                setFullProductSize();
             }
         }) ;
 
@@ -210,20 +257,30 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
         templateBinder.forField(bleedCombo).asRequired().bind(WorkFlow::getBleed, WorkFlow::setBleed);
         bleedCombo.addValueChangeListener(e->{
-            nameOfTemplate.setValue(setDefaultName());
+            if (autoNamed.getValue()) {
+                templateBinder.getBean().setName(setDefaultName());
+                templateBinder.refreshFields();
+            }
         });
 
         hLayout.add(sizeOfPaperCombo, length, width, layout, bleedCombo, dialog);
         this.add(hLayout);
     }
 
-    private String setDefaultName() {
-        if (templateBinder.getBean()!= null) {
-            templateBinder.getBean().setName("auto");
-            return templateBinder.getBean().getName();
+    private void setFullProductSize() {
+        var bean = templateBinder.getBean();
+        if ((bean.getSizeY() != null) & (bean.getPrintSizeX() != null)) {
+            if (bean.getBleed() != null) {
+                bean.setFullProductSizeX(bean.getSizeY() + bean.getBleed().getGapTop() + bean.getBleed().getGapBottom());
+                bean.setFullProductSizeY(bean.getSizeX() + bean.getBleed().getGapLeft() + bean.getBleed().getGapRight());
+            } else {
+                bean.setFullProductSizeX(bean.getSizeY());
+                bean.setFullProductSizeY(bean.getSizeX());
+            }
+            templateBinder.refreshFields();
         }
-        return  "null";
     }
+
 
     private void addQuantityAndOrientation() {
         var hLayout = new HorizontalLayout();
@@ -233,12 +290,15 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var quantityOfPrintLeaves = new IntegerField("Изделий на листе:");
         var quantityOfProduction = new IntegerField("Тираж:");
         var quantityProductionsOnLeaf = new IntegerField("Листаж:");
-        var gapComboBox = new ComboBox<Gap>("Отступы от краев материала:");
-
-        gapComboBox.setItems(gapService.findAllByNameNotContaining("Bleed"));
-        gapComboBox.setValue(gapService.findByName("Zero"));
-
-        templateBinder.bind(gapComboBox, WorkFlow::getGap, WorkFlow::setGap);
+        var gapLayout = new HorizontalLayout();
+        var h3 = new NativeLabel("Отступы от краев материала:");
+        var topGap = new IntegerField("Top");
+        var bottomGsp = new IntegerField("Bottom");
+        var leftGap = new IntegerField("Left");
+        var rightGap = new IntegerField("Right");
+        var printSizeX = new NumberField("Ширина:");
+        var printSizeY = new NumberField("Длина:");
+        gapLayout.add(topGap, bottomGsp, leftGap ,rightGap, printSizeX, printSizeY);
 
         radioGroup.setItems("Автоматически", "Вертикальная", "Горизонтальная");
         radioGroup.setValue("Автоматически");
@@ -248,6 +308,12 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         templateBinder.bind(quantityOfPrintLeaves, WorkFlow::getQuantityOfPrintLeaves, WorkFlow::setQuantityOfPrintLeaves);
         templateBinder.bind(quantityOfProduction, WorkFlow::getQuantityOfProduct, WorkFlow::setQuantityOfProduct);
         templateBinder.bind(quantityProductionsOnLeaf, WorkFlow::getQuantityProductionsOnLeaf, WorkFlow::setQuantityProductionsOnLeaf);
+        templateBinder.bind(topGap, WorkFlow::getTopGap, WorkFlow::setBottomGap);
+        templateBinder.bind(bottomGsp, WorkFlow::getBottomGap, WorkFlow::setBottomGap);
+        templateBinder.bind(leftGap, WorkFlow::getLeftGap, WorkFlow::setBottomGap);
+        templateBinder.bind(rightGap, WorkFlow::getRightGap, WorkFlow::setRightGap);
+        templateBinder.bind(printSizeX, WorkFlow::getPrintSizeX, WorkFlow::setPrintSizeX);
+        templateBinder.bind(printSizeY, WorkFlow::getPrintSizeY, WorkFlow::setPrintSizeY);
         //templateBinder.bind(radioGroup, WorkFlow::getOrientation, WorkFlow::setOrientation);
 
         radioGroup.addValueChangeListener(e-> {
@@ -263,29 +329,47 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         columnsOnLeaf.setReadOnly(true);
         hLayout.add(radioGroup);
         var hl = new HorizontalLayout();
-        hl.add(rowsOnLeaf,columnsOnLeaf,quantityOfPrintLeaves, quantityOfProduction, quantityProductionsOnLeaf, gapComboBox);
-        this.add(hLayout,hl);
-
+        hl.add(rowsOnLeaf,columnsOnLeaf,quantityOfPrintLeaves, quantityOfProduction, quantityProductionsOnLeaf);
+        this.add(hLayout,hl, h3, gapLayout);
     }
 
+    private double getPrintSizeX(){
+        var bean = templateBinder.getBean();
+        var margins = getMargins();
+        double x;
+
+        bean.setLeftGap(margins.getGapLeft());
+        bean.setRightGap(margins.getGapRight());
+        x = bean.getMaterial().getSizeOfPrintLeaf().getLength() - bean.getLeftGap() - bean.getRightGap();
+        bean.setPrintSizeX(x);
+        templateBinder.refreshFields();
+        return x;
+    }
+
+    private double getPrintSizeY(){
+        var bean = templateBinder.getBean();
+        var margins = getMargins();
+        double y;
+
+        bean.setTopGap(margins.getGapTop());
+        bean.setBottomGap(margins.getGapBottom());
+        y = bean.getMaterial().getSizeOfPrintLeaf().getWidth() - bean.getTopGap() - bean.getBottomGap();
+        bean.setPrintSizeY(y);
+        templateBinder.refreshFields();
+        return y;
+    }
 
     private int[] calculateAndSetQuantity(String str){
         var bean = templateBinder.getBean();
-        Gap margins = this.getMargins();
         int[] mass = {1,1,1};
-
+        var printSizeX = getPrintSizeX();
+        var printSizeY = getPrintSizeY();
         if (bean!=null){
             if ((bean.getMaterial().getSizeOfPrintLeaf()!=null)
                     & (bean.getSizeX()!=null)
-                    & (bean.getSizeY()!=null)
-                    & (bean.getGap()!=null)) {
-                int printSizeX = bean.getMaterial().getSizeOfPrintLeaf().getLength() - margins.getGapLeft() - margins.getGapRight();
-                int printSizeY = bean.getMaterial().getSizeOfPrintLeaf().getWidth() - margins.getGapTop() - margins.getGapBottom();
-                Double fullSizeX = bean.getSizeY() + bean.getBleed().getGapTop() + bean.getBleed().getGapBottom();
-                Double fullSizeY = bean.getSizeX() + bean.getBleed().getGapLeft() + bean.getBleed().getGapRight();
-
-                var mass1 = getQuantity(printSizeX, printSizeY, fullSizeX, fullSizeY);
-                var mass2 = getQuantity(printSizeX, printSizeY, fullSizeY, fullSizeX);
+                    & (bean.getSizeY()!=null)) {
+                var mass1 = getQuantity(printSizeX, printSizeY, bean.getFullProductSizeX(), bean.getFullProductSizeY());
+                var mass2 = getQuantity(printSizeX, printSizeY, bean.getFullProductSizeY(), bean.getFullProductSizeX());
 
                 switch (str) {
                     case "Автоматически":
@@ -299,7 +383,6 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
                         mass = mass2;
                         break;
                 }
-
             }
         }
         return mass;
@@ -317,8 +400,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         return margins;
     }
 
-
-    private int[] getQuantity(int sizeLeafX, int sizeLeafY, Double sizeElementX, Double sizeElementY) {
+    private int[] getQuantity(double sizeLeafX, double sizeLeafY, Double sizeElementX, Double sizeElementY) {
         int[] mass = new int[3];
         mass[0] = (int) (sizeLeafX/sizeElementX);
         mass[1] = (int) (sizeLeafY/sizeElementY);
