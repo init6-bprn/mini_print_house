@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.views.template;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 import com.vaadin.flow.component.ClickEvent;
@@ -34,7 +35,6 @@ import ru.bprn.printhouse.views.MainLayout;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @PageTitle("Создание и редактирование рабочих цепочек (WorkFlow)")
@@ -51,10 +51,11 @@ public class WorkFlowView extends SplitLayout {
     private final ImposeCaseService imposeCaseService;
     private final QuantityColorsService quantityColorsService;
     private final TabSheet tabSheet = new TabSheet();
-    private WorkFlow workFlow;
+    //private WorkFlow workFlow;
     private StartTabOfWorkFlowVerticalLayout startTab;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
+    private final Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
     public WorkFlowView(PrintMashineService printMashineService, StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
                         WorkFlowService workFlowService, ImposeCaseService imposeCaseService, QuantityColorsService quantityColorsService){
@@ -81,29 +82,30 @@ public class WorkFlowView extends SplitLayout {
         var vl = new VerticalLayout();
         vl.setSizeUndefined();
 
-        var dialog = new ConfirmDialog("Вы уверены, что хотите удалить этот workflow?" , "",
-                "Да", confirmEvent -> {if (workFlow !=null) {
-            workFlowService.delete(workFlow);
-                        templateGrid.getListDataView().removeItem(workFlow);
-                }},
-                "Нет", cancelEvent -> cancelEvent.getSource().close());
+        var dialog = new ConfirmDialog("Вы уверены, что хотите удалить этот workflow?" , "", "Да", confirmEvent ->
+            {
+                var workflw = templateGrid.getSelectedItems().stream().findFirst();
+                if (workflw.isPresent()) {
+                        templateGrid.getListDataView().removeItem(workflw.get());
+                        workFlowService.delete(workflw.get());
+                }
+            },
+            "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         var hl = new HorizontalLayout();
         var createButton = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> {
             this.getPrimaryComponent().setVisible(false);
             this.getSecondaryComponent().getElement().setEnabled(true);
             this.setSplitterPosition(0);
-            workFlow = new WorkFlow();
-            startTab.getTemplateBinder().setBean(workFlow);
+            startTab.getTemplateBinder().setBean(new WorkFlow());
         });
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         var updateButton  = new Button(VaadinIcon.EDIT.create(), buttonClickEvent -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
-                workFlow = optTemp.get();
-                startTab.getTemplateBinder().setBean(workFlow);
-                populateTabSheet(getParseStringMap(workFlow.getStrJSON()));
+                startTab.getTemplateBinder().setBean(optTemp.get());
+                populateTabSheet(getParseStringMap(optTemp.get().getStrJSON()));
 
                 this.getPrimaryComponent().setVisible(false);
                 this.getSecondaryComponent().getElement().setEnabled(true);
@@ -116,7 +118,9 @@ public class WorkFlowView extends SplitLayout {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 var issueTemplate = optTemp.get();
-                workFlow = new WorkFlow();
+                var workFlow = new WorkFlow();
+                var id = workFlow.getId();
+                var name = workFlow.getName();
                 var objMapper = new ObjectMapper();
                 TokenBuffer tb = new TokenBuffer(objMapper, false);
                 try {
@@ -129,6 +133,9 @@ public class WorkFlowView extends SplitLayout {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+
+                workFlow.setId(id);
+                workFlow.setName(name);
 
                 startTab.getTemplateBinder().setBean(workFlow);
                 populateTabSheet(getParseStringMap(workFlow.getStrJSON()));
@@ -143,7 +150,7 @@ public class WorkFlowView extends SplitLayout {
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), buttonClickEvent -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
-                workFlow = optTemp.get();
+                //workFlow = optTemp.get();
                 dialog.open();
             }
         });
@@ -164,9 +171,16 @@ public class WorkFlowView extends SplitLayout {
 
         vl.add(templateGrid);
 
+        /*
         templateGrid.addSelectionListener(selectionEvent -> {
             if (selectionEvent.getFirstSelectedItem().isPresent())
                      workFlow = selectionEvent.getFirstSelectedItem().get();
+        });
+        */
+
+        templateGrid.addItemClickListener(workFlowItemClickEvent ->{
+           startTab.getTemplateBinder().setBean(workFlowItemClickEvent.getItem());
+           //populateTabSheet(getParseStringMap(workFlowItemClickEvent.getItem().getStrJSON()));
         });
 
         templateGrid.addItemDoubleClickListener(__->updateButton.click());
@@ -291,7 +305,7 @@ public class WorkFlowView extends SplitLayout {
                 for (Component comp : list) {
                     if (!((tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout))) {
                         hb = (HasBinder) tabSheet.getComponent((Tab) comp);
-                        listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getVolumeAsString()});
+                        listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getBeanAsString()});
                         if (!hb.isValid()) {
                             Notification.show("Заполните все требуемые поля!");
                             tabSheet.setSelectedTab((Tab) comp);
@@ -347,8 +361,12 @@ public class WorkFlowView extends SplitLayout {
             switch (str[0]) {
                 case "PrintingTabOfWorkFlowVerticalLayout" :
                     var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService);
-                    tabComp.getTemplateBinder().setBean(new DigitalPrinting());
-                    tabComp.setVolumeAsString(str[1]);
+                    try {
+                        tabComp.getTemplateBinder().setBean(objectMapper.readValue(str[1], DigitalPrinting.class));
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                    tabComp.setBeanFromString(str[1]);
                     tabSheet.add(createTab("Цифровая печать"), tabComp);
                 break;
             }

@@ -4,7 +4,7 @@ public interface HasBinder {
 
     public Boolean isValid();
 
-    public String getVolumeAsString();
+    public String getBeanAsString();
 
-    public void setVolumeAsString(String str);
+    public void setBeanFromString(String str);
 }

@@ -84,7 +84,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
     }
 
     @Override
-    public String getVolumeAsString(){
+    public String getBeanAsString(){
         try {
             return objectMapper.writeValueAsString(templateBinder.getBean());
         } catch (JsonProcessingException e) {
@@ -93,7 +93,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
 
     }
     @Override
-    public void setVolumeAsString(String str){
+    public void setBeanFromString(String str){
         try {
             if (!str.equals("null")) templateBinder.setBean(objectMapper.readValue(str, DigitalPrinting.class));
             else templateBinder.setBean(new DigitalPrinting());

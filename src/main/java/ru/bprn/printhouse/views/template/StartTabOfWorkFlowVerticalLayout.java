@@ -171,6 +171,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var imposeCaseCombo = new ComboBox<ImposeCase>("Вариант спуска полос:");
         imposeCaseCombo.setItems(imposeCaseService.findAll());
         templateBinder.forField(imposeCaseCombo).asRequired().bind(WorkFlow::getImposeCase, WorkFlow::setImposeCase);
+        comboBoxViewFirstElement(imposeCaseCombo);
 
         imposeCaseCombo.addValueChangeListener(e->{
             if (e.getValue()!=null) {
@@ -196,12 +197,12 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
         var length = new NumberField();
         length.setLabel("Длина");
-        templateBinder.bind(length, WorkFlow::getSizeX, WorkFlow::setSizeX);
+        templateBinder.forField(length).asRequired().bind(WorkFlow::getSizeX, WorkFlow::setSizeX);
         length.addValueChangeListener(e->setFullProductSize());
 
         var width = new NumberField();
         width.setLabel("Ширина");
-        templateBinder.bind(width, WorkFlow::getSizeY, WorkFlow::setSizeY);
+        templateBinder.forField(width).asRequired().bind(WorkFlow::getSizeY, WorkFlow::setSizeY);
         length.addValueChangeListener(e->setFullProductSize());
 
         var sizeOfPaperCombo = new ComboBox<StandartSize>();
@@ -254,8 +255,11 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
         var bleedCombo = new ComboBox<Gap>("Припуск");
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
+        bleedCombo.scrollIntoView();
+        //comboBoxViewFirstElement(bleedCombo);
 
         templateBinder.forField(bleedCombo).asRequired().bind(WorkFlow::getBleed, WorkFlow::setBleed);
+
         bleedCombo.addValueChangeListener(e->{
             if (autoNamed.getValue()) {
                 templateBinder.getBean().setName(setDefaultName());
@@ -390,6 +394,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
     private Gap getMargins() {
         var margins = new Gap(0,0,0,0);
+        //Notification.show(this.getChildren().toList().toString());
 
         this.getChildren().filter(HasMargins.class::isInstance).forEach(component -> {
             if (margins.getGapTop() < ((HasMargins) component).getMargins().getGapTop()) margins.setGapTop(((HasMargins) component).getMargins().getGapTop());
@@ -414,7 +419,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
     }
 
     @Override
-    public String getVolumeAsString(){
+    public String getBeanAsString(){
         try {
             return this.getClass().getSimpleName() + objectMapper.writeValueAsString(templateBinder.getBean());
         } catch (JsonProcessingException e) {
@@ -423,7 +428,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
     }
     @Override
-    public void setVolumeAsString(String str){
+    public void setBeanFromString(String str){
         try {
             templateBinder.setBean(objectMapper.readValue(str, WorkFlow.class));
         } catch (JsonProcessingException e) {
