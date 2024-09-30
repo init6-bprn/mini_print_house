@@ -187,29 +187,50 @@ public class WorkFlowView extends SplitLayout {
         return vl;
     }
 
+    private void removeTabs(){
+        Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
+        if (component.isPresent()) {
+            var tabs = (Tabs) component.get();
+            List<Component> list = tabs.getChildren().filter(Tab.class::isInstance).toList();
+            for (Component comp: list)
+                if (!(tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout))
+                    tabSheet.remove((Tab) comp);
+        }
+
+    }
+
     private VerticalLayout addTabSheetSection(){
 
         var confirmButton = new Button("Сохранить");
         confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        confirmButton.addClickListener(this::validateAndSaveBean);
+        confirmButton.addClickListener(e->{
+            if (validateBean()) {
+                removeTabs();
+                this.getPrimaryComponent().setVisible(true);
+                this.getSecondaryComponent().getElement().setEnabled(false);
+                this.setSplitterPosition(35.0);
+                this.templateGrid.setItems(workFlowService.findAll());
+            };
+        });
 
         var cancelButton = new Button("Отмена");
         cancelButton.addClickListener(buttonClickEvent -> {
-           startTab.getTemplateBinder().removeBean();
-           Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
-           if (component.isPresent()) {
-               var tabs = (Tabs) component.get();
-               List<Component> list = tabs.getChildren().filter(Tab.class::isInstance).toList();
-               for (int i=1;  i<list.size(); i++) tabSheet.remove(i);
-           }
+           removeTabs();
+           //startTab.getTemplateBinder().removeBean();
            this.getPrimaryComponent().setVisible(true);
            this.getSecondaryComponent().getElement().setEnabled(false);
            this.setSplitterPosition(35.0);
         });
 
+        var calculateButton = new Button("Calculate!");
+        calculateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        calculateButton.addClickListener(buttonClickEvent -> {
+           calculateElements();
+        });
 
-        tabSheet.setSuffixComponent(new HorizontalLayout(cancelButton,confirmButton));
+
+        tabSheet.setSuffixComponent(new HorizontalLayout(cancelButton, calculateButton, confirmButton));
         var vel = new VerticalLayout();
         tabSheet.setWidthFull();
         startTab = new StartTabOfWorkFlowVerticalLayout(standartSizeService,
@@ -232,6 +253,10 @@ public class WorkFlowView extends SplitLayout {
 
         vel.add(tabSheet);
         return vel;
+    }
+
+    private void calculateElements() {
+
     }
 
     private Tab createTab (String str){
@@ -292,9 +317,15 @@ public class WorkFlowView extends SplitLayout {
         return tab;
     }
 
-    private void validateAndSaveBean(ClickEvent<Button> e) {
+    private void saveBean(ArrayList<String[]> str){
+        var wf = startTab.getTemplateBinder().getBean();
+        wf.setStrJSON(addKeyVolumeToMap(str));
+        workFlowService.save(wf);
+    }
+
+    private boolean validateBean() {
         HasBinder hb;
-        boolean flag = false;
+        boolean flag = true;
         Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
 
         if (component.isPresent()) {
@@ -303,34 +334,28 @@ public class WorkFlowView extends SplitLayout {
             var listWorkflow = new ArrayList<String[]>();
             if (!list.isEmpty()) {
                 for (Component comp : list) {
-                    if (!((tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout))) {
-                        hb = (HasBinder) tabSheet.getComponent((Tab) comp);
-                        listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getBeanAsString()});
+                    Component layout = tabSheet.getComponent((Tab) comp);
+                    if (layout instanceof HasBinder) {
+                        hb = (HasBinder) layout;
                         if (!hb.isValid()) {
                             Notification.show("Заполните все требуемые поля!");
                             tabSheet.setSelectedTab((Tab) comp);
                             listWorkflow.clear();
-                            flag = true;
+                            flag = false;
+                            break;
                         }
-                        if (flag) break;
+                        else if (!(layout instanceof StartTabOfWorkFlowVerticalLayout))
+                            listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getBeanAsString()});
                     }
                 }
 
-                if (!flag) {
-                    var wf = startTab.getTemplateBinder().getBean();
-                    wf.setStrJSON(addKeyVolumeToMap(listWorkflow));
-                    workFlowService.save(wf);
-                    for (Component comp: list)
-                        if (!((tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout)))
-                            tabSheet.remove((Tab) comp);
-                    //for (int i=list.size()-1;  i>0; i--) tabSheet.remove(i);
-                    this.getPrimaryComponent().setVisible(true);
-                    this.getSecondaryComponent().getElement().setEnabled(false);
-                    this.setSplitterPosition(35.0);
-                    this.templateGrid.setItems(workFlowService.findAll());
+                if (flag) {
+                    saveBean(listWorkflow);
+                    return true;
                 }
             }
         }
+        return false;
     }
 
 

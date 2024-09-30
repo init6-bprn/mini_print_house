@@ -24,6 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
+import java.util.Objects;
+
 @UIScope
 @AnonymousAllowed
 public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder{
@@ -60,6 +62,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         addSetOfSheetsSection();
         addMaterialSection();
         addQuantityAndOrientation();
+
     }
 
     private  void addNameOfTemplate() {
@@ -142,7 +145,10 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         grid.setHeight("270px");
         grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
 
-        templateBinder.forField(grid.asSingleSelect()).asRequired().bind(WorkFlow::getMaterial, WorkFlow::setMaterial);
+        //templateBinder.forField(grid.).bind(WorkFlow::getMaterial, WorkFlow::setMaterial);
+        templateBinder.forField(grid.asSingleSelect()).
+                withValidator(Objects::nonNull, "Выделите строку!")
+                .bind(WorkFlow::getMaterial, WorkFlow::setMaterial);
 
         grid.getHeaderRows().clear();
         HeaderRow headerRow = grid.appendHeaderRow();
@@ -171,7 +177,8 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var imposeCaseCombo = new ComboBox<ImposeCase>("Вариант спуска полос:");
         imposeCaseCombo.setItems(imposeCaseService.findAll());
         templateBinder.forField(imposeCaseCombo).asRequired().bind(WorkFlow::getImposeCase, WorkFlow::setImposeCase);
-        comboBoxViewFirstElement(imposeCaseCombo);
+        imposeCaseCombo.setValue(imposeCaseService.getFirst());
+
 
         imposeCaseCombo.addValueChangeListener(e->{
             if (e.getValue()!=null) {
@@ -255,10 +262,8 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
         var bleedCombo = new ComboBox<Gap>("Припуск");
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
-        bleedCombo.scrollIntoView();
-        //comboBoxViewFirstElement(bleedCombo);
-
-        templateBinder.forField(bleedCombo).asRequired().bind(WorkFlow::getBleed, WorkFlow::setBleed);
+        //templateBinder.forField(bleedCombo).asRequired().bind(WorkFlow::getBleed, WorkFlow::setBleed);
+        templateBinder.forField(bleedCombo).withValidator(Objects::nonNull, "Errrrr").bind(WorkFlow::getBleed, WorkFlow::setBleed);
 
         bleedCombo.addValueChangeListener(e->{
             if (autoNamed.getValue()) {
@@ -273,15 +278,17 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
     private void setFullProductSize() {
         var bean = templateBinder.getBean();
-        if ((bean.getSizeY() != null) & (bean.getPrintSizeX() != null)) {
-            if (bean.getBleed() != null) {
-                bean.setFullProductSizeX(bean.getSizeY() + bean.getBleed().getGapTop() + bean.getBleed().getGapBottom());
-                bean.setFullProductSizeY(bean.getSizeX() + bean.getBleed().getGapLeft() + bean.getBleed().getGapRight());
-            } else {
-                bean.setFullProductSizeX(bean.getSizeY());
-                bean.setFullProductSizeY(bean.getSizeX());
+        if (bean != null) {
+            if ((bean.getSizeY() != null) & (bean.getPrintSizeX() != null)) {
+                if (bean.getBleed() != null) {
+                    bean.setFullProductSizeX(bean.getSizeY() + bean.getBleed().getGapTop() + bean.getBleed().getGapBottom());
+                    bean.setFullProductSizeY(bean.getSizeX() + bean.getBleed().getGapLeft() + bean.getBleed().getGapRight());
+                } else {
+                    bean.setFullProductSizeX(bean.getSizeY());
+                    bean.setFullProductSizeY(bean.getSizeX());
+                }
+                templateBinder.refreshFields();
             }
-            templateBinder.refreshFields();
         }
     }
 
@@ -395,8 +402,8 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
     private Gap getMargins() {
         var margins = new Gap(0,0,0,0);
         //Notification.show(this.getChildren().toList().toString());
-
-        this.getChildren().filter(HasMargins.class::isInstance).forEach(component -> {
+        if (this.getParent().isPresent())
+            this.getParent().get().getChildren().filter(HasMargins.class::isInstance).forEach(component -> {
             if (margins.getGapTop() < ((HasMargins) component).getMargins().getGapTop()) margins.setGapTop(((HasMargins) component).getMargins().getGapTop());
             if (margins.getGapBottom() < ((HasMargins) component).getMargins().getGapBottom()) margins.setGapBottom(((HasMargins) component).getMargins().getGapBottom());
             if (margins.getGapLeft() < ((HasMargins) component).getMargins().getGapLeft()) margins.setGapLeft(((HasMargins) component).getMargins().getGapLeft());
@@ -415,6 +422,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
     @Override
     public Boolean isValid() {
+        templateBinder.validate();
         return templateBinder.isValid();
     }
 
@@ -431,6 +439,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
     public void setBeanFromString(String str){
         try {
             templateBinder.setBean(objectMapper.readValue(str, WorkFlow.class));
+            //templateBinder.refreshFields();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

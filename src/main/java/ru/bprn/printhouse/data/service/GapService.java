@@ -18,6 +18,8 @@ public class GapService {
         return gapRepository.findAllByNameContainingIgnoreCase(str);
     }
 
+    public  Gap getFirstBleeds(String name) {return gapRepository.findFirstByName(name);}
+
     public List<Gap> findAllByNameNotContaining (String str) {return  gapRepository.findAllByNameNotContainingIgnoreCase(str);}
 
     public List<Gap> findAll(){

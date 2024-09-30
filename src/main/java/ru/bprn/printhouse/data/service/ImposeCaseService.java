@@ -16,6 +16,8 @@ public class ImposeCaseService {
 
     public List<ImposeCase> findAll() {return imposeCaseRepository.findAll();}
 
+    public ImposeCase getFirst() {return imposeCaseRepository.findAll().getFirst();}
+
     public ImposeCase save(ImposeCase imposeCase) {return imposeCaseRepository.save(imposeCase);}
 
     public void delete(ImposeCase imposeCase) {imposeCaseRepository.delete(imposeCase);}
