@@ -3,7 +3,6 @@ package ru.bprn.printhouse.views.template;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
-import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -205,7 +204,9 @@ public class WorkFlowView extends SplitLayout {
         confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         confirmButton.addClickListener(e->{
-            if (validateBean()) {
+            var optList = validateBean();
+            if (optList.isPresent()) {
+                saveBean(optList.get());
                 removeTabs();
                 this.getPrimaryComponent().setVisible(true);
                 this.getSecondaryComponent().getElement().setEnabled(false);
@@ -323,7 +324,33 @@ public class WorkFlowView extends SplitLayout {
         workFlowService.save(wf);
     }
 
-    private boolean validateBean() {
+    private <T> List<Component> getListOfComponents(T t) {
+        Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
+        if (component.isPresent()) {
+            var tabs = (Tabs) component.get();
+            List<Component> list = tabs.getChildren().filter(Tab.class::isInstance).toList();
+            var listWorkflow = new ArrayList<String[]>();
+            if (!list.isEmpty()) { /*
+                for (Component comp : list) {
+                    Component layout = tabSheet.getComponent((Tab) comp);
+                    if (layout instanceof t.getClass()) {
+                        T hb = (T) layout;
+                        if (!hb.isValid()) {
+                            Notification.show("Заполните все требуемые поля!");
+                            tabSheet.setSelectedTab((Tab) comp);
+                            listWorkflow.clear();
+                            flag = false;
+                            break;
+                        } else if (!(layout instanceof StartTabOfWorkFlowVerticalLayout))
+                            listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getBeanAsString()});
+                    }
+                } */
+            }
+        }
+        return null;
+    }
+
+    private Optional<ArrayList<String[]>> validateBean() {
         HasBinder hb;
         boolean flag = true;
         Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
@@ -349,15 +376,11 @@ public class WorkFlowView extends SplitLayout {
                     }
                 }
 
-                if (flag) {
-                    saveBean(listWorkflow);
-                    return true;
-                }
+                if (flag) return Optional.of(listWorkflow);
             }
         }
-        return false;
+        return Optional.empty();
     }
-
 
     private List<String[]> getParseStringMap(String str) {
         var list = new ArrayList<String[]>();
