@@ -31,7 +31,6 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
         this.quantityColorsService = quantityColorsService;
         objectMapper = new ObjectMapper();
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
-
         addPrinterSection();
     }
 

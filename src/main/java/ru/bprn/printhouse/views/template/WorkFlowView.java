@@ -150,7 +150,6 @@ public class WorkFlowView extends SplitLayout {
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), buttonClickEvent -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
-                //workFlow = optTemp.get();
                 dialog.open();
             }
         });
@@ -170,13 +169,6 @@ public class WorkFlowView extends SplitLayout {
         templateGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 
         vl.add(templateGrid);
-
-        /*
-        templateGrid.addSelectionListener(selectionEvent -> {
-            if (selectionEvent.getFirstSelectedItem().isPresent())
-                     workFlow = selectionEvent.getFirstSelectedItem().get();
-        });
-        */
 
         templateGrid.addItemClickListener(workFlowItemClickEvent ->{
            startTab.getTemplateBinder().setBean(workFlowItemClickEvent.getItem());
@@ -254,7 +246,25 @@ public class WorkFlowView extends SplitLayout {
     }
 
     private void calculateElements() {
-
+        var left = startTab.getTemplateBinder().getBean().getLeftGap();
+        var right = startTab.getTemplateBinder().getBean().getRightGap();
+        var top = startTab.getTemplateBinder().getBean().getTopGap();
+        var bottom = startTab.getTemplateBinder().getBean().getBottomGap();
+        var comp = getListOfComponents(HasMargins.class);
+        for (Component c : comp) {
+            HasMargins mg = (HasMargins) c;
+            if (mg.getMargins()!=null){
+                if (left < mg.getMargins().getGapLeft()) left = mg.getMargins().getGapLeft();
+                if (right < mg.getMargins().getGapRight()) right = mg.getMargins().getGapRight();
+                if (top < mg.getMargins().getGapTop()) top = mg.getMargins().getGapTop();
+                if (bottom < mg.getMargins().getGapBottom()) bottom = mg.getMargins().getGapBottom();
+            }
+        }
+        startTab.getTemplateBinder().getBean().setRightGap(right);
+        startTab.getTemplateBinder().getBean().setLeftGap(left);
+        startTab.getTemplateBinder().getBean().setTopGap(top);
+        startTab.getTemplateBinder().getBean().setBottomGap(bottom);
+        startTab.getTemplateBinder().refreshFields();
     }
 
     private Tab createTab (String str){
@@ -348,12 +358,7 @@ public class WorkFlowView extends SplitLayout {
             HasBinder hb = (HasBinder) comp;
             if (!hb.isValid()) {
                 Notification.show("Заполните все требуемые поля!");
-                //
-                // Здесь надо подумать!
-                // (Tab) comp.getParent() - не работает
-                //
-                var c = comp.getParent();
-                c.ifPresent(component -> tabSheet.setSelectedTab((Tab) component));
+                tabSheet.setSelectedTab(tabSheet.getTab(comp));
                 listWorkflow.clear();
                 flag = false;
                 break;

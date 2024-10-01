@@ -373,12 +373,12 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
     private int[] calculateAndSetQuantity(String str){
         var bean = templateBinder.getBean();
         int[] mass = {1,1,1};
-        var printSizeX = getPrintSizeX();
-        var printSizeY = getPrintSizeY();
-        if (bean!=null){
+        if (bean!=null && bean.getMaterial()!=null){
             if ((bean.getMaterial().getSizeOfPrintLeaf()!=null)
                     & (bean.getSizeX()!=null)
                     & (bean.getSizeY()!=null)) {
+                var printSizeX = getPrintSizeX();
+                var printSizeY = getPrintSizeY();
                 var mass1 = getQuantity(printSizeX, printSizeY, bean.getFullProductSizeX(), bean.getFullProductSizeY());
                 var mass2 = getQuantity(printSizeX, printSizeY, bean.getFullProductSizeY(), bean.getFullProductSizeX());
 
