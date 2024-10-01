@@ -33,6 +33,7 @@ import ru.bprn.printhouse.views.MainLayout;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -187,15 +188,11 @@ public class WorkFlowView extends SplitLayout {
     }
 
     private void removeTabs(){
-        Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
-        if (component.isPresent()) {
-            var tabs = (Tabs) component.get();
-            List<Component> list = tabs.getChildren().filter(Tab.class::isInstance).toList();
-            for (Component comp: list)
+        var list = getListOfTabs();
+        if (list.isPresent())
+            for (Component comp: list.get())
                 if (!(tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout))
                     tabSheet.remove((Tab) comp);
-        }
-
     }
 
     private VerticalLayout addTabSheetSection(){
@@ -324,62 +321,47 @@ public class WorkFlowView extends SplitLayout {
         workFlowService.save(wf);
     }
 
-    private <T> List<Component> getListOfComponents(T t) {
+    private Optional<List<Component>> getListOfTabs(){
         Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
-        if (component.isPresent()) {
-            var tabs = (Tabs) component.get();
-            List<Component> list = tabs.getChildren().filter(Tab.class::isInstance).toList();
-            var listWorkflow = new ArrayList<String[]>();
-            if (!list.isEmpty()) { /*
-                for (Component comp : list) {
-                    Component layout = tabSheet.getComponent((Tab) comp);
-                    if (layout instanceof t.getClass()) {
-                        T hb = (T) layout;
-                        if (!hb.isValid()) {
-                            Notification.show("Заполните все требуемые поля!");
-                            tabSheet.setSelectedTab((Tab) comp);
-                            listWorkflow.clear();
-                            flag = false;
-                            break;
-                        } else if (!(layout instanceof StartTabOfWorkFlowVerticalLayout))
-                            listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getBeanAsString()});
-                    }
-                } */
+        return component.map(value -> value.getChildren().filter(Tab.class::isInstance).toList());
+    }
+
+    private List<Component> getListOfComponents(Class<?> clazz) {
+        var listWorkflow = new ArrayList<Component>();
+        var list = getListOfTabs();
+        if (list.isPresent()) {
+            for (Component comp : list.get()) {
+                Component layout = tabSheet.getComponent((Tab) comp);
+                if (Arrays.stream(layout.getClass().getInterfaces()).toList().contains(clazz)) {
+                    listWorkflow.add(layout);
+                }
             }
         }
-        return null;
+        return listWorkflow;
     }
 
     private Optional<ArrayList<String[]>> validateBean() {
-        HasBinder hb;
-        boolean flag = true;
-        Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
-
-        if (component.isPresent()) {
-            var tabs = (Tabs) component.get();
-            List<Component> list = tabs.getChildren().filter(Tab.class::isInstance).toList();
-            var listWorkflow = new ArrayList<String[]>();
-            if (!list.isEmpty()) {
-                for (Component comp : list) {
-                    Component layout = tabSheet.getComponent((Tab) comp);
-                    if (layout instanceof HasBinder) {
-                        hb = (HasBinder) layout;
-                        if (!hb.isValid()) {
-                            Notification.show("Заполните все требуемые поля!");
-                            tabSheet.setSelectedTab((Tab) comp);
-                            listWorkflow.clear();
-                            flag = false;
-                            break;
-                        }
-                        else if (!(layout instanceof StartTabOfWorkFlowVerticalLayout))
-                            listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getBeanAsString()});
-                    }
-                }
-
-                if (flag) return Optional.of(listWorkflow);
-            }
+        var flag = true;
+        var list = getListOfComponents(HasBinder.class);
+        var listWorkflow = new ArrayList<String[]>();
+        for (Component comp : list) {
+            HasBinder hb = (HasBinder) comp;
+            if (!hb.isValid()) {
+                Notification.show("Заполните все требуемые поля!");
+                //
+                // Здесь надо подумать!
+                // (Tab) comp.getParent() - не работает
+                //
+                var c = comp.getParent();
+                c.ifPresent(component -> tabSheet.setSelectedTab((Tab) component));
+                listWorkflow.clear();
+                flag = false;
+                break;
+            } else if (!(comp instanceof StartTabOfWorkFlowVerticalLayout))
+                    listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getBeanAsString()});
         }
-        return Optional.empty();
+        if (flag) return Optional.of(listWorkflow);
+        else return Optional.empty();
     }
 
     private List<String[]> getParseStringMap(String str) {
