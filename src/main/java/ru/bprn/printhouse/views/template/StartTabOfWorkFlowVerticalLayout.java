@@ -401,7 +401,6 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
     private Gap getMargins() {
         var margins = new Gap(0,0,0,0);
-        //Notification.show(this.getChildren().toList().toString());
         if (this.getParent().isPresent())
             this.getParent().get().getChildren().filter(HasMargins.class::isInstance).forEach(component -> {
             if (margins.getGapTop() < ((HasMargins) component).getMargins().getGapTop()) margins.setGapTop(((HasMargins) component).getMargins().getGapTop());

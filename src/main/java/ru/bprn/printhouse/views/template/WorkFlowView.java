@@ -51,7 +51,6 @@ public class WorkFlowView extends SplitLayout {
     private final ImposeCaseService imposeCaseService;
     private final QuantityColorsService quantityColorsService;
     private final TabSheet tabSheet = new TabSheet();
-    //private WorkFlow workFlow;
     private StartTabOfWorkFlowVerticalLayout startTab;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -207,7 +206,6 @@ public class WorkFlowView extends SplitLayout {
         var cancelButton = new Button("Отмена");
         cancelButton.addClickListener(buttonClickEvent -> {
            removeTabs();
-           //startTab.getTemplateBinder().removeBean();
            this.getPrimaryComponent().setVisible(true);
            this.getSecondaryComponent().getElement().setEnabled(false);
            this.setSplitterPosition(35.0);
@@ -216,7 +214,8 @@ public class WorkFlowView extends SplitLayout {
         var calculateButton = new Button("Calculate!");
         calculateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         calculateButton.addClickListener(buttonClickEvent -> {
-           calculateElements();
+            var valid = validateBean();
+            if (valid.isPresent()) calculateElements();
         });
 
 
@@ -264,6 +263,8 @@ public class WorkFlowView extends SplitLayout {
         startTab.getTemplateBinder().getBean().setLeftGap(left);
         startTab.getTemplateBinder().getBean().setTopGap(top);
         startTab.getTemplateBinder().getBean().setBottomGap(bottom);
+        startTab.getTemplateBinder().getBean().setPrintSizeX((double) (startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf().getLength()-right-left));
+        startTab.getTemplateBinder().getBean().setPrintSizeY((double) (startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf().getWidth()-top-bottom));
         startTab.getTemplateBinder().refreshFields();
     }
 
