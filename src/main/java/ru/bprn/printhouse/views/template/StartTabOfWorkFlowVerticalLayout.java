@@ -270,6 +270,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
                 templateBinder.getBean().setName(setDefaultName());
                 templateBinder.refreshFields();
             }
+            setFullProductSize();
         });
 
         hLayout.add(sizeOfPaperCombo, length, width, layout, bleedCombo, dialog);
@@ -298,9 +299,9 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var radioGroup = new RadioButtonGroup<>("Ориентация");
         var rowsOnLeaf = new IntegerField("Колонок:");
         var columnsOnLeaf = new IntegerField("Столбцов:");
-        var quantityOfPrintLeaves = new IntegerField("Изделий на листе:");
+        var quantityOfPrintLeaves = new IntegerField("Листаж:");
         var quantityOfProduction = new IntegerField("Тираж:");
-        var quantityProductionsOnLeaf = new IntegerField("Листаж:");
+        var quantityProductionsOnLeaf = new IntegerField("Изделий на листе:");
         var gapLayout = new HorizontalLayout();
         var h3 = new NativeLabel("Отступы от краев материала:");
         var topGap = new IntegerField("Top");
@@ -328,10 +329,13 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         //templateBinder.bind(radioGroup, WorkFlow::getOrientation, WorkFlow::setOrientation);
 
         radioGroup.addValueChangeListener(e-> {
+            /*
             var mass = calculateAndSetQuantity(e.getValue().toString());
             rowsOnLeaf.setValue(mass[0]);
             columnsOnLeaf.setValue(mass[1]);
-            quantityOfPrintLeaves.setValue(mass[2]);
+            quantityProductionsOnLeaf.setValue(mass[2]);
+
+             */
         });
         add(radioGroup);
 
@@ -340,10 +344,10 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         columnsOnLeaf.setReadOnly(true);
         hLayout.add(radioGroup);
         var hl = new HorizontalLayout();
-        hl.add(rowsOnLeaf,columnsOnLeaf,quantityOfPrintLeaves, quantityOfProduction, quantityProductionsOnLeaf);
+        hl.add(rowsOnLeaf,columnsOnLeaf,quantityProductionsOnLeaf, quantityOfProduction, quantityOfPrintLeaves);
         this.add(hLayout,hl, h3, gapLayout);
     }
-
+/*
     private double getPrintSizeX(){
         var bean = templateBinder.getBean();
         var margins = getMargins();
@@ -418,7 +422,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         mass[2] = mass[1]*mass[0];
         return mass;
     }
-
+*/
     @Override
     public Boolean isValid() {
         templateBinder.validate();

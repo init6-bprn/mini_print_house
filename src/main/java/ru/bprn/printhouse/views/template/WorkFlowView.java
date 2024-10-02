@@ -33,7 +33,6 @@ import ru.bprn.printhouse.views.MainLayout;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,6 +52,7 @@ public class WorkFlowView extends SplitLayout {
     private final TabSheet tabSheet = new TabSheet();
     private StartTabOfWorkFlowVerticalLayout startTab;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private CalculateWorkflowParameters calc;
 
     private final Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
@@ -67,6 +67,11 @@ public class WorkFlowView extends SplitLayout {
         this.workFlowService = workFlowService;
         this.imposeCaseService = imposeCaseService;
         this.quantityColorsService = quantityColorsService;
+
+        startTab = new StartTabOfWorkFlowVerticalLayout(this.standartSizeService,
+                this.typeOfMaterialService, this.materialService, this.gapService, this.imposeCaseService);
+
+        calc = new CalculateWorkflowParameters(tabSheet);
 
         this.setOrientation(Orientation.VERTICAL);
         addToPrimary(addGridSection());
@@ -97,6 +102,7 @@ public class WorkFlowView extends SplitLayout {
             this.getSecondaryComponent().getElement().setEnabled(true);
             this.setSplitterPosition(0);
             startTab.getTemplateBinder().setBean(new WorkFlow());
+            calc.setTemplateBinder(startTab.getTemplateBinder());
         });
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
@@ -104,6 +110,7 @@ public class WorkFlowView extends SplitLayout {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 startTab.getTemplateBinder().setBean(optTemp.get());
+                calc.setTemplateBinder(startTab.getTemplateBinder());
                 populateTabSheet(getParseStringMap(optTemp.get().getStrJSON()));
 
                 this.getPrimaryComponent().setVisible(false);
@@ -137,6 +144,7 @@ public class WorkFlowView extends SplitLayout {
                 workFlow.setName(name);
 
                 startTab.getTemplateBinder().setBean(workFlow);
+                calc.setTemplateBinder(startTab.getTemplateBinder());
                 populateTabSheet(getParseStringMap(workFlow.getStrJSON()));
 
                 this.getPrimaryComponent().setVisible(false);
@@ -179,7 +187,7 @@ public class WorkFlowView extends SplitLayout {
     }
 
     private void removeTabs(){
-        var list = getListOfTabs();
+        var list = calc.getListOfTabs();
         if (list.isPresent())
             for (Component comp: list.get())
                 if (!(tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout))
@@ -215,16 +223,13 @@ public class WorkFlowView extends SplitLayout {
         calculateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         calculateButton.addClickListener(buttonClickEvent -> {
             var valid = validateBean();
-            if (valid.isPresent()) calculateElements();
+            if (valid.isPresent()) calc.calculate();
         });
 
 
         tabSheet.setSuffixComponent(new HorizontalLayout(cancelButton, calculateButton, confirmButton));
         var vel = new VerticalLayout();
         tabSheet.setWidthFull();
-        startTab = new StartTabOfWorkFlowVerticalLayout(standartSizeService,
-                                                      typeOfMaterialService, materialService, gapService, imposeCaseService);
-
         tabSheet.add("Настройки", startTab);
 
         MenuBar menuBar = new MenuBar();
@@ -242,30 +247,6 @@ public class WorkFlowView extends SplitLayout {
 
         vel.add(tabSheet);
         return vel;
-    }
-
-    private void calculateElements() {
-        var left = startTab.getTemplateBinder().getBean().getLeftGap();
-        var right = startTab.getTemplateBinder().getBean().getRightGap();
-        var top = startTab.getTemplateBinder().getBean().getTopGap();
-        var bottom = startTab.getTemplateBinder().getBean().getBottomGap();
-        var comp = getListOfComponents(HasMargins.class);
-        for (Component c : comp) {
-            HasMargins mg = (HasMargins) c;
-            if (mg.getMargins()!=null){
-                if (left < mg.getMargins().getGapLeft()) left = mg.getMargins().getGapLeft();
-                if (right < mg.getMargins().getGapRight()) right = mg.getMargins().getGapRight();
-                if (top < mg.getMargins().getGapTop()) top = mg.getMargins().getGapTop();
-                if (bottom < mg.getMargins().getGapBottom()) bottom = mg.getMargins().getGapBottom();
-            }
-        }
-        startTab.getTemplateBinder().getBean().setRightGap(right);
-        startTab.getTemplateBinder().getBean().setLeftGap(left);
-        startTab.getTemplateBinder().getBean().setTopGap(top);
-        startTab.getTemplateBinder().getBean().setBottomGap(bottom);
-        startTab.getTemplateBinder().getBean().setPrintSizeX((double) (startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf().getLength()-right-left));
-        startTab.getTemplateBinder().getBean().setPrintSizeY((double) (startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf().getWidth()-top-bottom));
-        startTab.getTemplateBinder().refreshFields();
     }
 
     private Tab createTab (String str){
@@ -332,28 +313,9 @@ public class WorkFlowView extends SplitLayout {
         workFlowService.save(wf);
     }
 
-    private Optional<List<Component>> getListOfTabs(){
-        Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
-        return component.map(value -> value.getChildren().filter(Tab.class::isInstance).toList());
-    }
-
-    private List<Component> getListOfComponents(Class<?> clazz) {
-        var listWorkflow = new ArrayList<Component>();
-        var list = getListOfTabs();
-        if (list.isPresent()) {
-            for (Component comp : list.get()) {
-                Component layout = tabSheet.getComponent((Tab) comp);
-                if (Arrays.stream(layout.getClass().getInterfaces()).toList().contains(clazz)) {
-                    listWorkflow.add(layout);
-                }
-            }
-        }
-        return listWorkflow;
-    }
-
     private Optional<ArrayList<String[]>> validateBean() {
         var flag = true;
-        var list = getListOfComponents(HasBinder.class);
+        var list = calc.getListOfComponents(HasBinder.class);
         var listWorkflow = new ArrayList<String[]>();
         for (Component comp : list) {
             HasBinder hb = (HasBinder) comp;
