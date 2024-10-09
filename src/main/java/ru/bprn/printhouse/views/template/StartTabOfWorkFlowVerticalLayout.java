@@ -263,7 +263,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var bleedCombo = new ComboBox<Gap>("Припуск");
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
         //templateBinder.forField(bleedCombo).asRequired().bind(WorkFlow::getBleed, WorkFlow::setBleed);
-        templateBinder.forField(bleedCombo).withValidator(Objects::nonNull, "Errrrr").bind(WorkFlow::getBleed, WorkFlow::setBleed);
+        templateBinder.forField(bleedCombo).withValidator(Objects::nonNull, "Обязательно заполнить!").bind(WorkFlow::getBleed, WorkFlow::setBleed);
 
         bleedCombo.addValueChangeListener(e->{
             if (autoNamed.getValue()) {
@@ -296,7 +296,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
     private void addQuantityAndOrientation() {
         var hLayout = new HorizontalLayout();
-        var radioGroup = new RadioButtonGroup<>("Ориентация");
+        var radioGroup = new RadioButtonGroup<String>("Ориентация");
         var rowsOnLeaf = new IntegerField("Колонок:");
         var columnsOnLeaf = new IntegerField("Столбцов:");
         var quantityOfPrintLeaves = new IntegerField("Листаж:");
@@ -326,16 +326,10 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         templateBinder.bind(rightGap, WorkFlow::getRightGap, WorkFlow::setRightGap);
         templateBinder.bind(printSizeX, WorkFlow::getPrintSizeX, WorkFlow::setPrintSizeX);
         templateBinder.bind(printSizeY, WorkFlow::getPrintSizeY, WorkFlow::setPrintSizeY);
-        //templateBinder.bind(radioGroup, WorkFlow::getOrientation, WorkFlow::setOrientation);
+        templateBinder.bind(radioGroup, WorkFlow::getOrientation, WorkFlow::setOrientation);
 
         radioGroup.addValueChangeListener(e-> {
-            /*
-            var mass = calculateAndSetQuantity(e.getValue().toString());
-            rowsOnLeaf.setValue(mass[0]);
-            columnsOnLeaf.setValue(mass[1]);
-            quantityProductionsOnLeaf.setValue(mass[2]);
 
-             */
         });
         add(radioGroup);
 
@@ -347,82 +341,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         hl.add(rowsOnLeaf,columnsOnLeaf,quantityProductionsOnLeaf, quantityOfProduction, quantityOfPrintLeaves);
         this.add(hLayout,hl, h3, gapLayout);
     }
-/*
-    private double getPrintSizeX(){
-        var bean = templateBinder.getBean();
-        var margins = getMargins();
-        double x;
 
-        bean.setLeftGap(margins.getGapLeft());
-        bean.setRightGap(margins.getGapRight());
-        x = bean.getMaterial().getSizeOfPrintLeaf().getLength() - bean.getLeftGap() - bean.getRightGap();
-        bean.setPrintSizeX(x);
-        templateBinder.refreshFields();
-        return x;
-    }
-
-    private double getPrintSizeY(){
-        var bean = templateBinder.getBean();
-        var margins = getMargins();
-        double y;
-
-        bean.setTopGap(margins.getGapTop());
-        bean.setBottomGap(margins.getGapBottom());
-        y = bean.getMaterial().getSizeOfPrintLeaf().getWidth() - bean.getTopGap() - bean.getBottomGap();
-        bean.setPrintSizeY(y);
-        templateBinder.refreshFields();
-        return y;
-    }
-
-    private int[] calculateAndSetQuantity(String str){
-        var bean = templateBinder.getBean();
-        int[] mass = {1,1,1};
-        if (bean!=null && bean.getMaterial()!=null){
-            if ((bean.getMaterial().getSizeOfPrintLeaf()!=null)
-                    & (bean.getSizeX()!=null)
-                    & (bean.getSizeY()!=null)) {
-                var printSizeX = getPrintSizeX();
-                var printSizeY = getPrintSizeY();
-                var mass1 = getQuantity(printSizeX, printSizeY, bean.getFullProductSizeX(), bean.getFullProductSizeY());
-                var mass2 = getQuantity(printSizeX, printSizeY, bean.getFullProductSizeY(), bean.getFullProductSizeX());
-
-                switch (str) {
-                    case "Автоматически":
-                        if (mass1[2] >= mass2[2]) mass = mass1;
-                            else mass = mass2;
-                        break;
-                    case "Вертикальная":
-                        mass = mass1;
-                        break;
-                    case "Горизонтальная":
-                        mass = mass2;
-                        break;
-                }
-            }
-        }
-        return mass;
-    }
-
-    private Gap getMargins() {
-        var margins = new Gap(0,0,0,0);
-        if (this.getParent().isPresent())
-            this.getParent().get().getChildren().filter(HasMargins.class::isInstance).forEach(component -> {
-            if (margins.getGapTop() < ((HasMargins) component).getMargins().getGapTop()) margins.setGapTop(((HasMargins) component).getMargins().getGapTop());
-            if (margins.getGapBottom() < ((HasMargins) component).getMargins().getGapBottom()) margins.setGapBottom(((HasMargins) component).getMargins().getGapBottom());
-            if (margins.getGapLeft() < ((HasMargins) component).getMargins().getGapLeft()) margins.setGapLeft(((HasMargins) component).getMargins().getGapLeft());
-            if (margins.getGapRight() < ((HasMargins) component).getMargins().getGapRight()) margins.setGapRight(((HasMargins) component).getMargins().getGapRight());
-        });
-        return margins;
-    }
-
-    private int[] getQuantity(double sizeLeafX, double sizeLeafY, Double sizeElementX, Double sizeElementY) {
-        int[] mass = new int[3];
-        mass[0] = (int) (sizeLeafX/sizeElementX);
-        mass[1] = (int) (sizeLeafY/sizeElementY);
-        mass[2] = mass[1]*mass[0];
-        return mass;
-    }
-*/
     @Override
     public Boolean isValid() {
         templateBinder.validate();

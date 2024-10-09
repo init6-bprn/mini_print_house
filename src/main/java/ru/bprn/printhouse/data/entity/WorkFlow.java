@@ -42,7 +42,7 @@ public class WorkFlow {
     @JoinColumn (name = "material", nullable = false)
     private Material material;
 
-    @Positive
+    @PositiveOrZero
     private Integer quantityOfPrintLeaves = 1;
 
     @Positive
