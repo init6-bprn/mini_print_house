@@ -2,6 +2,7 @@ package ru.bprn.printhouse.views.template;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -201,18 +202,22 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
     private void addSizeOfProductSection() {
         var hLayout = new HorizontalLayout();
+        hLayout.setAlignItems(Alignment.START);
 
         var length = new NumberField();
         length.setLabel("Длина");
+        length.setWidth(13, Unit.PERCENTAGE);
         templateBinder.forField(length).asRequired().bind(WorkFlow::getSizeX, WorkFlow::setSizeX);
         length.addValueChangeListener(e->setFullProductSize());
 
         var width = new NumberField();
         width.setLabel("Ширина");
+        width.setWidth(13, Unit.PERCENTAGE);
         templateBinder.forField(width).asRequired().bind(WorkFlow::getSizeY, WorkFlow::setSizeY);
         length.addValueChangeListener(e->setFullProductSize());
 
         var sizeOfPaperCombo = new ComboBox<StandartSize>();
+        sizeOfPaperCombo.setWidth(30, Unit.PERCENTAGE);
         sizeOfPaperCombo.setItems(standartSizeService.findAll());
 
         templateBinder.forField(sizeOfPaperCombo).asRequired().bind(WorkFlow::getStandartSize, WorkFlow::setStandartSize);
@@ -249,6 +254,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var addSizeButton = new Button("Add");
         addSizeButton.setAriaLabel("Add");
         var layout = new VerticalLayout(label, addSizeButton);
+        layout.setWidth(14, Unit.PERCENTAGE);
         layout.getThemeList().clear();
         layout.getThemeList().add("spacing-xs");
         addSizeButton.addClickListener(e-> {
@@ -261,6 +267,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         });
 
         var bleedCombo = new ComboBox<Gap>("Припуск");
+        bleedCombo.setWidth(30, Unit.PERCENTAGE);
         bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
         //templateBinder.forField(bleedCombo).asRequired().bind(WorkFlow::getBleed, WorkFlow::setBleed);
         templateBinder.forField(bleedCombo).withValidator(Objects::nonNull, "Обязательно заполнить!").bind(WorkFlow::getBleed, WorkFlow::setBleed);

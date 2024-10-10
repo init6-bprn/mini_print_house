@@ -1,0 +1,18 @@
+package ru.bprn.printhouse.views.template;
+
+import ru.bprn.printhouse.data.entity.User;
+
+public interface HasWork {
+
+    public User getWorker();
+
+    public void setUser(User user);
+
+    public void getTimeOfPreOperationWork();
+
+    public boolean hasPreOperation();
+
+    public String getCalculateTimeOfWorkFormula();
+
+
+}

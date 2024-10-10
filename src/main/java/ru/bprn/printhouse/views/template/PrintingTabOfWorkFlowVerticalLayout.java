@@ -16,7 +16,7 @@ import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
 
 @AnonymousAllowed
-public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder, HasMargins {
+public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder, HasMargins, HasMaterial {
 
     private final PrintMashineService printerService;
     private final QuantityColorsService quantityColorsService;
@@ -69,12 +69,12 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
         });
 
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
-        this.add(hLayout);
+        this.add(hLayout, addMaterialBlock());
+
     }
 
-
-    private <T> void comboBoxViewFirstElement (ComboBox<T> combo) {
-        if (combo.getListDataView().getItemCount()>0) combo.setValue(combo.getListDataView().getItem(0));
+    private HorizontalLayout addMaterialBlock() {
+        return new HorizontalLayout();
     }
 
     @Override
@@ -106,4 +106,11 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
     public Gap getMargins() {
         return templateBinder.getBean().getPrintMashine().getGap();
     }
+
+    @Override
+    public String getMaterialFormula() {
+        return "";
+    }
+
+
 }
