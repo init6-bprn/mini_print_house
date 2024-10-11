@@ -49,6 +49,8 @@ public class WorkFlowView extends SplitLayout {
     private final WorkFlowService workFlowService;
     private final ImposeCaseService imposeCaseService;
     private final QuantityColorsService quantityColorsService;
+    private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
+
     private final TabSheet tabSheet = new TabSheet();
     private StartTabOfWorkFlowVerticalLayout startTab;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -57,7 +59,7 @@ public class WorkFlowView extends SplitLayout {
     private final Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
     public WorkFlowView(PrintMashineService printMashineService, StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
-                        WorkFlowService workFlowService, ImposeCaseService imposeCaseService, QuantityColorsService quantityColorsService){
+                        WorkFlowService workFlowService, ImposeCaseService imposeCaseService, QuantityColorsService quantityColorsService, CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService){
 
         this.printMashineService = printMashineService;
         this.materialService = materialService;
@@ -67,6 +69,7 @@ public class WorkFlowView extends SplitLayout {
         this.workFlowService = workFlowService;
         this.imposeCaseService = imposeCaseService;
         this.quantityColorsService = quantityColorsService;
+        this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
 
         startTab = new StartTabOfWorkFlowVerticalLayout(this.standartSizeService,
                 this.typeOfMaterialService, this.materialService, this.gapService, this.imposeCaseService);
@@ -236,7 +239,8 @@ public class WorkFlowView extends SplitLayout {
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.PLUS));
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> {
-                var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService);
+                var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService,
+                        costOfPrintSizeLeafAndColorService, startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf());
                 digitalPrinting.getTemplateBinder().setBean(new DigitalPrinting());
                 tabSheet.add(createTab("Цифровая печать"), digitalPrinting);
             }
@@ -358,7 +362,8 @@ public class WorkFlowView extends SplitLayout {
         for (String[] str: list) {
             switch (str[0]) {
                 case "PrintingTabOfWorkFlowVerticalLayout" :
-                    var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService);
+                    var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService, costOfPrintSizeLeafAndColorService,
+                            startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf());
                     try {
                         tabComp.getTemplateBinder().setBean(objectMapper.readValue(str[1], DigitalPrinting.class));
                     } catch (JsonProcessingException e) {

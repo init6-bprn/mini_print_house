@@ -3,6 +3,8 @@ package ru.bprn.printhouse.data.service;
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.data.entity.CostOfPrintSizeLeafAndColor;
 import ru.bprn.printhouse.data.entity.PrintMashine;
+import ru.bprn.printhouse.data.entity.QuantityColors;
+import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
 import ru.bprn.printhouse.data.repository.CostOfPrintSizeLeafAndColorRepository;
 
 import java.util.List;
@@ -26,5 +28,16 @@ public class CostOfPrintSizeLeafAndColorService {
         return costOfPrintSizeLeafAndColorRepository.findAllByPrintMashine(printMashine);
     }
 
+    public List<CostOfPrintSizeLeafAndColor> findAllByPrintMashineAndQuantityColors
+            (PrintMashine printMashine, QuantityColors quantityColors) {
+        return costOfPrintSizeLeafAndColorRepository.findAllByPrintMashineAndQuantityColors
+                (printMashine, quantityColors);
+    }
+
+    public CostOfPrintSizeLeafAndColor findByPrintMashineAndQuantityColorsSizeOfPrintLeaf
+            (PrintMashine printMashine, QuantityColors quantityColors, SizeOfPrintLeaf sizeOfPrintLeaf) {
+        return costOfPrintSizeLeafAndColorRepository.findByPrintMashineAndQuantityColorsAndSizeOfPrintLeaf
+                (printMashine, quantityColors, sizeOfPrintLeaf);
+    }
 
 }

@@ -17,4 +17,8 @@ public class DigitalPrinting {
     private QuantityColors quantityColorsBack;
 
     private ImposeCase imposeCase;
+
+    private boolean isNeedExtraLeaves;
+
+    private int quantityOfExtraLeaves;
 }

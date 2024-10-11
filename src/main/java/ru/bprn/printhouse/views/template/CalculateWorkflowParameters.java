@@ -9,6 +9,9 @@ import lombok.Getter;
 import lombok.Setter;
 import ru.bprn.printhouse.data.entity.WorkFlow;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +23,7 @@ public class CalculateWorkflowParameters {
     @Setter
     private BeanValidationBinder<WorkFlow> templateBinder;
     private final TabSheet tabSheet;
+    private StringBuilder strVariables = new StringBuilder();
 
     public CalculateWorkflowParameters(TabSheet tabSheet) {
         this.tabSheet = tabSheet;
@@ -42,6 +46,7 @@ public class CalculateWorkflowParameters {
             var bottom = bean.getBottomGap();
 
             var comp = getListOfComponents(HasMargins.class);
+
             for (Component c : comp) {
                 HasMargins mg = (HasMargins) c;
                 if (mg.getMargins() != null) {
@@ -71,9 +76,12 @@ public class CalculateWorkflowParameters {
                     break;
             }
 
+            var extraLeavesQuantity = getExtraLeaves();
+
             if (quantity != 0) {
                 quantityOfPrintLeaf = quantity / mass[2];
                 if (quantity % mass[2] != 0) quantityOfPrintLeaf++;
+                quantityOfPrintLeaf += extraLeavesQuantity;
             } else quantityOfPrintLeaf = 0;
 
             bean.setQuantityOfPrintLeaves(quantityOfPrintLeaf);
@@ -87,9 +95,61 @@ public class CalculateWorkflowParameters {
             bean.setPrintSizeX(printSizeX);
             bean.setPrintSizeY(printSizeY);
 
+            strVariables.delete(0, strVariables.length());
+            fillVariables();
+
+            getOperationPrice();
+
             templateBinder.refreshFields();
         }
     }
+
+    private int getExtraLeaves() {
+        var extraLeaves = getListOfComponents(ExtraLeaves.class);
+        int i = 0;
+        for (Component c : extraLeaves)
+            if (((ExtraLeaves) c).getExtraLeaves()>i)
+                i = ((ExtraLeaves) c).getExtraLeaves();
+        return i;
+    }
+
+    private double getOperationPrice() {
+        double total = 0;
+        String expression ;
+        var listOfPrice = getListOfComponents(Price.class);
+        ScriptEngineManager engineManager= new ScriptEngineManager();
+        ScriptEngine engine = engineManager.getEngineByName("JavaScript");
+
+        for (Component c : listOfPrice){
+            Price cost = (Price) c;
+            ;
+            expression = strVariables + addVar("price", cost.getPriceOfOperation()) + ((Price) c).getFormula() +";";
+            try {
+                total += (Double) engine.eval(expression);
+            } catch (ScriptException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+        return total;
+    }
+
+    private void fillVariables() {
+        strVariables
+                .append(addVar("columns", templateBinder.getBean().getListColumns()))
+                .append(addVar("rows", templateBinder.getBean().getListRows()))
+                .append(addVar("quantity", templateBinder.getBean().getQuantityOfProduct()))
+                .append(addVar("leaves", templateBinder.getBean().getQuantityOfPrintLeaves()))
+                .append(addVar("onleaf", templateBinder.getBean().getQuantityProductionsOnLeaf()));
+    }
+    private String addVar(String name, int i) {
+        return name + "=" + i + "; ";
+    }
+
+    private String addVar(String name, double i) {
+        return name + "=" + i + "; ";
+    }
+
 
     public Optional<List<Component>> getListOfTabs(){
         Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();

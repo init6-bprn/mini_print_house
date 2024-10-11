@@ -2,33 +2,42 @@ package ru.bprn.printhouse.views.template;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
-import ru.bprn.printhouse.data.entity.DigitalPrinting;
-import ru.bprn.printhouse.data.entity.Gap;
-import ru.bprn.printhouse.data.entity.PrintMashine;
-import ru.bprn.printhouse.data.entity.QuantityColors;
+import ru.bprn.printhouse.data.entity.*;
+import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
 import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
 
+@UIScope
 @AnonymousAllowed
-public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder, HasMargins, HasMaterial {
+public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
+        implements HasBinder, HasMargins, HasMaterial, ExtraLeaves, Price {
 
     private final PrintMashineService printerService;
     private final QuantityColorsService quantityColorsService;
+    private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
+
     private final ObjectMapper objectMapper;
+    private final SizeOfPrintLeaf size;
 
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
 
-    public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService, QuantityColorsService quantityColorsService){
+    public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService, QuantityColorsService quantityColorsService,
+                                               CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService, SizeOfPrintLeaf size){
 
         this.printerService = printerService;
         this.quantityColorsService = quantityColorsService;
+        this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
+        this.size = size;
         objectMapper = new ObjectMapper();
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
         addPrinterSection();
@@ -74,7 +83,22 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
     }
 
     private HorizontalLayout addMaterialBlock() {
-        return new HorizontalLayout();
+        var checkBox = new Checkbox("Нужна приводка?");
+        var intField = new IntegerField("Количество листов:");
+        var hl = new HorizontalLayout();
+
+        intField.setValue(0);
+        checkBox.setValue(false);
+        checkBox.addValueChangeListener(e -> {
+            intField.setEnabled(e.getValue());
+            if (!intField.isEnabled()) intField.setValue(0);
+        });
+
+        templateBinder.forField(intField).asRequired().bind(DigitalPrinting::getQuantityOfExtraLeaves, DigitalPrinting::setQuantityOfExtraLeaves);
+        templateBinder.forField(checkBox).bind(DigitalPrinting::isNeedExtraLeaves, DigitalPrinting::setNeedExtraLeaves);
+
+        hl.add(checkBox, intField);
+        return hl;
     }
 
     @Override
@@ -112,5 +136,42 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout implemen
         return "";
     }
 
+
+    @Override
+    public int getExtraLeaves() {
+        return templateBinder.getBean().getQuantityOfExtraLeaves();
+    }
+
+    @Override
+    public double getPriceOfOperation() {
+        double total = .0;
+        CostOfPrintSizeLeafAndColor costCover = costOfPrintSizeLeafAndColorService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf
+                (templateBinder.getBean().getPrintMashine(), templateBinder.getBean().getQuantityColorsCover(), size);
+        if (costCover != null) total += costCover.getCoast();
+        CostOfPrintSizeLeafAndColor costBack = costOfPrintSizeLeafAndColorService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf
+                (templateBinder.getBean().getPrintMashine(), templateBinder.getBean().getQuantityColorsBack(), size);
+        if (costBack!=null) total += costBack.getCoast();
+    return total;
+    }
+
+    @Override
+    public double getPriceOfWork() {
+        return 0;
+    }
+
+    @Override
+    public double getPriceOfAmmo() {
+        return 0;
+    }
+
+    @Override
+    public int getTimeOfOperationPerSec() {
+        return 0;
+    }
+
+    @Override
+    public String getFormula() {
+        return "leaves*price";
+    }
 
 }
