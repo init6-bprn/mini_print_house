@@ -1,6 +1,7 @@
 package ru.bprn.printhouse.views.template;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.Tabs;
@@ -23,7 +24,7 @@ public class CalculateWorkflowParameters {
     @Setter
     private BeanValidationBinder<WorkFlow> templateBinder;
     private final TabSheet tabSheet;
-    private StringBuilder strVariables = new StringBuilder();
+    private final StringBuilder strVariables = new StringBuilder();
 
     public CalculateWorkflowParameters(TabSheet tabSheet) {
         this.tabSheet = tabSheet;
@@ -117,12 +118,10 @@ public class CalculateWorkflowParameters {
         double total = 0;
         String expression ;
         var listOfPrice = getListOfComponents(Price.class);
-        ScriptEngineManager engineManager= new ScriptEngineManager();
-        ScriptEngine engine = engineManager.getEngineByName("JavaScript");
+        ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
 
         for (Component c : listOfPrice){
             Price cost = (Price) c;
-            ;
             expression = strVariables + addVar("price", cost.getPriceOfOperation()) + ((Price) c).getFormula() +";";
             try {
                 total += (Double) engine.eval(expression);
@@ -131,6 +130,7 @@ public class CalculateWorkflowParameters {
             }
 
         }
+        Notification.show("Price: "+total);
         return total;
     }
 
