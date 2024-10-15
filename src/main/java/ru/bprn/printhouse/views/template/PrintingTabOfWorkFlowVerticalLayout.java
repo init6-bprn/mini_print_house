@@ -2,8 +2,11 @@ package ru.bprn.printhouse.views.template;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -13,6 +16,7 @@ import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
+import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
 
@@ -27,20 +31,34 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
     private final ObjectMapper objectMapper;
     private final SizeOfPrintLeaf size;
+    private final FormulasService formulasService;
 
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
 
     public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService, QuantityColorsService quantityColorsService,
-                                               CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService, SizeOfPrintLeaf size){
+                                               CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
+                                               FormulasService formulasService, SizeOfPrintLeaf size){
 
         this.printerService = printerService;
         this.quantityColorsService = quantityColorsService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
         this.size = size;
+        this.formulasService = formulasService;
         objectMapper = new ObjectMapper();
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
         addPrinterSection();
+        this.add(addMaterialBlock());
+        this.add(addFormula());
+    }
+
+    private Div addFormula() {
+        var div = new Div();
+        var formulaCombo = new ComboBox<Formulas>("Формула расчета");
+        formulaCombo.setItems(formulasService.findAll());
+        formulaCombo.setPrefixComponent(new Button(VaadinIcon.COPY_O.create(), buttonClickEvent -> {}));
+        div.add(formulaCombo);
+        return div;
     }
 
     private void addPrinterSection() {
@@ -77,10 +95,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             backQuantityOfColor.setValue(oldValue2);
         });
 
-        var formulaCombo = new ComboBox<Formulas>("Формула расчета");
-
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
-        this.add(hLayout, addMaterialBlock());
+        this.add(hLayout);
 
     }
 

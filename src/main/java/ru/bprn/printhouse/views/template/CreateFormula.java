@@ -3,6 +3,7 @@ package ru.bprn.printhouse.views.template;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -40,7 +41,6 @@ public class CreateFormula extends Dialog {
             try {
                 double d = ((Number) engine.eval(strVariables.toString())).doubleValue();
             } catch (ScriptException e) {
-                //throw new RuntimeException(e);
                 return false;
             }
             return true;
@@ -53,10 +53,10 @@ public class CreateFormula extends Dialog {
                 try {
                     formulaBinder.writeBean(formulaBean);
                 } catch (ValidationException e) {
-                    throw new RuntimeException(e);
+                    Notification.show("Невозможно сохранить объект в БД");
                 }
+                this.close();
             }
-            this.close();
         });
         var cancelButton = new Button("Cancel", buttonClickEvent -> {
             formulaBinder.removeBean();
