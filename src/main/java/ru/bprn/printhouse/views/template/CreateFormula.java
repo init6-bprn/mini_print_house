@@ -4,24 +4,64 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.binder.ValidationException;
+import ru.bprn.printhouse.data.entity.Formulas;
 
-import java.util.ArrayList;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.util.List;
 
 public class CreateFormula extends Dialog {
-    public CreateFormula() {
+    private final TextField formulaField = new TextField("Фомула");
+    private final BeanValidationBinder<Formulas> formulaBinder;
+    private final StringBuilder strVariables = new StringBuilder();
+    private final List<VariablesRecord> list;
+    private final Formulas formulaBean;
+
+    public CreateFormula(Formulas bean) {
+        this.formulaBean = bean;
+        this.formulaBinder = new BeanValidationBinder<>(Formulas.class);
+        formulaBinder.setBean(bean);
+
+        list = new ListOfVariables().getList();
+        for (VariablesRecord rec:list){
+            strVariables.append(rec.name()).append(" = 1;");
+        }
 
         this.setHeaderTitle("Редактирование формулы");
         var name = new TextField("Название формулы");
-        var formulaField = new TextField("Фомула");
+        formulaBinder.forField(name).withValidator(String::isBlank, "Не может быть пустым!")
+                .bind(Formulas::getName, Formulas::setName);
+        formulaBinder.forField(formulaField).withValidator(s -> {
+            strVariables.append(s);
+            ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+            try {
+                double d = ((Number) engine.eval(strVariables.toString())).doubleValue();
+            } catch (ScriptException e) {
+                //throw new RuntimeException(e);
+                return false;
+            }
+            return true;
+        }, "Формула не верна!").bind(Formulas::getFormula, Formulas::setFormula);
 
         this.add(name, formulaField, addVariablesButton());
 
         var saveButton = new Button("Save", buttonClickEvent -> {
-            if (isValid()) save();
+            if (formulaBinder.isValid()) {
+                try {
+                    formulaBinder.writeBean(formulaBean);
+                } catch (ValidationException e) {
+                    throw new RuntimeException(e);
+                }
+            }
             this.close();
         });
-        var cancelButton = new Button("Cancel", buttonClickEvent -> this.close());
+        var cancelButton = new Button("Cancel", buttonClickEvent -> {
+            formulaBinder.removeBean();
+            this.close();
+        });
 
         this.getFooter().add(cancelButton);
         this.getFooter().add(saveButton);
@@ -29,17 +69,16 @@ public class CreateFormula extends Dialog {
 
     private Div addVariablesButton() {
         var div = new Div();
-        VariablesRecord variable = new VariablesRecord("");
-        List<VariablesRecord> list = new ArrayList<VariablesRecord>();
-        list.add(variable);
+        for (VariablesRecord rec:list) {
+            var button = new Button(rec.name(), buttonClickEvent -> {
+                formulaField.setValue(formulaField.getValue()+rec.name()+" ");
+            });
+            button.setTooltipText(rec.description());
+            //button.setThemeName();
+            div.add(button);
+        }
+
         return  div;
-    }
-
-    private void save() {
-    }
-
-    private boolean isValid() {
-        return true;
     }
 
 }

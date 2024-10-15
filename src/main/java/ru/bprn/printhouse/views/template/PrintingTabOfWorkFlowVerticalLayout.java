@@ -77,6 +77,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             backQuantityOfColor.setValue(oldValue2);
         });
 
+        var formulaCombo = new ComboBox<Formulas>("Формула расчета");
+
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
         this.add(hLayout, addMaterialBlock());
 
