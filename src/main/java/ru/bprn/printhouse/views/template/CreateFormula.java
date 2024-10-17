@@ -7,6 +7,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
+import lombok.Setter;
 import ru.bprn.printhouse.data.entity.Formulas;
 
 import javax.script.ScriptEngine;
@@ -19,7 +20,8 @@ public class CreateFormula extends Dialog {
     private final BeanValidationBinder<Formulas> formulaBinder;
     private final StringBuilder strVariables = new StringBuilder();
     private final List<VariablesRecord> list;
-    private final Formulas formulaBean;
+    @Setter
+    private Formulas formulaBean;
 
     public CreateFormula(Formulas bean) {
         this.formulaBean = bean;
@@ -33,17 +35,17 @@ public class CreateFormula extends Dialog {
 
         this.setHeaderTitle("Редактирование формулы");
         var name = new TextField("Название формулы");
-        formulaBinder.forField(name).withValidator(String::isBlank, "Не может быть пустым!")
+        formulaBinder.forField(name).withValidator(s -> !s.isEmpty(), "Не может быть пустым!")
                 .bind(Formulas::getName, Formulas::setName);
         formulaBinder.forField(formulaField).withValidator(s -> {
-            strVariables.append(s);
+            strVariables.append(s).append(";");
             ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
             try {
                 double d = ((Number) engine.eval(strVariables.toString())).doubleValue();
             } catch (ScriptException e) {
-                return false;
+                return true;
             }
-            return true;
+            return false;
         }, "Формула не верна!").bind(Formulas::getFormula, Formulas::setFormula);
 
         this.add(name, formulaField, addVariablesButton());

@@ -21,4 +21,6 @@ public class DigitalPrinting {
     private boolean isNeedExtraLeaves;
 
     private int quantityOfExtraLeaves;
+
+    private Formulas formula;
 }

@@ -32,6 +32,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     private final ObjectMapper objectMapper;
     private final SizeOfPrintLeaf size;
     private final FormulasService formulasService;
+    private CreateFormula dialogFormula;
+    private Formulas formula;
 
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
@@ -56,10 +58,35 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         var div = new Div();
         var formulaCombo = new ComboBox<Formulas>("Формула расчета");
         formulaCombo.setItems(formulasService.findAll());
-        formulaCombo.setPrefixComponent(new Button(VaadinIcon.COPY_O.create(), buttonClickEvent -> {}));
+        formulaCombo.setSizeFull();
+        formulaCombo.addValueChangeListener(e -> formula = e.getValue());
+        formulaCombo.setPrefixComponent(addPrefix());
+        templateBinder.forField(formulaCombo).bind(DigitalPrinting::getFormula, DigitalPrinting::setFormula);
         div.add(formulaCombo);
         return div;
     }
+
+    private Div addPrefix(){
+        var div = new Div();
+        var create = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> {
+            if (dialogFormula == null) dialogFormula = new CreateFormula(new Formulas());
+            else dialogFormula.setFormulaBean(new Formulas());
+            dialogFormula.open();
+            templateBinder. refreshFields();
+        });
+
+        var update = new Button(VaadinIcon.EDIT.create(), buttonClickEvent -> {
+            if (formula!=null) {
+                if (dialogFormula == null) dialogFormula = new CreateFormula(formula);
+                else dialogFormula.setFormulaBean(formula);
+                dialogFormula.open();
+                templateBinder.refreshFields();
+            }
+        });
+        div.add(create, update);
+        return div;
+    }
+
 
     private void addPrinterSection() {
 

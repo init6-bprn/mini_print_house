@@ -5,8 +5,9 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 public class ListOfVariables {
-    @Getter
+
     private List<VariablesRecord> list;
 
     public ListOfVariables(){
