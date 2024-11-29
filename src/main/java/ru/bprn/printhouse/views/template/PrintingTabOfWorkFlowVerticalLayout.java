@@ -34,6 +34,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     private final FormulasService formulasService;
     private CreateFormula dialogFormula;
     private Formulas formula;
+    private ComboBox<Formulas> formulaCombo = new ComboBox<>("Формула расчета");
 
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
@@ -56,7 +57,6 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
     private Div addFormula() {
         var div = new Div();
-        var formulaCombo = new ComboBox<Formulas>("Формула расчета");
         formulaCombo.setItems(formulasService.findAll());
         formulaCombo.setSizeFull();
         formulaCombo.addValueChangeListener(e -> formula = e.getValue());
@@ -69,15 +69,17 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     private Div addPrefix(){
         var div = new Div();
         var create = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> {
-            if (dialogFormula == null) dialogFormula = new CreateFormula(new Formulas());
+            if (dialogFormula == null) dialogFormula = new CreateFormula(new Formulas(), formulasService);
             else dialogFormula.setFormulaBean(new Formulas());
             dialogFormula.open();
+            formulaCombo.setItems(formulasService.findAll());
             templateBinder. refreshFields();
+            formulaCombo.setValue(dialogFormula.getFormulaBean());
         });
 
         var update = new Button(VaadinIcon.EDIT.create(), buttonClickEvent -> {
             if (formula!=null) {
-                if (dialogFormula == null) dialogFormula = new CreateFormula(formula);
+                if (dialogFormula == null) dialogFormula = new CreateFormula(formula, formulasService);
                 else dialogFormula.setFormulaBean(formula);
                 dialogFormula.open();
                 templateBinder.refreshFields();

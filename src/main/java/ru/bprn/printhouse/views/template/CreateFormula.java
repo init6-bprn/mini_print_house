@@ -7,8 +7,9 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
-import lombok.Setter;
+import lombok.Getter;
 import ru.bprn.printhouse.data.entity.Formulas;
+import ru.bprn.printhouse.data.service.FormulasService;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -20,13 +21,16 @@ public class CreateFormula extends Dialog {
     private final BeanValidationBinder<Formulas> formulaBinder;
     private final StringBuilder strVariables = new StringBuilder();
     private final List<VariablesRecord> list;
-    @Setter
+    @Getter
     private Formulas formulaBean;
+    private final FormulasService formulasService;
 
-    public CreateFormula(Formulas bean) {
+    public CreateFormula(Formulas bean, FormulasService formulasService) {
+        this.setModal(true);
         this.formulaBean = bean;
+        this.formulasService = formulasService;
         this.formulaBinder = new BeanValidationBinder<>(Formulas.class);
-        formulaBinder.setBean(bean);
+        formulaBinder.setBean(formulaBean);
 
         list = new ListOfVariables().getList();
         for (VariablesRecord rec:list){
@@ -54,6 +58,7 @@ public class CreateFormula extends Dialog {
             if (formulaBinder.isValid()) {
                 try {
                     formulaBinder.writeBean(formulaBean);
+                    formulasService.save(formulaBean);
                 } catch (ValidationException e) {
                     Notification.show("Невозможно сохранить объект в БД");
                 }
@@ -82,5 +87,12 @@ public class CreateFormula extends Dialog {
 
         return  div;
     }
+
+    public void setFormulaBean(Formulas formula) {
+        formulaBinder.removeBean();
+        formulaBinder.setBean(formula);
+        formulaBinder.refreshFields();
+    }
+
 
 }
