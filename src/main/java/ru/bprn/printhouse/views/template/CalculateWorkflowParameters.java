@@ -142,6 +142,7 @@ public class CalculateWorkflowParameters {
                 .append(addVar("leaves", templateBinder.getBean().getQuantityOfPrintLeaves()))
                 .append(addVar("onleaf", templateBinder.getBean().getQuantityProductionsOnLeaf()));
     }
+
     private String addVar(String name, int i) {
         return name + "=" + i + "; ";
     }

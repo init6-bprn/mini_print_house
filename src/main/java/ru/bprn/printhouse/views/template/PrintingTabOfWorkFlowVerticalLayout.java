@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.combobox.ComboBoxVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -57,8 +58,11 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
     private Div addFormula() {
         var div = new Div();
+        div.setWidth("50%");
         formulaCombo.setItems(formulasService.findAll());
+        formulaCombo.setAllowCustomValue(false);
         formulaCombo.setSizeFull();
+        formulaCombo.addThemeVariants(ComboBoxVariant.LUMO_ALIGN_RIGHT);
         formulaCombo.addValueChangeListener(e -> formula = e.getValue());
         formulaCombo.setPrefixComponent(addPrefix());
         templateBinder.forField(formulaCombo).bind(DigitalPrinting::getFormula, DigitalPrinting::setFormula);
@@ -131,8 +135,10 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
     private HorizontalLayout addMaterialBlock() {
         var checkBox = new Checkbox("Нужна приводка?");
+
         var intField = new IntegerField("Количество листов:");
         var hl = new HorizontalLayout();
+        hl.setAlignItems(Alignment.BASELINE);
 
         intField.setValue(0);
         checkBox.setValue(false);
@@ -218,7 +224,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
     @Override
     public String getFormula() {
-        return "leaves*price";
+        return formulaCombo.getValue().getFormula();
     }
 
 }

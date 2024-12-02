@@ -21,6 +21,8 @@ public class ListOfVariables {
         list.add(new VariablesRecord("quantity","Тираж"));
         list.add(new VariablesRecord("leaves","Листаж"));
         list.add(new VariablesRecord("onleaf","Изделий на листе"));
+        list.add(new VariablesRecord("price","Стоимость операции"));
+        //list.add(new VariablesRecord("extraleaves","Количество листов на приводку"));
     }
 
 }

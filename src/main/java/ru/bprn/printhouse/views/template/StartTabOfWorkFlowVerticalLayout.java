@@ -29,7 +29,7 @@ import java.util.Objects;
 
 @UIScope
 @AnonymousAllowed
-public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder{
+public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements HasBinder, Price{
 
     private final StandartSizeService standartSizeService;
     private final TypeOfMaterialService typeOfMaterialService;
@@ -374,4 +374,28 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         }
     }
 
+    @Override
+    public double getPriceOfOperation() {
+        return templateBinder.getBean().getMaterial().getPriceOfLeaf();
+    }
+
+    @Override
+    public double getPriceOfWork() {
+        return 0;
+    }
+
+    @Override
+    public double getPriceOfAmmo() {
+        return 0;
+    }
+
+    @Override
+    public int getTimeOfOperationPerSec() {
+        return 0;
+    }
+
+    @Override
+    public String getFormula() {
+        return "price*leaves";
+    }
 }

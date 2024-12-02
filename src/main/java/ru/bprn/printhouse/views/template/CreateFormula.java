@@ -42,14 +42,15 @@ public class CreateFormula extends Dialog {
         formulaBinder.forField(name).withValidator(s -> !s.isEmpty(), "Не может быть пустым!")
                 .bind(Formulas::getName, Formulas::setName);
         formulaBinder.forField(formulaField).withValidator(s -> {
-            strVariables.append(s).append(";");
+            String str = strVariables + s+ ";";
+            //Notification.show(str);
             ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
             try {
-                double d = ((Number) engine.eval(strVariables.toString())).doubleValue();
+                double d = ((Number) engine.eval(str)).doubleValue();
             } catch (ScriptException e) {
-                return true;
+                return false;
             }
-            return false;
+            return true;
         }, "Формула не верна!").bind(Formulas::getFormula, Formulas::setFormula);
 
         this.add(name, formulaField, addVariablesButton());
