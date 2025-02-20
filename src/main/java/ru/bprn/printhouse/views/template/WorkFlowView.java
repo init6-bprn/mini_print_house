@@ -1,6 +1,5 @@
 package ru.bprn.printhouse.views.template;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
 import com.vaadin.flow.component.Component;
@@ -33,6 +32,7 @@ import ru.bprn.printhouse.views.MainLayout;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,8 +54,8 @@ public class WorkFlowView extends SplitLayout {
 
     private final TabSheet tabSheet = new TabSheet();
     private StartTabOfWorkFlowVerticalLayout startTab;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private CalculateWorkflowParameters calc;
+    //private final ObjectMapper objectMapper = new ObjectMapper();
+    //private CalculateWorkflowParameters calc;
 
     private final Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
@@ -77,7 +77,7 @@ public class WorkFlowView extends SplitLayout {
         startTab = new StartTabOfWorkFlowVerticalLayout(this.standartSizeService,
                 this.typeOfMaterialService, this.materialService, this.gapService, this.imposeCaseService);
 
-        calc = new CalculateWorkflowParameters(tabSheet);
+        //calc = new CalculateWorkflowParameters(tabSheet);
 
         this.setOrientation(Orientation.VERTICAL);
         addToPrimary(addGridSection());
@@ -108,7 +108,7 @@ public class WorkFlowView extends SplitLayout {
             this.getSecondaryComponent().getElement().setEnabled(true);
             this.setSplitterPosition(0);
             startTab.getTemplateBinder().setBean(new WorkFlow());
-            calc.setTemplateBinder(startTab.getTemplateBinder());
+            //calc.setTemplateBinder(startTab.getTemplateBinder());
         });
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
@@ -116,8 +116,8 @@ public class WorkFlowView extends SplitLayout {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 startTab.getTemplateBinder().setBean(optTemp.get());
-                calc.setTemplateBinder(startTab.getTemplateBinder());
-                populateTabSheet(getParseStringMap(optTemp.get().getStrJSON()));
+                //calc.setTemplateBinder(startTab.getTemplateBinder());
+                populateTabSheet(JSONToObjectsHelper.getListOfObjects(optTemp.get().getStrJSON()));
 
                 this.getPrimaryComponent().setVisible(false);
                 this.getSecondaryComponent().getElement().setEnabled(true);
@@ -150,8 +150,8 @@ public class WorkFlowView extends SplitLayout {
                 workFlow.setName(name);
 
                 startTab.getTemplateBinder().setBean(workFlow);
-                calc.setTemplateBinder(startTab.getTemplateBinder());
-                populateTabSheet(getParseStringMap(workFlow.getStrJSON()));
+                //calc.setTemplateBinder(startTab.getTemplateBinder());
+                populateTabSheet(JSONToObjectsHelper.getListOfObjects(optTemp.get().getStrJSON()));
 
                 this.getPrimaryComponent().setVisible(false);
                 this.getSecondaryComponent().getElement().setEnabled(true);
@@ -193,11 +193,16 @@ public class WorkFlowView extends SplitLayout {
     }
 
     private void removeTabs(){
-        var list = calc.getListOfTabs();
+        var list = getListOfTabs();
         if (list.isPresent())
             for (Component comp: list.get())
                 if (!(tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout))
                     tabSheet.remove((Tab) comp);
+    }
+
+    public Optional<List<Component>> getListOfTabs(){
+        Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
+        return component.map(value -> value.getChildren().filter(Tab.class::isInstance).toList());
     }
 
     private VerticalLayout addTabSheetSection(){
@@ -229,7 +234,7 @@ public class WorkFlowView extends SplitLayout {
         calculateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         calculateButton.addClickListener(buttonClickEvent -> {
             var valid = validateBean();
-            if (valid.isPresent()) calc.calculate();
+            if (valid.isPresent()) workFlowService.calculate(startTab.getTemplateBinder().getBean());
         });
 
 
@@ -322,7 +327,7 @@ public class WorkFlowView extends SplitLayout {
 
     private Optional<ArrayList<String[]>> validateBean() {
         var flag = true;
-        var list = calc.getListOfComponents(HasBinder.class);
+        var list = getListOfComponents(HasBinder.class);
         var listWorkflow = new ArrayList<String[]>();
         for (Component comp : list) {
             HasBinder hb = (HasBinder) comp;
@@ -333,23 +338,24 @@ public class WorkFlowView extends SplitLayout {
                 flag = false;
                 break;
             } else if (!(comp instanceof StartTabOfWorkFlowVerticalLayout))
-                    listWorkflow.add(new String[]{hb.getClass().getSimpleName(), hb.getBeanAsString()});
+                       listWorkflow.add(hb.getBeanAsString());
         }
         if (flag) return Optional.of(listWorkflow);
         else return Optional.empty();
     }
 
-    private List<String[]> getParseStringMap(String str) {
-        var list = new ArrayList<String[]>();
-        if (str!= null) {
-            if (!str.isBlank()) {
-                String[] arrayStr = str.split("-");
-                for (String s : arrayStr) {
-                    list.add(s.split("@"));
+    public List<Component> getListOfComponents(Class<?> clazz) {
+        var listWorkflow = new ArrayList<Component>();
+        var list = getListOfTabs();
+        if (list.isPresent()) {
+            for (Component comp : list.get()) {
+                Component layout = tabSheet.getComponent((Tab) comp);
+                if (Arrays.stream(layout.getClass().getInterfaces()).toList().contains(clazz)) {
+                    listWorkflow.add(layout);
                 }
             }
         }
-        return list;
+        return listWorkflow;
     }
 
     private String addKeyVolumeToMap(List<String[]> list) {
@@ -361,24 +367,20 @@ public class WorkFlowView extends SplitLayout {
         return builder.toString();
     }
 
-    private void populateTabSheet(List<String[]> list) {
-        for (String[] str: list) {
-            switch (str[0]) {
-                case "PrintingTabOfWorkFlowVerticalLayout" :
+    private void populateTabSheet(List<Object> list) {
+        for (Object obj: list) {
+            switch (obj) {
+                case DigitalPrinting dp -> {
                     var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService,
                             costOfPrintSizeLeafAndColorService, formulasService,
                             startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf());
-                    try {
-                        tabComp.getTemplateBinder().setBean(objectMapper.readValue(str[1], DigitalPrinting.class));
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                    tabComp.setBeanFromString(str[1]);
+                    tabComp.getTemplateBinder().setBean(dp);
                     tabSheet.add(createTab("Цифровая печать"), tabComp);
-                break;
+                }
+                default -> throw new IllegalStateException("Unexpected value: " + obj);
             }
-
         }
+
     }
 
 }

@@ -1,6 +1,5 @@
 package ru.bprn.printhouse.views.template;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -16,15 +15,12 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
-import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
-import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.data.service.PrintMashineService;
-import ru.bprn.printhouse.data.service.QuantityColorsService;
+import ru.bprn.printhouse.data.service.*;
 
 @UIScope
 @AnonymousAllowed
 public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
-        implements HasBinder, HasMargins, HasMaterial, ExtraLeaves, Price {
+        implements HasBinder, HasMaterial, ExtraLeaves, Price {
 
     private final PrintMashineService printerService;
     private final QuantityColorsService quantityColorsService;
@@ -160,28 +156,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     }
 
     @Override
-    public String getBeanAsString(){
-        try {
-            return objectMapper.writeValueAsString(templateBinder.getBean());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-    @Override
-    public void setBeanFromString(String str){
-        try {
-            if (!str.equals("null")) templateBinder.setBean(objectMapper.readValue(str, DigitalPrinting.class));
-            else templateBinder.setBean(new DigitalPrinting());
-
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public Gap getMargins() {
-        return templateBinder.getBean().getPrintMashine().getGap();
+    public String[] getBeanAsString(){
+        return JSONToObjectsHelper.getBeanAsJSONStr(templateBinder.getBean());
     }
 
     @Override

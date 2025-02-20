@@ -1,6 +1,5 @@
 package ru.bprn.printhouse.views.template;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
@@ -356,22 +355,8 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
     }
 
     @Override
-    public String getBeanAsString(){
-        try {
-            return this.getClass().getSimpleName() + objectMapper.writeValueAsString(templateBinder.getBean());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-    @Override
-    public void setBeanFromString(String str){
-        try {
-            templateBinder.setBean(objectMapper.readValue(str, WorkFlow.class));
-            //templateBinder.refreshFields();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+    public String[] getBeanAsString(){
+        return JSONToObjectsHelper.getBeanAsJSONStr(templateBinder.getBean());
     }
 
     @Override

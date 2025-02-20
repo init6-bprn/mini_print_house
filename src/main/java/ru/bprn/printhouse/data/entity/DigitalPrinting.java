@@ -1,12 +1,16 @@
 package ru.bprn.printhouse.data.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import ru.bprn.printhouse.views.template.HasMargins;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class DigitalPrinting {
+public class DigitalPrinting implements HasMargins {
 
     private Long id;
 
@@ -23,4 +27,9 @@ public class DigitalPrinting {
     private int quantityOfExtraLeaves;
 
     private Formulas formula;
+
+    @Override
+    public Gap getMargins() {
+        return printMashine.getGap();
+    }
 }
