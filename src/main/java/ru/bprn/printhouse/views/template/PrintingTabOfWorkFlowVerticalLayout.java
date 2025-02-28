@@ -122,6 +122,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             var oldValue2 = backQuantityOfColor.getValue();
             backQuantityOfColor.setItems(e.getValue().getQuantityColors());
             backQuantityOfColor.setValue(oldValue2);
+            templateBinder.getBean().setMargins(e.getValue().getGap());
         });
 
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);

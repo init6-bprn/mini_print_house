@@ -28,8 +28,12 @@ public class DigitalPrinting implements HasMargins {
 
     private Formulas formula;
 
+    @Setter
+    private Gap margins;
+
     @Override
     public Gap getMargins() {
         return printMashine.getGap();
     }
+
 }

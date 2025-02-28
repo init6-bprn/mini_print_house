@@ -32,6 +32,7 @@ public class JSONToObjectsHelper {
         if (!listOfStr.isEmpty()) {
             for (String[] s : listOfStr)
                 try {
+                    //Notification.show("Class: "+Class.forName(s[0]));
                       listOfObjects.add(objectMapper.readValue(s[1], Class.forName(s[0])));
                     } catch (JsonProcessingException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
@@ -45,7 +46,7 @@ public class JSONToObjectsHelper {
         var objectMapper = new ObjectMapper();
         String[] mass = new String[2];
         try {
-            mass[0] = bean.getClass().getSimpleName();
+            mass[0] = bean.getClass().getName();
             mass[1] = objectMapper.writeValueAsString(bean);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
