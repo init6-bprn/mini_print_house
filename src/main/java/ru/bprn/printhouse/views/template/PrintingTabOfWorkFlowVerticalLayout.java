@@ -1,21 +1,25 @@
 package ru.bprn.printhouse.views.template;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.combobox.ComboBoxVariant;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.select.SelectVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
-import ru.bprn.printhouse.data.service.*;
+import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
+import ru.bprn.printhouse.data.service.FormulasService;
+import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
+import ru.bprn.printhouse.data.service.PrintMashineService;
 
 @UIScope
 @AnonymousAllowed
@@ -23,42 +27,65 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         implements HasBinder, HasMaterial, ExtraLeaves, Price {
 
     private final PrintMashineService printerService;
-    private final QuantityColorsService quantityColorsService;
     private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
 
-    private final ObjectMapper objectMapper;
     private final SizeOfPrintLeaf size;
     private final FormulasService formulasService;
+
     private CreateFormula dialogFormula;
     private Formulas formula;
-    private ComboBox<Formulas> formulaCombo = new ComboBox<>("Формула расчета");
+    private final Select<Formulas> formulaCombo = new Select<>();
+    private final Select<PrintMashine> printerCombo = new Select<>();
+    private final Grid<Material> grid = new Grid<>(Material.class, false);
+    private final Select<QuantityColors> backQuantityOfColor = new Select<>();
+    private final Select<QuantityColors> coverQuantityOfColor = new Select<>();
 
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
 
-    public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService, QuantityColorsService quantityColorsService,
+    public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService,
                                                CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
                                                FormulasService formulasService, SizeOfPrintLeaf size){
 
         this.printerService = printerService;
-        this.quantityColorsService = quantityColorsService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
         this.size = size;
         this.formulasService = formulasService;
-        objectMapper = new ObjectMapper();
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
         addPrinterSection();
         this.add(addMaterialBlock());
         this.add(addFormula());
+        addMaterialSection();
+        postConstruct();
+
+    }
+
+    private void addMaterialSection() {
+
+        grid.addColumn(Material::getName).setHeader("Название");
+        grid.addColumn(Material::getTypeOfMaterial).setHeader("Тип материала");
+        grid.addColumn(Material::getSizeOfPrintLeaf).setHeader("Размер печатного листа");
+        grid.addColumn(Material::getThickness).setHeader("Плотность");
+        grid.setSelectionMode(Grid.SelectionMode.MULTI);
+        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        grid.setHeight("270px");
+        this.add(grid);
+    }
+
+    private <T> void comboBoxViewFirstElement(Select<T> combo) {
+        if (combo!=null)
+            if (combo.getListDataView().getItemCount()>0)
+                combo.setValue(combo.getListDataView().getItem(0));
     }
 
     private Div addFormula() {
         var div = new Div();
         div.setWidth("50%");
-        formulaCombo.setItems(formulasService.findAll());
-        formulaCombo.setAllowCustomValue(false);
+
+        formulaCombo.setAriaLabel("Формула расчета:");
         formulaCombo.setSizeFull();
-        formulaCombo.addThemeVariants(ComboBoxVariant.LUMO_ALIGN_RIGHT);
+        formulaCombo.setEmptySelectionAllowed(false);
+        formulaCombo.addThemeVariants(SelectVariant.LUMO_ALIGN_RIGHT);
         formulaCombo.addValueChangeListener(e -> formula = e.getValue());
         formulaCombo.setPrefixComponent(addPrefix());
         templateBinder.forField(formulaCombo).bind(DigitalPrinting::getFormula, DigitalPrinting::setFormula);
@@ -94,35 +121,29 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
         var hLayout = new HorizontalLayout();
 
-        var coverQuantityOfColor = new ComboBox<QuantityColors>();
-        templateBinder.forField(coverQuantityOfColor).asRequired().bind(DigitalPrinting::getQuantityColorsCover, DigitalPrinting::setQuantityColorsCover);
-        coverQuantityOfColor.setItems(quantityColorsService.findAll());
-
-        var backQuantityOfColor = new ComboBox<QuantityColors>();
-        templateBinder.forField(backQuantityOfColor).asRequired().bind(DigitalPrinting::getQuantityColorsBack, DigitalPrinting::setQuantityColorsBack);
-        backQuantityOfColor.setItems(quantityColorsService.findAll());
-
-        // Принтеры
-        var printerCombo = new ComboBox<PrintMashine>();
-        printerCombo.setLabel("Принтер:");
-        printerCombo.setAllowCustomValue(false);
-        printerCombo.setItems(printerService.findAll());
-        templateBinder.forField(printerCombo).asRequired().bind(DigitalPrinting::getPrintMashine, DigitalPrinting::setPrintMashine);
-
         // Цветность лица
+        templateBinder.forField(coverQuantityOfColor).asRequired().bind(DigitalPrinting::getQuantityColorsCover, DigitalPrinting::setQuantityColorsCover);
         coverQuantityOfColor.setLabel("Лицо");
+        coverQuantityOfColor.setEmptySelectionAllowed(false);
 
         // Цветность оборота
+        templateBinder.forField(backQuantityOfColor).asRequired().bind(DigitalPrinting::getQuantityColorsBack, DigitalPrinting::setQuantityColorsBack);
         backQuantityOfColor.setLabel("Оборот");
+        backQuantityOfColor.setEmptySelectionAllowed(false);
+
+        // Принтеры
+        printerCombo.setLabel("Принтер:");
+        printerCombo.setEmptySelectionAllowed(false);
+        templateBinder.forField(printerCombo).asRequired().bind(DigitalPrinting::getPrintMashine, DigitalPrinting::setPrintMashine);
 
         printerCombo.addValueChangeListener(e -> {
-            var oldValue = coverQuantityOfColor.getValue();
-            coverQuantityOfColor.setItems(e.getValue().getQuantityColors());
-            coverQuantityOfColor.setValue(oldValue);
-            var oldValue2 = backQuantityOfColor.getValue();
-            backQuantityOfColor.setItems(e.getValue().getQuantityColors());
-            backQuantityOfColor.setValue(oldValue2);
-            templateBinder.getBean().setMargins(e.getValue().getGap());
+            if (e.getValue() != null) {
+                grid.setItems(e.getValue().getMaterials());
+                coverQuantityOfColor.setItems(e.getValue().getQuantityColors());
+                comboBoxViewFirstElement(coverQuantityOfColor);
+                backQuantityOfColor.setItems(e.getValue().getQuantityColors());
+                comboBoxViewFirstElement(backQuantityOfColor);
+            }
         });
 
         hLayout.add(printerCombo, coverQuantityOfColor, backQuantityOfColor);
@@ -202,6 +223,26 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     @Override
     public String getFormula() {
         return formulaCombo.getValue().getFormula();
+    }
+
+    private void postConstruct() {
+        var printers = printerService.findAll();
+        if (printers!= null) {
+            printerCombo.setItems(printers);
+            printerCombo.setValue(printers.getFirst());
+
+            grid.setItems(printers.getFirst().getMaterials());
+
+            coverQuantityOfColor.setItems(printers.getFirst().getQuantityColors());
+            backQuantityOfColor.setItems(printers.getFirst().getQuantityColors());
+            comboBoxViewFirstElement(coverQuantityOfColor);
+            comboBoxViewFirstElement(backQuantityOfColor);
+
+            formulaCombo.setItems(formulasService.findAll());
+            formulaCombo.setValue(formulasService.findAll().getFirst());
+
+        }
+
     }
 
 }

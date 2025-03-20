@@ -247,7 +247,7 @@ public class WorkFlowView extends SplitLayout {
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.PLUS));
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> {
-                var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService,
+                var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
                         costOfPrintSizeLeafAndColorService, formulasService, startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf());
                 digitalPrinting.getTemplateBinder().setBean(new DigitalPrinting());
                 tabSheet.add(createTab("Цифровая печать"), digitalPrinting);
@@ -371,7 +371,7 @@ public class WorkFlowView extends SplitLayout {
         for (Object obj: list) {
             switch (obj) {
                 case DigitalPrinting dp -> {
-                    var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService, quantityColorsService,
+                    var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
                             costOfPrintSizeLeafAndColorService, formulasService,
                             startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf());
                     tabComp.getTemplateBinder().setBean(dp);
