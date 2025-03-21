@@ -2,6 +2,7 @@ package ru.bprn.printhouse.views.template;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
@@ -61,6 +62,17 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     }
 
     private void addMaterialSection() {
+        var dialog = new Dialog("Выберите бумагу для печати");
+        var cancelButton = new Button("Cancel", buttonClickEvent -> dialog.close());
+        var saveButton = new Button("Save", buttonClickEvent -> dialog.close());
+        dialog.getFooter().add(cancelButton);
+        dialog.getFooter().add(saveButton);
+
+        var button = new Button("Нажмите для выбора материала", buttonClickEvent -> {
+            dialog.open();
+        });
+        var anotherGrid = new Grid<Material>();
+
 
         grid.addColumn(Material::getName).setHeader("Название");
         grid.addColumn(Material::getTypeOfMaterial).setHeader("Тип материала");
