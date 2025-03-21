@@ -238,8 +238,11 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             comboBoxViewFirstElement(coverQuantityOfColor);
             comboBoxViewFirstElement(backQuantityOfColor);
 
-            formulaCombo.setItems(formulasService.findAll());
-            formulaCombo.setValue(formulasService.findAll().getFirst());
+            var formulas = formulasService.findAll();
+            if (!formulas.isEmpty()) {
+                formulaCombo.setItems(formulasService.findAll());
+                formulaCombo.setValue(formulasService.findAll().getFirst());
+            }
 
         }
 
