@@ -2,9 +2,6 @@ package ru.bprn.printhouse.views.template;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -37,9 +34,10 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     private Formulas formula;
     private final Select<Formulas> formulaCombo = new Select<>();
     private final Select<PrintMashine> printerCombo = new Select<>();
-    private final Grid<Material> grid = new Grid<>(Material.class, false);
     private final Select<QuantityColors> backQuantityOfColor = new Select<>();
     private final Select<QuantityColors> coverQuantityOfColor = new Select<>();
+    private final Select<Material> materialSelect = new Select<>();
+    private static SelectMaterailsDialog dialog;
 
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
@@ -53,6 +51,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         this.size = size;
         this.formulasService = formulasService;
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
+        dialog = new SelectMaterailsDialog("Выберите материалы для печати");
         addPrinterSection();
         this.add(addMaterialBlock());
         this.add(addFormula());
@@ -62,26 +61,16 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     }
 
     private void addMaterialSection() {
-        var dialog = new Dialog("Выберите бумагу для печати");
-        var cancelButton = new Button("Cancel", buttonClickEvent -> dialog.close());
-        var saveButton = new Button("Save", buttonClickEvent -> dialog.close());
-        dialog.getFooter().add(cancelButton);
-        dialog.getFooter().add(saveButton);
 
         var button = new Button("Нажмите для выбора материала", buttonClickEvent -> {
+            dialog.setMaterials(printerCombo.getValue().getMaterials());
             dialog.open();
         });
-        var anotherGrid = new Grid<Material>();
+        //materialSelect.addFocusListener(selectFocusEvent -> materialSelect.setItems(dialog.getSelected()));
+        templateBinder.forField(materialSelect).bind(DigitalPrinting::getDefaultMaterial, DigitalPrinting::setDefaultMaterial);
+        //templateBinder.forField(dialog).bind(DigitalPrinting::getMaterials, DigitalPrinting::setMaterials);
 
-
-        grid.addColumn(Material::getName).setHeader("Название");
-        grid.addColumn(Material::getTypeOfMaterial).setHeader("Тип материала");
-        grid.addColumn(Material::getSizeOfPrintLeaf).setHeader("Размер печатного листа");
-        grid.addColumn(Material::getThickness).setHeader("Плотность");
-        grid.setSelectionMode(Grid.SelectionMode.MULTI);
-        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        grid.setHeight("270px");
-        this.add(grid);
+        this.add(button, materialSelect);
     }
 
     private <T> void comboBoxViewFirstElement(Select<T> combo) {
@@ -150,7 +139,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
         printerCombo.addValueChangeListener(e -> {
             if (e.getValue() != null) {
-                grid.setItems(e.getValue().getMaterials());
+                dialog.setMaterials(e.getValue().getMaterials());
                 coverQuantityOfColor.setItems(e.getValue().getQuantityColors());
                 comboBoxViewFirstElement(coverQuantityOfColor);
                 backQuantityOfColor.setItems(e.getValue().getQuantityColors());
@@ -243,7 +232,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             printerCombo.setItems(printers);
             printerCombo.setValue(printers.getFirst());
 
-            grid.setItems(printers.getFirst().getMaterials());
+            dialog.setMaterials(printers.getFirst().getMaterials());
+            //dialog.setSelectedMaterial(materialSelect.getListDataView().);
 
             coverQuantityOfColor.setItems(printers.getFirst().getQuantityColors());
             backQuantityOfColor.setItems(printers.getFirst().getQuantityColors());

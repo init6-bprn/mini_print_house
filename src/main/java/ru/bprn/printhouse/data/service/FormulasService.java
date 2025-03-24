@@ -19,4 +19,6 @@ public class FormulasService {
     public void delete(Formulas formula) {this.formulasRepository.delete(formula);}
 
     public Formulas save(Formulas formula) {return this.formulasRepository.save(formula);}
+
+    public Formulas saveAndFlush(Formulas formula){return this.formulasRepository.saveAndFlush(formula);}
 }

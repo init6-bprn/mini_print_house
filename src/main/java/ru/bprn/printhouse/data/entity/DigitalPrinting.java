@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.bprn.printhouse.views.template.HasMargins;
 
+import java.util.Set;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -28,7 +30,10 @@ public class DigitalPrinting implements HasMargins {
 
     private Formulas formula;
 
-    @Setter
+    private Set<Material> materials;
+
+    private Material defaultMaterial;
+
     private Gap margins;
 
     @Override
