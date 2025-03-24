@@ -30,8 +30,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     private final SizeOfPrintLeaf size;
     private final FormulasService formulasService;
 
-    private CreateFormula dialogFormula;
-    private Formulas formula;
+    private final CreateFormula dialogFormula;
     private final Select<Formulas> formulaCombo = new Select<>();
     private final Select<PrintMashine> printerCombo = new Select<>();
     private final Select<QuantityColors> backQuantityOfColor = new Select<>();
@@ -42,33 +41,47 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
 
-    public PrintingTabOfWorkFlowVerticalLayout(PrintMashineService printerService,
-                                               CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
-                                               FormulasService formulasService, SizeOfPrintLeaf size){
-
+    public PrintingTabOfWorkFlowVerticalLayout(
+            PrintMashineService printerService,
+            CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
+            FormulasService formulasService, SizeOfPrintLeaf size)
+    {
         this.printerService = printerService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
         this.size = size;
         this.formulasService = formulasService;
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
-        dialog = new SelectMaterailsDialog("Выберите материалы для печати");
+        dialogFormula = new CreateFormula(formulasService);
+
         addPrinterSection();
         this.add(addMaterialBlock());
         this.add(addFormula());
+        dialogFormula.addOpenedChangeListener(openedChangeEvent -> {
+            if (!openedChangeEvent.isOpened()) {
+                var oldSelection = formulaCombo.getOptionalValue();
+                formulaCombo.setItems(formulasService.findAll());
+                oldSelection.ifPresent(formulaCombo::setValue);
+            }
+        });
         addMaterialSection();
         postConstruct();
-
     }
 
     private void addMaterialSection() {
-
-        var button = new Button("Нажмите для выбора материала", buttonClickEvent -> {
-            dialog.setMaterials(printerCombo.getValue().getMaterials());
-            dialog.open();
+        dialog = new SelectMaterailsDialog("Выберите материалы для печати");
+        dialog.addOpenedChangeListener(openedChangeEvent -> {
+            if (openedChangeEvent.isOpened()) dialog.setSelectedMaterial(templateBinder.getBean().getMaterials());
+            else {
+                var oldValue = materialSelect.getOptionalValue();
+                materialSelect.setItems(dialog.getGrid().getSelectedItems());
+                oldValue.ifPresent(materialSelect::setValue);
+            }
         });
-        //materialSelect.addFocusListener(selectFocusEvent -> materialSelect.setItems(dialog.getSelected()));
+
+        var button = new Button("Нажмите для выбора материала", e -> dialog.open());
+
         templateBinder.forField(materialSelect).bind(DigitalPrinting::getDefaultMaterial, DigitalPrinting::setDefaultMaterial);
-        //templateBinder.forField(dialog).bind(DigitalPrinting::getMaterials, DigitalPrinting::setMaterials);
+        templateBinder.forField(dialog.getGrid().asMultiSelect()).bind(DigitalPrinting::getMaterials, DigitalPrinting::setMaterials);
 
         this.add(button, materialSelect);
     }
@@ -87,7 +100,6 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         formulaCombo.setSizeFull();
         formulaCombo.setEmptySelectionAllowed(false);
         formulaCombo.addThemeVariants(SelectVariant.LUMO_ALIGN_RIGHT);
-        formulaCombo.addValueChangeListener(e -> formula = e.getValue());
         formulaCombo.setPrefixComponent(addPrefix());
         templateBinder.forField(formulaCombo).bind(DigitalPrinting::getFormula, DigitalPrinting::setFormula);
         div.add(formulaCombo);
@@ -96,21 +108,12 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
     private Div addPrefix(){
         var div = new Div();
-        var create = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> {
-            if (dialogFormula == null) dialogFormula = new CreateFormula(new Formulas(), formulasService);
-            else dialogFormula.setFormulaBean(new Formulas());
-            dialogFormula.open();
-            formulaCombo.setItems(formulasService.findAll());
-            templateBinder. refreshFields();
-            formulaCombo.setValue(dialogFormula.getFormulaBean());
-        });
+        var create = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> dialogFormula.open());
 
         var update = new Button(VaadinIcon.EDIT.create(), buttonClickEvent -> {
-            if (formula!=null) {
-                if (dialogFormula == null) dialogFormula = new CreateFormula(formula, formulasService);
-                else dialogFormula.setFormulaBean(formula);
+            if (formulaCombo.getOptionalValue().isPresent()) {
+                dialogFormula.setFormulaBean(formulaCombo.getOptionalValue().get());
                 dialogFormula.open();
-                templateBinder.refreshFields();
             }
         });
         div.add(create, update);
@@ -139,7 +142,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
         printerCombo.addValueChangeListener(e -> {
             if (e.getValue() != null) {
-                dialog.setMaterials(e.getValue().getMaterials());
+                dialog.getGrid().setItems(e.getValue().getMaterials());
                 coverQuantityOfColor.setItems(e.getValue().getQuantityColors());
                 comboBoxViewFirstElement(coverQuantityOfColor);
                 backQuantityOfColor.setItems(e.getValue().getQuantityColors());
@@ -232,8 +235,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             printerCombo.setItems(printers);
             printerCombo.setValue(printers.getFirst());
 
-            dialog.setMaterials(printers.getFirst().getMaterials());
-            //dialog.setSelectedMaterial(materialSelect.getListDataView().);
+            dialog.getGrid().setItems(printers.getFirst().getMaterials());
+            //dialog.setSelectedMaterial(templateBinder.getBean().getMaterials());
 
             coverQuantityOfColor.setItems(printers.getFirst().getQuantityColors());
             backQuantityOfColor.setItems(printers.getFirst().getQuantityColors());

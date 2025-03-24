@@ -1,18 +1,21 @@
 package ru.bprn.printhouse.views.template;
 
-import com.vaadin.flow.component.HasValue;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import lombok.Getter;
+import lombok.Setter;
 import ru.bprn.printhouse.data.entity.Material;
 
 import java.util.Set;
 
+@Getter
+@Setter
 public class SelectMaterailsDialog extends Dialog {
-    private final Grid<Material> grid = new Grid<>();
+
+    private Grid<Material> grid = new Grid<>();
 
     public SelectMaterailsDialog(String title){
         super(title);
@@ -22,9 +25,7 @@ public class SelectMaterailsDialog extends Dialog {
         this.setHeight("50%");
         this.setWidth("50%");
 
-        var cancelButton = new Button("Cancel", buttonClickEvent -> this.close());
-        var saveButton = new Button("Save", buttonClickEvent -> this.close());
-        this.getFooter().add(cancelButton);
+        var saveButton = new Button("Ok", buttonClickEvent -> this.close());
         this.getFooter().add(saveButton);
 
         var layout = new VerticalLayout();
@@ -42,15 +43,7 @@ public class SelectMaterailsDialog extends Dialog {
         this.add(layout);
     }
 
-    public Set<Material> getSelected() {
-        return grid.getSelectedItems();
-    }
-
-    public void setMaterials(Set<Material> materials) {
-        grid.setItems(materials);
-    }
-
     public void setSelectedMaterial(Set<Material> materials) {
-        if (!materials.isEmpty()) for (Material m : materials) grid.getSelectionModel().select(m);
+        if (!materials.isEmpty()) for (Material m : materials) grid.select(m);
     }
 }

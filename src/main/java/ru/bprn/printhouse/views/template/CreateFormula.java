@@ -17,19 +17,18 @@ import javax.script.ScriptException;
 import java.util.List;
 
 public class CreateFormula extends Dialog {
+
     private final TextField formulaField = new TextField("Фомула");
     private final BeanValidationBinder<Formulas> formulaBinder;
     private final StringBuilder strVariables = new StringBuilder();
     private final List<VariablesRecord> list;
-    @Getter
-    private Formulas formulaBean;
-    private final FormulasService formulasService;
 
-    public CreateFormula(Formulas bean, FormulasService formulasService) {
-        this.setModal(true);
-        this.formulaBean = bean;
-        this.formulasService = formulasService;
-        this.formulaBinder = new BeanValidationBinder<>(Formulas.class);
+    @Getter
+    private final Formulas formulaBean = new Formulas();
+
+    public CreateFormula(FormulasService formulasService) {
+        setModal(true);
+        formulaBinder = new BeanValidationBinder<>(Formulas.class);
         formulaBinder.setBean(formulaBean);
 
         list = new ListOfVariables().getList();
@@ -78,9 +77,7 @@ public class CreateFormula extends Dialog {
     private Div addVariablesButton() {
         var div = new Div();
         for (VariablesRecord rec:list) {
-            var button = new Button(rec.name(), buttonClickEvent -> {
-                formulaField.setValue(formulaField.getValue()+rec.name()+" ");
-            });
+            var button = new Button(rec.name(), buttonClickEvent -> formulaField.setValue(formulaField.getValue()+rec.name()+" "));
             button.setTooltipText(rec.description());
             //button.setThemeName();
             div.add(button);
