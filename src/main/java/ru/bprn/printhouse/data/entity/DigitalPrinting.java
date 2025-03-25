@@ -24,8 +24,6 @@ public class DigitalPrinting implements HasMargins {
 
     private ImposeCase imposeCase;
 
-    private boolean isNeedExtraLeaves;
-
     private int quantityOfExtraLeaves;
 
     private Formulas formula;

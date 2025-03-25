@@ -1,7 +1,6 @@
 package ru.bprn.printhouse.views.template;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -36,7 +35,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     private final Select<QuantityColors> backQuantityOfColor = new Select<>();
     private final Select<QuantityColors> coverQuantityOfColor = new Select<>();
     private final Select<Material> materialSelect = new Select<>();
-    private static SelectMaterailsDialog dialog;
+    private SelectMaterailsDialog dialog;
 
     @Getter
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
@@ -44,7 +43,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     public PrintingTabOfWorkFlowVerticalLayout(
             PrintMashineService printerService,
             CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
-            FormulasService formulasService, SizeOfPrintLeaf size)
+            FormulasService formulasService,
+            SizeOfPrintLeaf size)
     {
         this.printerService = printerService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
@@ -78,12 +78,16 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             }
         });
 
-        var button = new Button("Нажмите для выбора материала", e -> dialog.open());
-
+        var button = new Button("Выбор материалов", e -> dialog.open());
+        materialSelect.setLabel("Установка основного материала");
+        materialSelect.setEmptySelectionAllowed(false);
+        materialSelect.addAttachListener(attachEvent -> {
+           materialSelect.setItems(templateBinder.getBean().getMaterials());
+           materialSelect.setValue(templateBinder.getBean().getDefaultMaterial());
+        });
         templateBinder.forField(materialSelect).bind(DigitalPrinting::getDefaultMaterial, DigitalPrinting::setDefaultMaterial);
         templateBinder.forField(dialog.getGrid().asMultiSelect()).bind(DigitalPrinting::getMaterials, DigitalPrinting::setMaterials);
-
-        this.add(button, materialSelect);
+        add(new HorizontalLayout(Alignment.BASELINE, button, materialSelect));
     }
 
     private <T> void comboBoxViewFirstElement(Select<T> combo) {
@@ -96,7 +100,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         var div = new Div();
         div.setWidth("50%");
 
-        formulaCombo.setAriaLabel("Формула расчета:");
+        formulaCombo.setLabel("Формула расчета:");
         formulaCombo.setSizeFull();
         formulaCombo.setEmptySelectionAllowed(false);
         formulaCombo.addThemeVariants(SelectVariant.LUMO_ALIGN_RIGHT);
@@ -156,23 +160,14 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     }
 
     private HorizontalLayout addMaterialBlock() {
-        var checkBox = new Checkbox("Нужна приводка?");
-
-        var intField = new IntegerField("Количество листов:");
+        var intField = new IntegerField("Листов приводки:");
         var hl = new HorizontalLayout();
         hl.setAlignItems(Alignment.BASELINE);
 
         intField.setValue(0);
-        checkBox.setValue(false);
-        checkBox.addValueChangeListener(e -> {
-            intField.setEnabled(e.getValue());
-            if (!intField.isEnabled()) intField.setValue(0);
-        });
-
         templateBinder.forField(intField).asRequired().bind(DigitalPrinting::getQuantityOfExtraLeaves, DigitalPrinting::setQuantityOfExtraLeaves);
-        templateBinder.forField(checkBox).bind(DigitalPrinting::isNeedExtraLeaves, DigitalPrinting::setNeedExtraLeaves);
 
-        hl.add(checkBox, intField);
+        hl.add(intField);
         return hl;
     }
 
@@ -236,7 +231,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             printerCombo.setValue(printers.getFirst());
 
             dialog.getGrid().setItems(printers.getFirst().getMaterials());
-            //dialog.setSelectedMaterial(templateBinder.getBean().getMaterials());
+            materialSelect.setItems(dialog.getGrid().getSelectedItems());
 
             coverQuantityOfColor.setItems(printers.getFirst().getQuantityColors());
             backQuantityOfColor.setItems(printers.getFirst().getQuantityColors());
