@@ -54,6 +54,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         dialogFormula = new CreateFormula(formulasService);
 
         addPrinterSection();
+        addMaterialSection();
         this.add(addMaterialBlock());
         this.add(addFormula());
         dialogFormula.addOpenedChangeListener(openedChangeEvent -> {
@@ -63,7 +64,6 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
                 oldSelection.ifPresent(formulaCombo::setValue);
             }
         });
-        addMaterialSection();
         postConstruct();
     }
 
@@ -83,9 +83,9 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         materialSelect.setEmptySelectionAllowed(false);
         materialSelect.addAttachListener(attachEvent -> {
            materialSelect.setItems(templateBinder.getBean().getMaterials());
-           materialSelect.setValue(templateBinder.getBean().getDefaultMaterial());
+            //materialSelect.setValue(templateBinder.getBean().getDefaultMaterial());
         });
-        templateBinder.forField(materialSelect).bind(DigitalPrinting::getDefaultMaterial, DigitalPrinting::setDefaultMaterial);
+        templateBinder.forField(materialSelect).asRequired().bind(DigitalPrinting::getDefaultMaterial, DigitalPrinting::setDefaultMaterial);
         templateBinder.forField(dialog.getGrid().asMultiSelect()).bind(DigitalPrinting::getMaterials, DigitalPrinting::setMaterials);
         add(new HorizontalLayout(Alignment.BASELINE, button, materialSelect));
     }
@@ -96,6 +96,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
                 combo.setValue(combo.getListDataView().getItem(0));
     }
 
+    //---------------------Селектор для выбора формул с редактированием и созданием новой-------
     private Div addFormula() {
         var div = new Div();
         div.setWidth("50%");
@@ -110,9 +111,12 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         return div;
     }
 
-    private Div addPrefix(){
+    private Div addPrefix() {
         var div = new Div();
-        var create = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> dialogFormula.open());
+        var create = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> {
+            dialogFormula.setFormulaBean(new Formulas());
+            dialogFormula.open();
+        });
 
         var update = new Button(VaadinIcon.EDIT.create(), buttonClickEvent -> {
             if (formulaCombo.getOptionalValue().isPresent()) {
@@ -123,7 +127,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         div.add(create, update);
         return div;
     }
-
+//------------------------------------------------------------------------------------------------------
 
     private void addPrinterSection() {
 
@@ -226,11 +230,13 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
     private void postConstruct() {
         var printers = printerService.findAll();
-        if (printers!= null) {
+        var material = printerService.findAll().getFirst().getMaterials();
+        if (!printers.isEmpty()) {
             printerCombo.setItems(printers);
             printerCombo.setValue(printers.getFirst());
 
-            dialog.getGrid().setItems(printers.getFirst().getMaterials());
+            dialog.getGrid().setItems(material);
+            dialog.getGrid().select(material.stream().findFirst().get());
             materialSelect.setItems(dialog.getGrid().getSelectedItems());
 
             coverQuantityOfColor.setItems(printers.getFirst().getQuantityColors());

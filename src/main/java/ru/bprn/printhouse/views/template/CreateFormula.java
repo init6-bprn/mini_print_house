@@ -24,7 +24,7 @@ public class CreateFormula extends Dialog {
     private final List<VariablesRecord> list;
 
     @Getter
-    private final Formulas formulaBean = new Formulas();
+    private Formulas formulaBean = new Formulas();
 
     public CreateFormula(FormulasService formulasService) {
         setModal(true);
@@ -87,8 +87,9 @@ public class CreateFormula extends Dialog {
     }
 
     public void setFormulaBean(Formulas formula) {
+        this.formulaBean = formula;
         formulaBinder.removeBean();
-        formulaBinder.setBean(formula);
+        formulaBinder.setBean(formulaBean);
         formulaBinder.refreshFields();
     }
 

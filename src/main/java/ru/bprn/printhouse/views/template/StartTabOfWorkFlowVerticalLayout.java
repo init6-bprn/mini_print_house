@@ -93,12 +93,12 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
                  stringName.append(bean.getSizeX()).append("x").append(bean.getSizeY()).append(" - ");
              }
             else stringName.append("Неизвестный размер - ");
-
+/*
         if (bean.getMaterial()!=null) stringName.append(bean.getMaterial().getName()).append("-")
                 .append(bean.getMaterial().getThickness()).append("-")
                 .append(bean.getMaterial().getSizeOfPrintLeaf());
         else stringName.append("неизвестный материал - ");
-
+*/
         return  stringName.toString();
     }
 
