@@ -5,6 +5,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.select.SelectVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -55,8 +56,10 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
         addPrinterSection();
         addMaterialSection();
-        this.add(addMaterialBlock());
-        this.add(addFormula());
+        add(addMaterialBlock());
+        add(addOrientation());
+        add(addFormula());
+
         dialogFormula.addOpenedChangeListener(openedChangeEvent -> {
             if (!openedChangeEvent.isOpened()) {
                 var oldSelection = formulaCombo.getOptionalValue();
@@ -65,6 +68,19 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             }
         });
         postConstruct();
+    }
+
+    private HorizontalLayout addOrientation() {
+        var hl = new HorizontalLayout();
+        hl.setSizeFull();
+        var radioGroup = new RadioButtonGroup<String>();
+        templateBinder.forField(radioGroup).asRequired().bind(DigitalPrinting::getOrientation, DigitalPrinting::setOrientation);
+        radioGroup.setItems("Автоматически", "Вертикальная", "Горизонтальная");
+        radioGroup.setValue("Автоматически");
+        radioGroup.addValueChangeListener(e -> templateBinder.getBean().setOrientation(e.getValue()));
+
+        hl.add(radioGroup);
+        return hl;
     }
 
     private void addMaterialSection() {
@@ -83,7 +99,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         materialSelect.setEmptySelectionAllowed(false);
         materialSelect.addAttachListener(attachEvent -> {
            materialSelect.setItems(templateBinder.getBean().getMaterials());
-            //materialSelect.setValue(templateBinder.getBean().getDefaultMaterial());
+           materialSelect.setValue(templateBinder.getBean().getDefaultMaterial());
         });
         templateBinder.forField(materialSelect).asRequired().bind(DigitalPrinting::getDefaultMaterial, DigitalPrinting::setDefaultMaterial);
         templateBinder.forField(dialog.getGrid().asMultiSelect()).bind(DigitalPrinting::getMaterials, DigitalPrinting::setMaterials);

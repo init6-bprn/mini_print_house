@@ -59,8 +59,8 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
         addNameOfTemplate();
         addSizeOfProductSection();
-        addSetOfSheetsSection();
-        addMaterialSection();
+        //addSetOfSheetsSection();
+        //addMaterialSection();
         addQuantityAndOrientation();
 
     }

@@ -22,14 +22,16 @@ public class SelectMaterailsDialog extends Dialog {
         this.setCloseOnEsc(true);
         this.setCloseOnOutsideClick(false);
         this.setModal(true);
-        this.setHeight("50%");
-        this.setWidth("50%");
+        this.setHeight("75%");
+        this.setWidth("75%");
 
         var saveButton = new Button("Ok", buttonClickEvent -> this.close());
         this.getFooter().add(saveButton);
 
         var layout = new VerticalLayout();
         layout.setSizeFull();
+
+
 
         grid.addColumn(Material::getName).setHeader("Название");
         grid.addColumn(Material::getTypeOfMaterial).setHeader("Тип материала");
@@ -38,10 +40,15 @@ public class SelectMaterailsDialog extends Dialog {
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         grid.setSizeFull();
+        grid.getHeaderRows().clear();
+        grid.getListDataView();
+
 
         layout.add(grid);
         this.add(layout);
     }
+
+
 
     public void setSelectedMaterial(Set<Material> materials) {
         if (!materials.isEmpty()) for (Material m : materials) grid.select(m);

@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.data.entity;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,6 +34,10 @@ public class DigitalPrinting implements HasMargins {
     private Material defaultMaterial;
 
     private Gap margins;
+
+    @NotBlank
+    private String orientation = "Автоматически";
+
 
     @Override
     public Gap getMargins() {
