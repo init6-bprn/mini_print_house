@@ -1,12 +1,18 @@
 package ru.bprn.printhouse.views.template;
 
+import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.data.entity.Material;
+
+import java.util.Set;
 
 public interface HasMaterial {
 
-    public String getMaterialFormula();
+    String getDescription();
+    void setDescription(String str);
 
-    Material material = new Material();
+    Material getDefaultMaterial();
+    Set<Material> getSelectedMaterials();
 
+    Formulas getMaterialFormula();
 
 }

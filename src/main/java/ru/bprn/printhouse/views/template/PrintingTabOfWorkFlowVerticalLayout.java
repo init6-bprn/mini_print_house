@@ -22,12 +22,11 @@ import ru.bprn.printhouse.data.service.PrintMashineService;
 @UIScope
 @AnonymousAllowed
 public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
-        implements HasBinder, HasMaterial, ExtraLeaves, Price {
+        implements HasBinder, ExtraLeaves, Price {
 
     private final PrintMashineService printerService;
     private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
 
-    private final SizeOfPrintLeaf size;
     private final FormulasService formulasService;
 
     private final CreateFormula dialogFormula;
@@ -44,12 +43,10 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     public PrintingTabOfWorkFlowVerticalLayout(
             PrintMashineService printerService,
             CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
-            FormulasService formulasService,
-            SizeOfPrintLeaf size)
+            FormulasService formulasService)
     {
         this.printerService = printerService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
-        this.size = size;
         this.formulasService = formulasService;
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
         dialogFormula = new CreateFormula(formulasService);
@@ -171,6 +168,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
                 comboBoxViewFirstElement(coverQuantityOfColor);
                 backQuantityOfColor.setItems(e.getValue().getQuantityColors());
                 comboBoxViewFirstElement(backQuantityOfColor);
+                if (templateBinder.getBean()!=null) templateBinder.getBean().setMargins(e.getValue().getGap());
             }
         });
 
@@ -202,12 +200,6 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     }
 
     @Override
-    public String getMaterialFormula() {
-        return "";
-    }
-
-
-    @Override
     public int getExtraLeaves() {
         return templateBinder.getBean().getQuantityOfExtraLeaves();
     }
@@ -216,10 +208,14 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     public double getPriceOfOperation() {
         double total = .0;
         CostOfPrintSizeLeafAndColor costCover = costOfPrintSizeLeafAndColorService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf
-                (templateBinder.getBean().getPrintMashine(), templateBinder.getBean().getQuantityColorsCover(), size);
+                (templateBinder.getBean().getPrintMashine(),
+                        templateBinder.getBean().getQuantityColorsCover(),
+                        templateBinder.getBean().getDefaultMaterial().getSizeOfPrintLeaf());
         if (costCover != null) total += costCover.getCoast();
         CostOfPrintSizeLeafAndColor costBack = costOfPrintSizeLeafAndColorService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf
-                (templateBinder.getBean().getPrintMashine(), templateBinder.getBean().getQuantityColorsBack(), size);
+                (templateBinder.getBean().getPrintMashine(),
+                        templateBinder.getBean().getQuantityColorsBack(),
+                        templateBinder.getBean().getDefaultMaterial().getSizeOfPrintLeaf());
         if (costBack!=null) total += costBack.getCoast();
     return total;
     }

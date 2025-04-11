@@ -55,7 +55,7 @@ public class WorkFlowView extends SplitLayout {
     private final TabSheet tabSheet = new TabSheet();
     private StartTabOfWorkFlowVerticalLayout startTab;
     //private final ObjectMapper objectMapper = new ObjectMapper();
-    //private CalculateWorkflowParameters calc;
+    private final ComputeAnyElementsDialog calc = new ComputeAnyElementsDialog();
 
     private final Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
@@ -77,7 +77,7 @@ public class WorkFlowView extends SplitLayout {
         startTab = new StartTabOfWorkFlowVerticalLayout(this.standartSizeService,
                 this.typeOfMaterialService, this.materialService, this.gapService, this.imposeCaseService);
 
-        //calc = new CalculateWorkflowParameters(tabSheet);
+        //calc.;
 
         this.setOrientation(Orientation.VERTICAL);
         addToPrimary(addGridSection());
@@ -173,9 +173,10 @@ public class WorkFlowView extends SplitLayout {
         vl.add(hl);
 
         templateGrid.addColumn(WorkFlow::getName).setHeader("Имя");
+        /*
         templateGrid.addColumn(WorkFlow::getStandartSize).setHeader("Размер");
         templateGrid.addColumn(WorkFlow::getMaterial).setHeader("Материал");
-
+*/
         templateGrid.setItems(this.workFlowService.findAll());
         templateGrid.setHeight("200px");
         templateGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
@@ -234,7 +235,11 @@ public class WorkFlowView extends SplitLayout {
         calculateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         calculateButton.addClickListener(buttonClickEvent -> {
             var valid = validateBean();
-            if (valid.isPresent()) workFlowService.calculate(startTab.getTemplateBinder().getBean());
+            if (valid.isPresent()) {
+                calc.setWorkFlow(startTab.getTemplateBinder().getBean());
+                calc.open();
+                //workFlowService.calculate(startTab.getTemplateBinder().getBean());
+            }
         });
 
 
@@ -248,17 +253,31 @@ public class WorkFlowView extends SplitLayout {
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> {
                 var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
-                        costOfPrintSizeLeafAndColorService, formulasService, startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf());
+                        costOfPrintSizeLeafAndColorService, formulasService);
                 digitalPrinting.getTemplateBinder().setBean(new DigitalPrinting());
                 tabSheet.add(createTab("Цифровая печать"), digitalPrinting);
+                addDescriptionToName("Цифровая печать");
             }
         );
-        subMenu.addItem("Резка", menuItemClickEvent -> tabSheet.add(createTab("Резка"), new VerticalLayout()));
-        subMenu.addItem("Верстка", menuItemClickEvent -> tabSheet.add(createTab("Верстка"), new VerticalLayout()));
+        subMenu.addItem("Резка", menuItemClickEvent -> {
+            tabSheet.add(createTab("Резка"), new VerticalLayout());
+            addDescriptionToName("Резка");
+        });
+        subMenu.addItem("Верстка", menuItemClickEvent -> {
+            tabSheet.add(createTab("Верстка"), new VerticalLayout());
+            addDescriptionToName("Верстка");
+        });
         tabSheet.setPrefixComponent(menuBar);
 
         vel.add(tabSheet);
         return vel;
+    }
+
+    private void addDescriptionToName (String str) {
+        if (startTab.getAutoNamed().getValue()) {
+            startTab.getTemplateBinder().getBean().setName(startTab.getTemplateBinder().getBean().getName() + "-"+ str);
+            startTab.getTemplateBinder().refreshFields();
+        }
     }
 
     private Tab createTab (String str){
@@ -372,8 +391,7 @@ public class WorkFlowView extends SplitLayout {
             switch (obj) {
                 case DigitalPrinting dp -> {
                     var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
-                            costOfPrintSizeLeafAndColorService, formulasService,
-                            startTab.getTemplateBinder().getBean().getMaterial().getSizeOfPrintLeaf());
+                            costOfPrintSizeLeafAndColorService, formulasService);
                     tabComp.getTemplateBinder().setBean(dp);
                     tabSheet.add(createTab("Цифровая печать"), tabComp);
                 }

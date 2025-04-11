@@ -37,11 +37,11 @@ public class WorkFlow {
 
     @Positive
     private Double sizeY = 1.0;
-
+/*
     @ManyToOne (fetch = FetchType.EAGER)
     @JoinColumn (name = "material", nullable = false)
     private Material material;
-
+*/
     @PositiveOrZero
     private Integer quantityOfPrintLeaves = 1;
 
@@ -51,11 +51,11 @@ public class WorkFlow {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "bleed", nullable = false)
     private Gap bleed;
-
+/*
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "impose_case", nullable = false)
     private ImposeCase imposeCase;
-
+*/
     @Column(columnDefinition = "mediumtext")
     private String strJSON = "";
 

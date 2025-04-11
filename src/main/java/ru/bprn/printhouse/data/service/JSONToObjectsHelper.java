@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class JSONToObjectsHelper {
@@ -63,5 +64,14 @@ public class JSONToObjectsHelper {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static <T> List<T> getListOfObjReqType(String str, Class<T> clazz) {
+        var list = getListOfObjects(str).stream().filter(clazz::isInstance).toList();
+        var output = new LinkedList<T>();
+
+        for (Object obj : list) output.add(clazz.cast(obj));
+
+        return output;
     }
 }

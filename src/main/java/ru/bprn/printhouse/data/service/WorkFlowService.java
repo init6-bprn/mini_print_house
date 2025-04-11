@@ -4,13 +4,12 @@ import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.repository.WorkFlowRepository;
 import ru.bprn.printhouse.views.template.ExtraLeaves;
-import ru.bprn.printhouse.views.template.HasMargins;
 import ru.bprn.printhouse.views.template.Price;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.util.*;
+import java.util.List;
 
 @Service
 public class WorkFlowService {
@@ -30,6 +29,7 @@ public class WorkFlowService {
     public void delete (WorkFlow workFlow) {this.workFlowRepository.delete(workFlow);}
 
     public void calculate(WorkFlow workFlow) {
+        /*
         int[] mass = {1,1,1};
 
         if(workFlow!= null) {
@@ -99,6 +99,8 @@ public class WorkFlowService {
             fillVariables(workFlow);
             getOperationPrice(workFlow);
         }
+
+         */
     }
 
     private int getExtraLeaves(WorkFlow workFlow) {

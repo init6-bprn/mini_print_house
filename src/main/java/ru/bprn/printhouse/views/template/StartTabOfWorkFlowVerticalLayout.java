@@ -5,9 +5,6 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -21,7 +18,9 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
-import ru.bprn.printhouse.data.entity.*;
+import ru.bprn.printhouse.data.entity.Gap;
+import ru.bprn.printhouse.data.entity.StandartSize;
+import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 
 import java.util.Objects;
@@ -40,6 +39,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
     @Getter
     private final BeanValidationBinder<WorkFlow> templateBinder;
 
+    @Getter
     private final Checkbox autoNamed = new Checkbox("Задать имя автоматически");
 
     @Autowired
@@ -61,7 +61,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         addSizeOfProductSection();
         //addSetOfSheetsSection();
         //addMaterialSection();
-        addQuantityAndOrientation();
+        //addQuantityAndOrientation();
 
     }
 
@@ -102,97 +102,97 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         return  stringName.toString();
     }
 
+    /*
+        private void addMaterialSection() {
 
-    private void addMaterialSection() {
+            var typeOfMaterialCombo = new ComboBox<TypeOfMaterial>();
+            var thicknessCombo = new ComboBox<Thickness>();
+            var sizeOfPrintLeafCombo = new ComboBox<SizeOfPrintLeaf>();
+            var grid = new Grid<>(Material.class, false);
 
-        var typeOfMaterialCombo = new ComboBox<TypeOfMaterial>();
-        var thicknessCombo = new ComboBox<Thickness>();
-        var sizeOfPrintLeafCombo = new ComboBox<SizeOfPrintLeaf>();
-        var grid = new Grid<>(Material.class, false);
+            typeOfMaterialCombo.setItems(typeOfMaterialService.findAll());
+            typeOfMaterialCombo.setAllowCustomValue(false);
+            typeOfMaterialCombo.addValueChangeListener(e->{
+                if (e.getValue()!=null) {
+                    thicknessCombo.setItems(materialService.findAllThicknessByTypeOfMaterial(e.getValue()));
+                    comboBoxViewFirstElement(thicknessCombo);
+                    sizeOfPrintLeafCombo.setItems(materialService.findAllSizeOfPrintLeafByTypeOfMaterial(e.getValue()));
+                    comboBoxViewFirstElement(sizeOfPrintLeafCombo);
+                }
+                grid.setItems(materialService.findByFilters(e.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
+            });
 
-        typeOfMaterialCombo.setItems(typeOfMaterialService.findAll());
-        typeOfMaterialCombo.setAllowCustomValue(false);
-        typeOfMaterialCombo.addValueChangeListener(e->{
-            if (e.getValue()!=null) {
-                thicknessCombo.setItems(materialService.findAllThicknessByTypeOfMaterial(e.getValue()));
-                comboBoxViewFirstElement(thicknessCombo);
-                sizeOfPrintLeafCombo.setItems(materialService.findAllSizeOfPrintLeafByTypeOfMaterial(e.getValue()));
-                comboBoxViewFirstElement(sizeOfPrintLeafCombo);
-            }
-            grid.setItems(materialService.findByFilters(e.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
-        });
+            var listThickness = materialService.findAllThicknessByTypeOfMaterial(typeOfMaterialCombo.getValue());
+            if (listThickness!=null) thicknessCombo.setItems(listThickness);
+            thicknessCombo.setAllowCustomValue(false);
+            thicknessCombo.addValueChangeListener(e->{
+                grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), e.getValue()));
+            });
 
-        var listThickness = materialService.findAllThicknessByTypeOfMaterial(typeOfMaterialCombo.getValue());
-        if (listThickness!=null) thicknessCombo.setItems(listThickness);
-        thicknessCombo.setAllowCustomValue(false);
-        thicknessCombo.addValueChangeListener(e->{
-            grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), e.getValue()));
-        });
+            var listSizeOfPrintLeaf = materialService.findAllSizeOfPrintLeafByTypeOfMaterial(typeOfMaterialCombo.getValue());
+            if (listSizeOfPrintLeaf!=null) sizeOfPrintLeafCombo.setItems(listSizeOfPrintLeaf);
+            sizeOfPrintLeafCombo.setAllowCustomValue(false);
+            sizeOfPrintLeafCombo.addValueChangeListener(e->{
+                grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), e.getValue(), thicknessCombo.getValue()));
+            });
 
-        var listSizeOfPrintLeaf = materialService.findAllSizeOfPrintLeafByTypeOfMaterial(typeOfMaterialCombo.getValue());
-        if (listSizeOfPrintLeaf!=null) sizeOfPrintLeafCombo.setItems(listSizeOfPrintLeaf);
-        sizeOfPrintLeafCombo.setAllowCustomValue(false);
-        sizeOfPrintLeafCombo.addValueChangeListener(e->{
-            grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), e.getValue(), thicknessCombo.getValue()));
-        });
+            grid.addColumn(Material::getName).setHeader("Название");
+            Grid.Column<Material> typeColumn = grid.addColumn(Material::getTypeOfMaterial).setHeader("Тип материала");
+            Grid.Column<Material> sizeColumn = grid.addColumn(Material::getSizeOfPrintLeaf).setHeader("Размер печатного листа");
+            Grid.Column<Material> thicknessColumn = grid.addColumn(Material::getThickness).setHeader("Плотность");
+            grid.setSelectionMode(Grid.SelectionMode.SINGLE);
+            grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+            grid.setHeight("270px");
+            grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
 
-        grid.addColumn(Material::getName).setHeader("Название");
-        Grid.Column<Material> typeColumn = grid.addColumn(Material::getTypeOfMaterial).setHeader("Тип материала");
-        Grid.Column<Material> sizeColumn = grid.addColumn(Material::getSizeOfPrintLeaf).setHeader("Размер печатного листа");
-        Grid.Column<Material> thicknessColumn = grid.addColumn(Material::getThickness).setHeader("Плотность");
-        grid.setSelectionMode(Grid.SelectionMode.SINGLE);
-        grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        grid.setHeight("270px");
-        grid.setItems(materialService.findByFilters(typeOfMaterialCombo.getValue(), sizeOfPrintLeafCombo.getValue(), thicknessCombo.getValue()));
+            //templateBinder.forField(grid.).bind(WorkFlow::getMaterial, WorkFlow::setMaterial);
+            templateBinder.forField(grid.asSingleSelect()).
+                    withValidator(Objects::nonNull, "Выделите строку!")
+                    .bind(WorkFlow::getMaterial, WorkFlow::setMaterial);
 
-        //templateBinder.forField(grid.).bind(WorkFlow::getMaterial, WorkFlow::setMaterial);
-        templateBinder.forField(grid.asSingleSelect()).
-                withValidator(Objects::nonNull, "Выделите строку!")
-                .bind(WorkFlow::getMaterial, WorkFlow::setMaterial);
+            grid.getHeaderRows().clear();
+            HeaderRow headerRow = grid.appendHeaderRow();
 
-        grid.getHeaderRows().clear();
-        HeaderRow headerRow = grid.appendHeaderRow();
+            headerRow.getCell(typeColumn).setComponent(typeOfMaterialCombo);
+            headerRow.getCell(sizeColumn).setComponent(sizeOfPrintLeafCombo);
+            headerRow.getCell(thicknessColumn).setComponent(thicknessCombo);
 
-        headerRow.getCell(typeColumn).setComponent(typeOfMaterialCombo);
-        headerRow.getCell(sizeColumn).setComponent(sizeOfPrintLeafCombo);
-        headerRow.getCell(thicknessColumn).setComponent(thicknessCombo);
+            grid.addSelectionListener(selectionEvent -> {
+                if (autoNamed.getValue()) {
+                    templateBinder.getBean().setName(setDefaultName());
+                    templateBinder.refreshFields();
+                }
+            });
 
-        grid.addSelectionListener(selectionEvent -> {
-            if (autoNamed.getValue()) {
-                templateBinder.getBean().setName(setDefaultName());
-                templateBinder.refreshFields();
-            }
-        });
+            this.add(grid);
+        }
 
-        this.add(grid);
-    }
+        private void addSetOfSheetsSection(){
+            var ha = new HorizontalLayout();
 
-    private void addSetOfSheetsSection(){
-        var ha = new HorizontalLayout();
+            var sheetsQuantity = new IntegerField("Страниц/листов");
+            sheetsQuantity.setValue(1);
+            templateBinder.bind(sheetsQuantity, WorkFlow::getQuantityOfLeaves, WorkFlow::setQuantityOfLeaves);
 
-        var sheetsQuantity = new IntegerField("Страниц/листов");
-        sheetsQuantity.setValue(1);
-        templateBinder.bind(sheetsQuantity, WorkFlow::getQuantityOfLeaves, WorkFlow::setQuantityOfLeaves);
-
-        var imposeCaseCombo = new ComboBox<ImposeCase>("Вариант спуска полос:");
-        imposeCaseCombo.setItems(imposeCaseService.findAll());
-        templateBinder.forField(imposeCaseCombo).asRequired().bind(WorkFlow::getImposeCase, WorkFlow::setImposeCase);
-        imposeCaseCombo.setValue(imposeCaseService.getFirst());
+            var imposeCaseCombo = new ComboBox<ImposeCase>("Вариант спуска полос:");
+            imposeCaseCombo.setItems(imposeCaseService.findAll());
+            templateBinder.forField(imposeCaseCombo).asRequired().bind(WorkFlow::getImposeCase, WorkFlow::setImposeCase);
+            imposeCaseCombo.setValue(imposeCaseService.getFirst());
 
 
-        imposeCaseCombo.addValueChangeListener(e->{
-            if (e.getValue()!=null) {
-                if (e.getValue().getName().equals("Однолистовое")) {
-                    sheetsQuantity.setValue(1);
-                    sheetsQuantity.setEnabled(false);
-                } else sheetsQuantity.setEnabled(true);
-            }
-        });
+            imposeCaseCombo.addValueChangeListener(e->{
+                if (e.getValue()!=null) {
+                    if (e.getValue().getName().equals("Однолистовое")) {
+                        sheetsQuantity.setValue(1);
+                        sheetsQuantity.setEnabled(false);
+                    } else sheetsQuantity.setEnabled(true);
+                }
+            });
 
-        ha.add(imposeCaseCombo, sheetsQuantity);
-        this.add(ha);
-    }
-
+            ha.add(imposeCaseCombo, sheetsQuantity);
+            this.add(ha);
+        }
+    */
     private <T> void comboBoxViewFirstElement(ComboBox<T> combo) {
         if (combo!=null)
             if (combo.getListDataView().getItemCount()>0)
@@ -318,9 +318,6 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var printSizeY = new NumberField("Длина:");
         gapLayout.add(topGap, bottomGsp, leftGap ,rightGap, printSizeX, printSizeY);
 
-        radioGroup.setItems("Автоматически", "Вертикальная", "Горизонтальная");
-        radioGroup.setValue("Автоматически");
-
         templateBinder.bind(rowsOnLeaf, WorkFlow::getListRows, WorkFlow::setListRows);
         templateBinder.bind(columnsOnLeaf, WorkFlow::getListColumns, WorkFlow::setListColumns);
         templateBinder.bind(quantityOfPrintLeaves, WorkFlow::getQuantityOfPrintLeaves, WorkFlow::setQuantityOfPrintLeaves);
@@ -333,11 +330,6 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         templateBinder.bind(printSizeX, WorkFlow::getPrintSizeX, WorkFlow::setPrintSizeX);
         templateBinder.bind(printSizeY, WorkFlow::getPrintSizeY, WorkFlow::setPrintSizeY);
         templateBinder.bind(radioGroup, WorkFlow::getOrientation, WorkFlow::setOrientation);
-
-        radioGroup.addValueChangeListener(e-> {
-
-        });
-        add(radioGroup);
 
         quantityOfPrintLeaves.setReadOnly(true);
         rowsOnLeaf.setReadOnly(true);
@@ -361,7 +353,7 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
 
     @Override
     public double getPriceOfOperation() {
-        return templateBinder.getBean().getMaterial().getPriceOfLeaf();
+        return 1d;
     }
 
     @Override
