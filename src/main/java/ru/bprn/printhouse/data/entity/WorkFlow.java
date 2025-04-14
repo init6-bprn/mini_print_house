@@ -14,10 +14,13 @@ import lombok.*;
 @Setter
 @Entity
 @Table(name = "workflow")
+/*
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id",
         scope = WorkFlow.class)
+
+ */
 public class WorkFlow {
     @Id
     @EqualsAndHashCode.Include

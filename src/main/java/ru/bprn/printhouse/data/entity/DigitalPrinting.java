@@ -1,23 +1,33 @@
 package ru.bprn.printhouse.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import ru.bprn.printhouse.views.template.HasFormula;
 import ru.bprn.printhouse.views.template.IsEquipment;
 import ru.bprn.printhouse.views.template.HasMaterial;
 
-import java.util.Collections;
 import java.util.Set;
 
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id",
+        scope = DigitalPrinting.class)
 public class DigitalPrinting implements IsEquipment, HasMaterial, HasFormula {
 
+    @Id
+    @EqualsAndHashCode.Include
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private PrintMashine printMashine;
@@ -42,6 +52,12 @@ public class DigitalPrinting implements IsEquipment, HasMaterial, HasFormula {
 
     private Formulas materialFormula;
 
+    @JsonIgnoreProperties
+    private int fullSizeX = 10000;
+
+    @JsonIgnoreProperties
+    private int fullSizeY = 10000;
+
     @NotBlank
     private String orientation = "Автоматически";
 
@@ -58,7 +74,7 @@ public class DigitalPrinting implements IsEquipment, HasMaterial, HasFormula {
 
     @Override
     public Set<Material> getSelectedMaterials() {
-        return Collections.unmodifiableSet(materials);
+        return materials;
     }
 
     @Override
@@ -67,7 +83,7 @@ public class DigitalPrinting implements IsEquipment, HasMaterial, HasFormula {
     }
 
     @Override
-    public Formulas getFormulas() {
+    public Formulas getFormula() {
         return formula;
     }
 

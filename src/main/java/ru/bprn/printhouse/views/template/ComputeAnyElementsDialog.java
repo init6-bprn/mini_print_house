@@ -37,8 +37,10 @@ public class ComputeAnyElementsDialog extends Dialog {
 
         integerField.addValueChangeListener(e->{
             this.calc();
-            tirage = e.getValue();
-            textArea.setValue(setText());
+            if (e.getValue()!=null) {
+                tirage = e.getValue();
+                textArea.setValue(setText());
+            }
         });
         return integerField;
     }
