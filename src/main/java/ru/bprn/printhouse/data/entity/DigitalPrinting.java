@@ -1,6 +1,7 @@
 package ru.bprn.printhouse.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.GeneratedValue;
@@ -9,25 +10,25 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import ru.bprn.printhouse.views.template.HasFormula;
-import ru.bprn.printhouse.views.template.IsEquipment;
 import ru.bprn.printhouse.views.template.HasMaterial;
+import ru.bprn.printhouse.views.template.IsMainPrintWork;
 
 import java.util.Set;
 
-@EqualsAndHashCode
-@NoArgsConstructor
-@AllArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+
 @JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
+        generator = ObjectIdGenerators.IntSequenceGenerator.class,
         property = "id",
         scope = DigitalPrinting.class)
-public class DigitalPrinting implements IsEquipment, HasMaterial, HasFormula {
-
-    @Id
+public class DigitalPrinting implements IsMainPrintWork, HasMaterial, HasFormula {
     @EqualsAndHashCode.Include
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     private PrintMashine printMashine;
@@ -38,7 +39,7 @@ public class DigitalPrinting implements IsEquipment, HasMaterial, HasFormula {
 
     private ImposeCase imposeCase;
 
-    private int quantityOfExtraLeaves = 0;
+    private Integer quantityOfExtraLeaves = 0;
 
     private Formulas formula;
 
@@ -61,6 +62,14 @@ public class DigitalPrinting implements IsEquipment, HasMaterial, HasFormula {
     @NotBlank
     private String orientation = "Автоматически";
 
+    public @NotBlank String getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(@NotBlank String orientation) {
+        this.orientation = orientation;
+    }
+
     @Override
     public String getDescription() {
         return description;
@@ -73,6 +82,11 @@ public class DigitalPrinting implements IsEquipment, HasMaterial, HasFormula {
     }
 
     @Override
+    @JsonIgnore
+    public Material getMaterial() {return defaultMaterial; }
+
+    @Override
+    @JsonIgnore
     public Set<Material> getSelectedMaterials() {
         return materials;
     }
@@ -88,16 +102,26 @@ public class DigitalPrinting implements IsEquipment, HasMaterial, HasFormula {
     }
 
     @Override
-    public int getFullSizeX() {
-        var leaf = defaultMaterial.getSizeOfPrintLeaf();
-        var gap = printMashine.getGap();
-        return leaf.getWidth()-gap.getGapLeft()-gap.getGapRight();
+    @JsonIgnore
+    public Integer getLeafSizeX() {
+        return defaultMaterial.getSizeOfPrintLeaf().getLength();
     }
 
     @Override
-    public int getFullSizeY() {
-        var leaf = defaultMaterial.getSizeOfPrintLeaf();
-        var gap = printMashine.getGap();
-        return leaf.getLength()-gap.getGapTop()-gap.getGapBottom();
+    @JsonIgnore
+    public Integer getLeafSizeY() {
+        return defaultMaterial.getSizeOfPrintLeaf().getWidth();
+    }
+
+    @JsonIgnore
+    @Override
+    public Integer getPrintAreaX() {
+        return defaultMaterial.getSizeOfPrintLeaf().getWidth()-printMashine.getGap().getGapRight()-printMashine.getGap().getGapLeft();
+    }
+
+    @JsonIgnore
+    @Override
+    public Integer getPrintAreaY() {
+        return defaultMaterial.getSizeOfPrintLeaf().getLength()-printMashine.getGap().getGapTop()-printMashine.getGap().getGapBottom();
     }
 }

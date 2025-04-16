@@ -1,26 +1,25 @@
 package ru.bprn.printhouse.views.template;
 
 import com.vaadin.flow.component.dialog.Dialog;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import lombok.Getter;
 import lombok.Setter;
 import ru.bprn.printhouse.data.entity.WorkFlow;
-import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
+import ru.bprn.printhouse.data.service.WorkFlowService;
 
 public class ComputeAnyElementsDialog extends Dialog {
     private int tirage = 1;
     private final TextArea textArea = new TextArea();
-    private int sizeX = 3000;
-    private int sizeY = 3000;
+    private final WorkFlowService workFlowService;
 
     @Getter
     @Setter
     private WorkFlow workFlow;
 
-    public ComputeAnyElementsDialog(){
+    public ComputeAnyElementsDialog(WorkFlowService workFlowService){
         super("Расчет переменных величин");
+        this.workFlowService = workFlowService;
         setHeight("75%");
         setWidth("75%");
         textArea.setSizeFull();
@@ -36,29 +35,25 @@ public class ComputeAnyElementsDialog extends Dialog {
         integerField.setValue(1);
 
         integerField.addValueChangeListener(e->{
-            this.calc();
+            ;
             if (e.getValue()!=null) {
+                workFlow.setQuantityOfProduct(e.getValue());
                 tirage = e.getValue();
-                textArea.setValue(setText());
+                textArea.setValue(this.calc());
             }
         });
         return integerField;
     }
 
-    private String setText() {
-        var str = new StringBuilder();
-        str.append("Размер печатного листа: ").append(sizeX).append("x").append(sizeY);
-        return str.toString();
-    }
+    private String calc() {
+        var sb = new StringBuilder();
+        workFlowService.calcWorkflowParameters(workFlow);
+        sb.append("Размер печатного листа: ").append(workFlow.getPrintSizeX()).append("x").append(workFlow.getPrintSizeY()).append("\n");
+        sb.append("Размер области печати: ").append(workFlow.getPrintAreaX()).append("x").append(workFlow.getPrintAreaY()).append("\n");
+        sb.append("Печатных листов: ").append(workFlow.getQuantityOfPrintLeaves()).append("\n");
+        sb.append("Изделий на листе: ").append(workFlow.getQuantityProductionsOnLeaf()).append("\n");
 
-    private void calc() {
-        var list = JSONToObjectsHelper.getListOfObjReqType(workFlow.getStrJSON(), IsEquipment.class);
-        if (list.isEmpty()) Notification.show("Empty!!!");
-        for (IsEquipment equipment : list) {
-            if (equipment.getFullSizeX()<sizeX) sizeX = equipment.getFullSizeX();
-            if (equipment.getFullSizeY()<sizeY) sizeY = equipment.getFullSizeY();
-        }
-
+        return sb.toString();
     }
 
 

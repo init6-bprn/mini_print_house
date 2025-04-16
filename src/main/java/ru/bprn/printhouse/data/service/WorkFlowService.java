@@ -1,9 +1,11 @@
 package ru.bprn.printhouse.data.service;
 
+import com.vaadin.flow.component.notification.Notification;
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.repository.WorkFlowRepository;
 import ru.bprn.printhouse.views.template.ExtraLeaves;
+import ru.bprn.printhouse.views.template.IsMainPrintWork;
 import ru.bprn.printhouse.views.template.Price;
 
 import javax.script.ScriptEngine;
@@ -28,21 +30,25 @@ public class WorkFlowService {
 
     public void delete (WorkFlow workFlow) {this.workFlowRepository.delete(workFlow);}
 
-    public void calculate(WorkFlow workFlow) {
-        /*
+    public void calcWorkflowParameters(WorkFlow workFlow) {
+        String orient = "";
+        Integer bleeds = workFlow.getBleed().getGapLeft() * 2;
+        var list = JSONToObjectsHelper.getListOfObjReqType(workFlow.getStrJSON(), IsMainPrintWork.class);
+        if (list.isEmpty()) Notification.show("Empty!!!");
+        for (IsMainPrintWork equipment : list) {
+            workFlow.setPrintSizeX(equipment.getLeafSizeX().doubleValue());
+            workFlow.setPrintSizeY(equipment.getLeafSizeY().doubleValue());
+            workFlow.setPrintAreaX(equipment.getPrintAreaX().doubleValue());
+            workFlow.setPrintAreaY(equipment.getPrintAreaY().doubleValue());
+            //workFlow.set
+            orient = equipment.getOrientation();
+        }
         int[] mass = {1,1,1};
 
-        if(workFlow!= null) {
+
             var quantity = workFlow.getQuantityOfProduct();
             var quantityOfPrintLeaf = workFlow.getQuantityOfPrintLeaves();
-            var printSizeX = workFlow.getPrintSizeX();
-            var printSizeY = workFlow.getPrintSizeY();
-            var orient = workFlow.getOrientation();
-            var left = workFlow.getLeftGap();
-            var right = workFlow.getRightGap();
-            var top = workFlow.getTopGap();
-            var bottom = workFlow.getBottomGap();
-
+/*
             List<Object> comp = JSONToObjectsHelper.getListOfObjects(workFlow.getStrJSON())
                     .stream().filter(HasMargins.class::isInstance).toList();
 
@@ -58,9 +64,11 @@ public class WorkFlowService {
 
             printSizeX = (double) (workFlow.getMaterial().getSizeOfPrintLeaf().getLength() - right - left);
             printSizeY = (double) (workFlow.getMaterial().getSizeOfPrintLeaf().getWidth() - top - bottom);
-
-            var mass1 = getQuantity(printSizeX, printSizeY, workFlow.getFullProductSizeX(), workFlow.getFullProductSizeY());
-            var mass2 = getQuantity(printSizeX, printSizeY, workFlow.getFullProductSizeY(), workFlow.getFullProductSizeX());
+*/
+            var mass1 = getQuantity(workFlow.getPrintAreaX(), workFlow.getPrintAreaY(),
+                    workFlow.getSizeX()+bleeds, workFlow.getSizeY()+bleeds);
+            var mass2 = getQuantity(workFlow.getPrintAreaX(), workFlow.getPrintAreaY(),
+                    workFlow.getSizeY()+bleeds, workFlow.getSizeX()+bleeds);
 
             switch (orient) {
                 case "Автоматически":
@@ -84,23 +92,17 @@ public class WorkFlowService {
             } else quantityOfPrintLeaf = 0;
 
             workFlow.setQuantityOfPrintLeaves(quantityOfPrintLeaf);
-            workFlow.setListRows(mass[0]);
-            workFlow.setListColumns(mass[1]);
+            workFlow.setRowsOnLeaf(mass[0]);
+            workFlow.setColumnsOnLeaf(mass[1]);
             workFlow.setQuantityProductionsOnLeaf(mass[2]);
-            workFlow.setRightGap(right);
-            workFlow.setLeftGap(left);
-            workFlow.setTopGap(top);
-            workFlow.setBottomGap(bottom);
-            workFlow.setPrintSizeX(printSizeX);
-            workFlow.setPrintSizeY(printSizeY);
-
+/*
             // Предварительный подсчет цены
             strVariables.delete(0, strVariables.length());
             fillVariables(workFlow);
             getOperationPrice(workFlow);
-        }
+        */
 
-         */
+
     }
 
     private int getExtraLeaves(WorkFlow workFlow) {
@@ -136,8 +138,8 @@ public class WorkFlowService {
 
     private void fillVariables(WorkFlow workFlow) {
         strVariables
-                .append(addVar("columns", workFlow.getListColumns()))
-                .append(addVar("rows", workFlow.getListRows()))
+                .append(addVar("columns", workFlow.getColumnsOnLeaf()))
+                .append(addVar("rows", workFlow.getRowsOnLeaf()))
                 .append(addVar("quantity", workFlow.getQuantityOfProduct()))
                 .append(addVar("leaves", workFlow.getQuantityOfPrintLeaves()))
                 .append(addVar("onleaf", workFlow.getQuantityProductionsOnLeaf()));

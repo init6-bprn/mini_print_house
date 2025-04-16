@@ -54,8 +54,7 @@ public class WorkFlowView extends SplitLayout {
 
     private final TabSheet tabSheet = new TabSheet();
     private StartTabOfWorkFlowVerticalLayout startTab;
-    //private final ObjectMapper objectMapper = new ObjectMapper();
-    private final ComputeAnyElementsDialog calc = new ComputeAnyElementsDialog();
+    private ComputeAnyElementsDialog calc;
 
     private final Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
@@ -77,7 +76,7 @@ public class WorkFlowView extends SplitLayout {
         startTab = new StartTabOfWorkFlowVerticalLayout(this.standartSizeService,
                 this.typeOfMaterialService, this.materialService, this.gapService, this.imposeCaseService);
 
-        //calc.;
+        calc = new ComputeAnyElementsDialog(workFlowService);
 
         this.setOrientation(Orientation.VERTICAL);
         addToPrimary(addGridSection());

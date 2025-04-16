@@ -100,6 +100,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         });
         templateBinder.forField(materialSelect).asRequired().bind(DigitalPrinting::getDefaultMaterial, DigitalPrinting::setDefaultMaterial);
         templateBinder.forField(dialog.getGrid().asMultiSelect()).bind(DigitalPrinting::getMaterials, DigitalPrinting::setMaterials);
+
         add(new HorizontalLayout(Alignment.BASELINE, button, materialSelect));
     }
 

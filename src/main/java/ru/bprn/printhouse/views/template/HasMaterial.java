@@ -10,7 +10,7 @@ public interface HasMaterial {
     String getDescription();
     void setDescription(String str);
 
-    Material getDefaultMaterial();
+    Material getMaterial();
     Set<Material> getSelectedMaterials();
 
     Formulas getMaterialFormula();

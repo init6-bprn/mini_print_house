@@ -318,18 +318,14 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         var printSizeY = new NumberField("Длина:");
         gapLayout.add(topGap, bottomGsp, leftGap ,rightGap, printSizeX, printSizeY);
 
-        templateBinder.bind(rowsOnLeaf, WorkFlow::getListRows, WorkFlow::setListRows);
-        templateBinder.bind(columnsOnLeaf, WorkFlow::getListColumns, WorkFlow::setListColumns);
+        templateBinder.bind(rowsOnLeaf, WorkFlow::getRowsOnLeaf, WorkFlow::setRowsOnLeaf);
+        templateBinder.bind(columnsOnLeaf, WorkFlow::getColumnsOnLeaf, WorkFlow::setColumnsOnLeaf);
         templateBinder.bind(quantityOfPrintLeaves, WorkFlow::getQuantityOfPrintLeaves, WorkFlow::setQuantityOfPrintLeaves);
         templateBinder.bind(quantityOfProduction, WorkFlow::getQuantityOfProduct, WorkFlow::setQuantityOfProduct);
         templateBinder.bind(quantityProductionsOnLeaf, WorkFlow::getQuantityProductionsOnLeaf, WorkFlow::setQuantityProductionsOnLeaf);
-        templateBinder.bind(topGap, WorkFlow::getTopGap, WorkFlow::setBottomGap);
-        templateBinder.bind(bottomGsp, WorkFlow::getBottomGap, WorkFlow::setBottomGap);
-        templateBinder.bind(leftGap, WorkFlow::getLeftGap, WorkFlow::setBottomGap);
-        templateBinder.bind(rightGap, WorkFlow::getRightGap, WorkFlow::setRightGap);
         templateBinder.bind(printSizeX, WorkFlow::getPrintSizeX, WorkFlow::setPrintSizeX);
         templateBinder.bind(printSizeY, WorkFlow::getPrintSizeY, WorkFlow::setPrintSizeY);
-        templateBinder.bind(radioGroup, WorkFlow::getOrientation, WorkFlow::setOrientation);
+
 
         quantityOfPrintLeaves.setReadOnly(true);
         rowsOnLeaf.setReadOnly(true);
