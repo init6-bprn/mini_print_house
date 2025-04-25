@@ -1,7 +1,9 @@
 package ru.bprn.printhouse.views.template;
 
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -9,15 +11,15 @@ import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.select.SelectVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
-import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
-import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
-import ru.bprn.printhouse.data.service.PrintMashineService;
+import ru.bprn.printhouse.data.service.*;
+
+import java.util.Objects;
 
 @UIScope
 @AnonymousAllowed
@@ -28,6 +30,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
 
     private final FormulasService formulasService;
+    private final StandartSizeService standartSizeService;
+    private final GapService gapService;
 
     private final CreateFormula dialogFormula;
     private final Select<Formulas> formulaCombo = new Select<>();
@@ -43,11 +47,15 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     public PrintingTabOfWorkFlowVerticalLayout(
             PrintMashineService printerService,
             CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
-            FormulasService formulasService)
+            FormulasService formulasService,
+            StandartSizeService standartSizeService,
+            GapService gapService)
     {
         this.printerService = printerService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
         this.formulasService = formulasService;
+        this.standartSizeService = standartSizeService;
+        this.gapService = gapService;
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
         dialogFormula = new CreateFormula(formulasService);
 
@@ -56,6 +64,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         add(addMaterialBlock());
         add(addOrientation());
         add(addFormula());
+        add(addSizeOfProductSection());
 
         dialogFormula.addOpenedChangeListener(openedChangeEvent -> {
             if (!openedChangeEvent.isOpened()) {
@@ -65,6 +74,68 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             }
         });
         postConstruct();
+    }
+
+    private HorizontalLayout addSizeOfProductSection() {
+        var hLayout = new HorizontalLayout();
+        hLayout.setAlignItems(Alignment.START);
+
+        var length = new NumberField("Длина");
+        length.setWidth(13, Unit.PERCENTAGE);
+        templateBinder.forField(length).asRequired().bind(DigitalPrinting::getProductSizeX, DigitalPrinting::setProductSizeX);
+
+        var width = new NumberField("Ширина");
+        width.setWidth(13, Unit.PERCENTAGE);
+        templateBinder.forField(width).asRequired().bind(DigitalPrinting::getProductSizeY, DigitalPrinting::setProductSizeY);
+
+        var sizeOfPaperCombo = new Select<StandartSize>("Размер изделия",e -> {
+            if (e.getValue()!=null) {
+                length.setValue(e.getValue().getLength());
+                width.setValue(e.getValue().getWidth());
+            }
+        });
+        sizeOfPaperCombo.setWidth(30, Unit.PERCENTAGE);
+        sizeOfPaperCombo.setItems(standartSizeService.findAll());
+        sizeOfPaperCombo.setEmptySelectionAllowed(true);
+        templateBinder.forField(sizeOfPaperCombo).asRequired().bind(DigitalPrinting::getStandartSize, DigitalPrinting::setStandartSize);
+
+        var dialog = new SizeDialog(standartSizeService);
+
+        dialog.addOpenedChangeListener(openedChangeEvent -> {
+            if (!openedChangeEvent.isOpened()) {
+                if (dialog.getStandartSize()!= null) {
+                    sizeOfPaperCombo.setItems(standartSizeService.findAll());
+                    sizeOfPaperCombo.setValue(dialog.getStandartSize());
+
+                }
+            }
+        });
+
+        var label = new NativeLabel("Добавить");
+        label.getStyle().set("padding-top", "var(--lumo-space-s)")
+                .set("font-size", "var(--lumo-font-size-xs)");
+        var addSizeButton = new Button("Add");
+        addSizeButton.setAriaLabel("Add");
+        var layout = new VerticalLayout(label, addSizeButton);
+        layout.setWidth(14, Unit.PERCENTAGE);
+        layout.getThemeList().clear();
+        layout.getThemeList().add("spacing-xs");
+        addSizeButton.addClickListener(e-> {
+            if ((length.getValue()!=null)&&(width.getValue()!=null)) {
+                dialog.setX(length.getValue());
+                dialog.setY(width.getValue());
+                dialog.setModal(true);
+                dialog.open();
+            }
+        });
+
+        var bleedCombo = new Select<Gap>("Припуск", e->{});
+        bleedCombo.setWidth(30, Unit.PERCENTAGE);
+        bleedCombo.setItems(gapService.findAllBleeds("Bleed"));
+        templateBinder.forField(bleedCombo).withValidator(Objects::nonNull, "Обязательно заполнить!").bind(DigitalPrinting::getBleed, DigitalPrinting::setBleed);
+
+        hLayout.add(sizeOfPaperCombo, length, width, layout, bleedCombo, dialog);
+        return hLayout;
     }
 
     private HorizontalLayout addOrientation() {

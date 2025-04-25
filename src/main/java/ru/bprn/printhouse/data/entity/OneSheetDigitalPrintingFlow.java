@@ -1,6 +1,8 @@
 package ru.bprn.printhouse.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -16,19 +18,16 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity
-@Table(name = "one_leaf_digital_print_flow")
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.IntSequenceGenerator.class,
+        property = "id",
+        scope = OneSheetDigitalPrintingFlow.class)
 public class OneSheetDigitalPrintingFlow {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", nullable = false)
     private Long id;
 
-    @NotBlank
-    private String name = "Стандартное название";
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "standart_size", nullable = false)
     private StandartSize standartSize;
 
     @Positive
@@ -37,42 +36,26 @@ public class OneSheetDigitalPrintingFlow {
     @Positive
     private Double productSizeY = 1.0;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "bleed", nullable = false)
     private Gap bleed;
 
-    @ManyToOne
-    @JoinColumn(name = "print_mashine_id")
     private PrintMashine printMashine;
 
-    @ManyToOne
-    @JoinColumn(name = "quantity_colors_cover_id")
     private QuantityColors quantityColorsCover;
 
-    @ManyToOne
-    @JoinColumn(name = "quantity_colors_back_id")
     private QuantityColors quantityColorsBack;
 
     private Integer quantityOfExtraLeaves = 0;
 
-    @ManyToOne
-    @JoinColumn(name = "formula_id")
     private Formulas formula;
 
     private Set<Material> materials;
 
-    @ManyToOne
-    @JoinColumn(name = "default_material_id")
     private Material defaultMaterial;
 
-    @ManyToOne
-    @JoinColumn(name = "margins_id")
     private Gap margins;
 
     private String description;
 
-    @ManyToOne
-    @JoinColumn(name = "material_formula_id")
     private Formulas materialFormula;
 
     @JsonIgnoreProperties

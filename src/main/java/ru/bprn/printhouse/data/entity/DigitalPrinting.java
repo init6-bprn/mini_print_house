@@ -2,65 +2,212 @@ package ru.bprn.printhouse.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.proxy.HibernateProxy;
 import ru.bprn.printhouse.views.template.HasFormula;
 import ru.bprn.printhouse.views.template.HasMaterial;
 import ru.bprn.printhouse.views.template.IsMainPrintWork;
 
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
 
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.IntSequenceGenerator.class,
         property = "id",
         scope = DigitalPrinting.class)
 public class DigitalPrinting implements IsMainPrintWork, HasMaterial, HasFormula {
-    @EqualsAndHashCode.Include
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private Long id;
 
+// --------  Размер изделия, поля и расположение на печатном листе -----------------
+    private StandartSize standartSize;
+
+    @Positive
+    private Double productSizeX = 1.0;
+
+    @Positive
+    private Double productSizeY = 1.0;
+
+    private Gap bleed;
+
+    @NotBlank
+    private String orientation = "Автоматически";
+
+
+    // Размер изделия с полями
+    @Positive
+    private double fullProductSizeX = 1.0;
+
+    @Positive
+    private double fullProductSizeY = 1.0;
+
+
+// -------  Принтер, цветность печати и отступы ------
     private PrintMashine printMashine;
 
     private QuantityColors quantityColorsCover;
 
     private QuantityColors quantityColorsBack;
 
-    private ImposeCase imposeCase;
-
+    @PositiveOrZero
     private Integer quantityOfExtraLeaves = 0;
 
+    private Gap margins;
+
+    @Positive
+    private Double printAreaSizeX = 1.0;
+
+    @Positive
+    private Double printAreaSizeY = 1.0;
+
+
+// ------  Материалы и формула расчета -------
     private Formulas formula;
 
     private Set<Material> materials;
 
     private Material defaultMaterial;
 
-    private Gap margins;
-
-    private String description;
-
     private Formulas materialFormula;
 
-    @JsonIgnoreProperties
-    private int fullSizeX = 10000;
+    // Размер печатного листа
+    @Positive
+    private Double printSheetSizeX = 1.0;
 
-    @JsonIgnoreProperties
-    private int fullSizeY = 10000;
+    @Positive
+    private Double printSheetSizeY = 1.0;
 
-    @NotBlank
-    private String orientation = "Автоматически";
+
+// -----  Вспомогательные элементы для расчета ------
+    @PositiveOrZero
+    private Integer quantityOfProduct = 0;
+
+    @Positive
+    private int rowsOnSheet = 1;
+
+    @Positive
+    private int columnsOnSheet = 1;
+
+    @Positive
+    private int quantityProductionsOnSheet = 1;
+
+    @PositiveOrZero
+    private Integer quantityOfPrintSheets = 0;
+
+    //@JsonIgnoreProperties
+   // private int fullSizeX = 10000;
+
+    //@JsonIgnoreProperties
+    //private int fullSizeY = 10000;
+
+
+
+// ------   Хранилище доп. работ -------
+    @Column(columnDefinition = "mediumtext")
+    private String additionalWorkStrJSON = "";
+
+
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        ru.bprn.printhouse.data.entity.WorkFlow workFlow = (ru.bprn.printhouse.data.entity.WorkFlow) o;
+        return getId() != null && Objects.equals(getId(), workFlow.getId());
+    }
+
+    @Override
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+
+    private void calc() {
+        calcPrintAreaSize();
+        calcProductionsOnSheet();
+
+    }
+
+    private void calcFullProductSize(){
+        if (bleed!=null) {
+            fullProductSizeX = productSizeX + bleed.getGapLeft() + bleed.getGapRight();
+            fullProductSizeY = productSizeY + bleed.getGapBottom() + bleed.getGapTop();
+        } else {
+            fullProductSizeX = productSizeX;
+            fullProductSizeY = productSizeY;
+        }
+    }
+
+    private void calcPrintAreaSize(){
+        if (defaultMaterial!=null) {
+            printAreaSizeX = printSheetSizeX - margins.getGapRight() - margins.getGapLeft();
+            printAreaSizeY = printSheetSizeY - margins.getGapTop() - margins.getGapBottom();
+        }
+    }
+
+    private void calcProductionsOnSheet(){
+        int[] mass = {1,1,1};
+
+        var mass1 = getQuantity(printAreaSizeX, productSizeY, fullProductSizeX, fullProductSizeY);
+        var mass2 = getQuantity(printAreaSizeX, productSizeY, fullProductSizeY, fullProductSizeX);
+
+        switch (this.orientation) {
+            case "Автоматически":
+                if (mass1[2] >= mass2[2]) mass = mass1;
+                else mass = mass2;
+                break;
+            case "Вертикальная":
+                mass = mass1;
+                break;
+            case "Горизонтальная":
+                mass = mass2;
+                break;
+        }
+
+        if (quantityOfProduct != 0) {
+            quantityOfPrintSheets = quantityOfProduct / mass[2];
+            if (quantityOfProduct % mass[2] != 0) quantityOfPrintSheets++;
+            quantityOfPrintSheets += quantityOfExtraLeaves;
+        } else quantityOfPrintSheets = 0;
+
+        rowsOnSheet = mass[0];
+        columnsOnSheet = mass[1];
+        quantityProductionsOnSheet = mass[2];
+
+    }
+
+    private int[] getQuantity(double sizeLeafX, double sizeLeafY, Double sizeElementX, Double sizeElementY) {
+        int[] mass = new int[3];
+        mass[0] = (int) (sizeLeafX/sizeElementX);
+        mass[1] = (int) (sizeLeafY/sizeElementY);
+        mass[2] = mass[1]*mass[0];
+        return mass;
+    }
+
+    public void setMargins(Gap margins) {
+        this.margins = margins;
+        calc();
+    }
 
     public @NotBlank String getOrientation() {
         return orientation;
@@ -68,17 +215,27 @@ public class DigitalPrinting implements IsMainPrintWork, HasMaterial, HasFormula
 
     public void setOrientation(@NotBlank String orientation) {
         this.orientation = orientation;
+        calc();
     }
 
-    @Override
-    public String getDescription() {
-        return description;
+    public void setDefaultMaterial(Material defaultMaterial) {
+        this.defaultMaterial = defaultMaterial;
+        calc();
     }
 
-    @Override
-    public void setDescription(String str) {
-        this.description = str;
+    public void setProductSizeX(@Positive Double productSizeX) {
+        this.productSizeX = productSizeX;
+        calcFullProductSize();
+    }
 
+    public void setProductSizeY(@Positive Double productSizeY) {
+        this.productSizeY = productSizeY;
+        calcFullProductSize();
+    }
+
+    public void setBleed(Gap bleed) {
+        this.bleed = bleed;
+        calcFullProductSize();
     }
 
     @Override

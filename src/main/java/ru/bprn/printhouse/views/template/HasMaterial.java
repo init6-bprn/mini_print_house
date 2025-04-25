@@ -7,9 +7,6 @@ import java.util.Set;
 
 public interface HasMaterial {
 
-    String getDescription();
-    void setDescription(String str);
-
     Material getMaterial();
     Set<Material> getSelectedMaterials();
 
