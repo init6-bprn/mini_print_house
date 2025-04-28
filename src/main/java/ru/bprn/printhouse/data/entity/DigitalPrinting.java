@@ -10,10 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 import ru.bprn.printhouse.views.template.HasFormula;
 import ru.bprn.printhouse.views.template.HasMaterial;
@@ -26,6 +23,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 
 @JsonIdentityInfo(
         generator = ObjectIdGenerators.IntSequenceGenerator.class,
@@ -35,6 +33,7 @@ public class DigitalPrinting implements IsMainPrintWork, HasMaterial, HasFormula
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private Long id;
 
 // --------  Размер изделия, поля и расположение на печатном листе -----------------
@@ -121,26 +120,9 @@ public class DigitalPrinting implements IsMainPrintWork, HasMaterial, HasFormula
 
 
 // ------   Хранилище доп. работ -------
-    @Column(columnDefinition = "mediumtext")
-    private String additionalWorkStrJSON = "";
+//    @Column(columnDefinition = "mediumtext")
+//    private String additionalWorkStrJSON = "";
 
-
-
-    @Override
-    public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) return false;
-        ru.bprn.printhouse.data.entity.WorkFlow workFlow = (ru.bprn.printhouse.data.entity.WorkFlow) o;
-        return getId() != null && Objects.equals(getId(), workFlow.getId());
-    }
-
-    @Override
-    public final int hashCode() {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
-    }
 
     private void calc() {
         calcPrintAreaSize();
@@ -220,6 +202,8 @@ public class DigitalPrinting implements IsMainPrintWork, HasMaterial, HasFormula
 
     public void setDefaultMaterial(Material defaultMaterial) {
         this.defaultMaterial = defaultMaterial;
+        this.printSheetSizeX = (double) defaultMaterial.getSizeOfPrintLeaf().getLength();
+        this.printSheetSizeY = (double) defaultMaterial.getSizeOfPrintLeaf().getWidth();
         calc();
     }
 
@@ -280,5 +264,9 @@ public class DigitalPrinting implements IsMainPrintWork, HasMaterial, HasFormula
     @Override
     public Integer getPrintAreaY() {
         return defaultMaterial.getSizeOfPrintLeaf().getLength()-printMashine.getGap().getGapTop()-printMashine.getGap().getGapBottom();
+    }
+
+    public String toString() {
+        return this.getClass().getName();
     }
 }

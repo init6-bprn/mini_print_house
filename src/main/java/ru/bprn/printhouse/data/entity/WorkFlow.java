@@ -10,7 +10,6 @@ import org.hibernate.proxy.HibernateProxy;
 import java.util.Objects;
 
 @ToString
-//@RequiredArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -26,55 +25,8 @@ public class WorkFlow {
     @NotBlank
     private String name = "Стандартное название";
 
-    @ManyToOne (fetch = FetchType.EAGER)
-    @JoinColumn (name = "standart_size", nullable = false)
-    private StandartSize standartSize;
-
-    @Positive
-    private Double sizeX = 1.0;
-
-    @Positive
-    private Double sizeY = 1.0;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "bleed", nullable = false)
-    private Gap bleed;
-
     @Column(columnDefinition = "mediumtext")
     private String strJSON = "";
-
-    @PositiveOrZero
-    private Integer quantityOfPrintLeaves = 1;
-
-    @PositiveOrZero
-    private Integer quantityOfProduct = 0;
-
-    @Positive
-    private int rowsOnLeaf = 1;
-
-    @Positive
-    private int columnsOnLeaf = 1;
-
-    @Positive
-    private int quantityProductionsOnLeaf = 1;
-
-    @PositiveOrZero
-    private Double printSizeX = .0;
-
-    @PositiveOrZero
-    private Double printSizeY = .0;
-
-    @PositiveOrZero
-    private Double printAreaX = .0;
-
-    @PositiveOrZero
-    private Double printAreaY = .0;
-
-    @PositiveOrZero
-    private double fullProductSizeX = .0;
-
-    @PositiveOrZero
-    private double fullProductSizeY = .0;
 
     @Override
     public final boolean equals(Object o) {

@@ -318,7 +318,7 @@ public class WorkFlowView extends SplitLayout {
         rightBtn.addClickListener(e->{
             if (tabSheet.getChildren().anyMatch(Tabs.class::isInstance)) {
                 Tabs tabs = (Tabs) tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst().get();
-                int j = tabs.getComponentCount();
+                int j = tabs.getTabCount();
                 int i = tabSheet.getIndexOf(tab);
                 tabs.setSelectedIndex(i);
                 tab.setSelected(true);

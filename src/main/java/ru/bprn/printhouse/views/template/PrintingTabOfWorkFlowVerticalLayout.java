@@ -59,12 +59,12 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
         dialogFormula = new CreateFormula(formulasService);
 
+        add(addSizeOfProductSection());
         addPrinterSection();
         addMaterialSection();
         add(addMaterialBlock());
         add(addOrientation());
         add(addFormula());
-        add(addSizeOfProductSection());
 
         dialogFormula.addOpenedChangeListener(openedChangeEvent -> {
             if (!openedChangeEvent.isOpened()) {

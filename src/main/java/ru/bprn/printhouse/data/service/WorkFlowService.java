@@ -29,7 +29,7 @@ public class WorkFlowService {
     public WorkFlow save(WorkFlow workFlow) {return this.workFlowRepository.save(workFlow);}
 
     public void delete (WorkFlow workFlow) {this.workFlowRepository.delete(workFlow);}
-
+/*
     public void calcWorkflowParameters(WorkFlow workFlow) {
         String orient = "";
         Integer bleeds = workFlow.getBleed().getGapLeft() * 2;
@@ -48,7 +48,7 @@ public class WorkFlowService {
 
             var quantity = workFlow.getQuantityOfProduct();
             var quantityOfPrintLeaf = workFlow.getQuantityOfPrintLeaves();
-/*
+
             List<Object> comp = JSONToObjectsHelper.getListOfObjects(workFlow.getStrJSON())
                     .stream().filter(HasMargins.class::isInstance).toList();
 
@@ -64,7 +64,7 @@ public class WorkFlowService {
 
             printSizeX = (double) (workFlow.getMaterial().getSizeOfPrintLeaf().getLength() - right - left);
             printSizeY = (double) (workFlow.getMaterial().getSizeOfPrintLeaf().getWidth() - top - bottom);
-*/
+
             var mass1 = getQuantity(workFlow.getPrintAreaX(), workFlow.getPrintAreaY(),
                     workFlow.getSizeX()+bleeds, workFlow.getSizeY()+bleeds);
             var mass2 = getQuantity(workFlow.getPrintAreaX(), workFlow.getPrintAreaY(),
@@ -95,16 +95,16 @@ public class WorkFlowService {
             workFlow.setRowsOnLeaf(mass[0]);
             workFlow.setColumnsOnLeaf(mass[1]);
             workFlow.setQuantityProductionsOnLeaf(mass[2]);
-/*
+
             // Предварительный подсчет цены
             strVariables.delete(0, strVariables.length());
             fillVariables(workFlow);
             getOperationPrice(workFlow);
-        */
+
 
 
     }
-
+*/
     private int getExtraLeaves(WorkFlow workFlow) {
         var extraLeaves = JSONToObjectsHelper.getListOfObjects(workFlow.getStrJSON())
                 .stream().filter(ExtraLeaves.class::isInstance).toList();;
@@ -135,7 +135,7 @@ public class WorkFlowService {
         }
         return total;
     }
-
+/*
     private void fillVariables(WorkFlow workFlow) {
         strVariables
                 .append(addVar("columns", workFlow.getColumnsOnLeaf()))
@@ -144,7 +144,7 @@ public class WorkFlowService {
                 .append(addVar("leaves", workFlow.getQuantityOfPrintLeaves()))
                 .append(addVar("onleaf", workFlow.getQuantityProductionsOnLeaf()));
     }
-
+*/
     private String addVar(String name, int i) {
         return name + "=" + i + "; ";
     }

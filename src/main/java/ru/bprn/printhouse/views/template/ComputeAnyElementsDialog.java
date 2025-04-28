@@ -37,7 +37,7 @@ public class ComputeAnyElementsDialog extends Dialog {
         integerField.addValueChangeListener(e->{
             ;
             if (e.getValue()!=null) {
-                workFlow.setQuantityOfProduct(e.getValue());
+                //workFlow.setQuantityOfProduct(e.getValue());
                 tirage = e.getValue();
                 textArea.setValue(this.calc());
             }
@@ -47,12 +47,13 @@ public class ComputeAnyElementsDialog extends Dialog {
 
     private String calc() {
         var sb = new StringBuilder();
+        /*
         workFlowService.calcWorkflowParameters(workFlow);
         sb.append("Размер печатного листа: ").append(workFlow.getPrintSizeX()).append("x").append(workFlow.getPrintSizeY()).append("\n");
         sb.append("Размер области печати: ").append(workFlow.getPrintAreaX()).append("x").append(workFlow.getPrintAreaY()).append("\n");
         sb.append("Печатных листов: ").append(workFlow.getQuantityOfPrintLeaves()).append("\n");
         sb.append("Изделий на листе: ").append(workFlow.getQuantityProductionsOnLeaf()).append("\n");
-
+*/
         return sb.toString();
     }
 
