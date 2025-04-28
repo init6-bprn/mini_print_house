@@ -3,7 +3,6 @@ package ru.bprn.printhouse.data.entity;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -11,12 +10,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
-import org.hibernate.proxy.HibernateProxy;
 import ru.bprn.printhouse.views.template.HasFormula;
 import ru.bprn.printhouse.views.template.HasMaterial;
 import ru.bprn.printhouse.views.template.IsMainPrintWork;
 
-import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -96,6 +93,8 @@ public class DigitalPrinting implements IsMainPrintWork, HasMaterial, HasFormula
 
 
 // -----  Вспомогательные элементы для расчета ------
+    //private Set<VariablesForMainWorks> variables;
+
     @PositiveOrZero
     private Integer quantityOfProduct = 0;
 
@@ -110,18 +109,6 @@ public class DigitalPrinting implements IsMainPrintWork, HasMaterial, HasFormula
 
     @PositiveOrZero
     private Integer quantityOfPrintSheets = 0;
-
-    //@JsonIgnoreProperties
-   // private int fullSizeX = 10000;
-
-    //@JsonIgnoreProperties
-    //private int fullSizeY = 10000;
-
-
-
-// ------   Хранилище доп. работ -------
-//    @Column(columnDefinition = "mediumtext")
-//    private String additionalWorkStrJSON = "";
 
 
     private void calc() {

@@ -102,6 +102,9 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(ImposeCaseDictionary.class))
             dick.addItem(new SideNavItem("Спуск полос", ImposeCaseDictionary.class, VaadinIcon.RECORDS.create()));
 
+        if (accessChecker.hasAccess(VariablesForMainWorksDictionary.class))
+            dick.addItem(new SideNavItem("Переменные для работ", VariablesForMainWorksDictionary.class, VaadinIcon.RECORDS.create()));
+
         nav.addItem(dick);
 
         dick = new SideNavItem("Оборудование");

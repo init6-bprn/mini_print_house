@@ -10,20 +10,19 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
-import ru.bprn.printhouse.data.entity.Gap;
-import ru.bprn.printhouse.data.service.GapService;
+import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
+import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
 
 import java.util.List;
 
-@PageTitle("Словарь отступов")
-@Route(value = "gap_dictionary", layout = MainLayout.class)
 @AnonymousAllowed
-public class GapDictionary extends VerticalLayout {
+@PageTitle("Словарь переменных")
+@Route(value = "variables_dictionary", layout = MainLayout.class)
+public class VariablesForMainWorksDictionary extends VerticalLayout {
 
-    public GapDictionary(GapService gapService) {
-
-        DefaultCrudFormFactory<Gap> formFactory = new DefaultCrudFormFactory<>(Gap.class) {
+    public VariablesForMainWorksDictionary (VariablesForMainWorksService service){
+        DefaultCrudFormFactory<VariablesForMainWorks> formFactory = new DefaultCrudFormFactory<>(VariablesForMainWorks.class){
             @Override
             protected void configureForm(FormLayout formLayout, List<HasValueAndElement> fields) {
                 Component nameField = (Component) fields.get(0);
@@ -31,27 +30,22 @@ public class GapDictionary extends VerticalLayout {
             }
         };
         formFactory.setUseBeanValidation(true);
-        formFactory.setVisibleProperties("name", "gapTop", "gapBottom", "gapLeft", "gapRight");
+        formFactory.setVisibleProperties("clazz", "name", "description");
 
-        GridCrud<Gap> crud = new GridCrud<>(Gap.class, new HorizontalSplitCrudLayout(), formFactory);
+        GridCrud<VariablesForMainWorks> crud = new GridCrud<>(VariablesForMainWorks.class, new HorizontalSplitCrudLayout(), formFactory);
         crud.setClickRowToUpdate(true);
         crud.setUpdateOperationVisible(false);
-        crud.getGrid().setColumns("name", "gapTop", "gapBottom", "gapLeft", "gapRight");
+        crud.getGrid().setColumns("clazz", "name", "description");
 
         setSizeFull();
         this.add(crud);
 
-        crud.setOperations(
-                gapService::findAll,
-                gapService::save,
-                gapService::save,
-                gapService::delete
-        );
+        crud.setOperations(service::findAll, service::save, service::save, service::delete);
 
         setJustifyContentMode(JustifyContentMode.CENTER);
         setDefaultHorizontalComponentAlignment(Alignment.START);
         getStyle().set("text-align", "center");
-    }
 
+    }
 
 }
