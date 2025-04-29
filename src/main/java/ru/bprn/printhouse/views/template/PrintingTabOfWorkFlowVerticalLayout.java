@@ -12,6 +12,7 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.select.SelectVariant;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.spring.annotation.UIScope;
@@ -59,6 +60,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
         dialogFormula = new CreateFormula(formulasService);
 
+        add(addName());
         add(addSizeOfProductSection());
         addPrinterSection();
         addMaterialSection();
@@ -74,6 +76,14 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             }
         });
         postConstruct();
+    }
+
+    private HorizontalLayout addName(){
+        var hLayout = new HorizontalLayout();
+        hLayout.setAlignItems(Alignment.START);
+        var nameField = new TextField("Название цепочки");
+        templateBinder.forField(nameField).asRequired().bind(DigitalPrinting::getName, DigitalPrinting::setName);
+        return hLayout;
     }
 
     private HorizontalLayout addSizeOfProductSection() {
@@ -273,7 +283,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
 
     @Override
     public int getExtraLeaves() {
-        return templateBinder.getBean().getQuantityOfExtraLeaves();
+        return 0; //templateBinder.getBean().getQuantityOfExtraLeaves();
     }
 
     @Override

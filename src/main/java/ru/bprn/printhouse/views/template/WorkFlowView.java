@@ -26,15 +26,13 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
+import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @PageTitle("Создание и редактирование рабочих цепочек (WorkFlow)")
 @Route(value = "workflows", layout = MainLayout.class)
@@ -51,6 +49,7 @@ public class WorkFlowView extends SplitLayout {
     private final QuantityColorsService quantityColorsService;
     private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
     private final FormulasService formulasService;
+    private final VariablesForMainWorksService variablesForMainWorksService;
 
     private final TabSheet tabSheet = new TabSheet();
     private StartTabOfWorkFlowVerticalLayout startTab;
@@ -58,9 +57,17 @@ public class WorkFlowView extends SplitLayout {
 
     private final Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
-    public WorkFlowView(PrintMashineService printMashineService, StandartSizeService standartSizeService, TypeOfMaterialService typeOfMaterialService, MaterialService materialService, GapService gapService,
-                        WorkFlowService workFlowService, ImposeCaseService imposeCaseService, QuantityColorsService quantityColorsService,
-                        CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService, FormulasService formulasService){
+    public WorkFlowView(PrintMashineService printMashineService,
+                        StandartSizeService standartSizeService,
+                        TypeOfMaterialService typeOfMaterialService,
+                        MaterialService materialService,
+                        GapService gapService,
+                        WorkFlowService workFlowService,
+                        ImposeCaseService imposeCaseService,
+                        QuantityColorsService quantityColorsService,
+                        CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
+                        FormulasService formulasService,
+                        VariablesForMainWorksService variablesForMainWorksService){
 
         this.printMashineService = printMashineService;
         this.materialService = materialService;
@@ -72,6 +79,7 @@ public class WorkFlowView extends SplitLayout {
         this.quantityColorsService = quantityColorsService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
         this.formulasService = formulasService;
+        this.variablesForMainWorksService = variablesForMainWorksService;
 
         startTab = new StartTabOfWorkFlowVerticalLayout(this.standartSizeService,
                 this.typeOfMaterialService, this.materialService, this.gapService, this.imposeCaseService);
@@ -391,6 +399,7 @@ public class WorkFlowView extends SplitLayout {
                 case DigitalPrinting dp -> {
                     var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
                             costOfPrintSizeLeafAndColorService, formulasService, standartSizeService, gapService);
+                    dp.setVariables(populateVariables(dp.getClass().getSimpleName()));
                     tabComp.getTemplateBinder().setBean(dp);
                     tabSheet.add(createTab("Цифровая печать"), tabComp);
                 }
@@ -398,6 +407,13 @@ public class WorkFlowView extends SplitLayout {
             }
         }
 
+    }
+
+    private Map<String, Number> populateVariables(String name) {
+        Map<String, Number> map = new HashMap<>();
+        for (VariablesForMainWorks variables: variablesForMainWorksService.findAllClazz(name))
+                map.put(variables.getName(), 1d);
+        return map;
     }
 
 }
