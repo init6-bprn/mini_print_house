@@ -8,10 +8,10 @@ import com.vaadin.flow.component.splitlayout.SplitLayout;
 
 public abstract class WorkChainView extends SplitLayout {
 
-    private Grid<? extends WorkChain> templateGrid;
-    private final Class<? extends WorkChain> clazz;
+    private Grid<WorkChain> templateGrid;
+    private final Class<WorkChain> clazz;
 
-    public WorkChainView(Class<? extends WorkChain> clazz){
+    public WorkChainView(Class<WorkChain> clazz){
         super();
         this.clazz = clazz;
         templateGrid = new Grid<>(clazz, false);
@@ -30,7 +30,7 @@ public abstract class WorkChainView extends SplitLayout {
             var workflw = templateGrid.getSelectedItems().stream().findFirst();
 
             //workFlowService.delete(workflw.get());
-            //workflw.ifPresent(workChain -> templateGrid.getListDataView().removeItem(workChain));
+            workflw.ifPresent(workChain -> templateGrid.getListDataView().removeItem(workChain));
         },
                 "Нет", cancelEvent -> cancelEvent.getSource().close());
 /*
