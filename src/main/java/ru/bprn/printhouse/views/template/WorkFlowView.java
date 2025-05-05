@@ -99,7 +99,7 @@ public class WorkFlowView extends SplitLayout {
         var vl = new VerticalLayout();
         vl.setSizeUndefined();
 
-        var dialog = new ConfirmDialog("Вы уверены, что хотите удалить этот workflow?" , "", "Да", confirmEvent ->
+        var dialog = new ConfirmDialog("Внимание!" , "Вы уверены, что хотите удалить этот workflow?", "Да", confirmEvent ->
             {
                 var workflw = templateGrid.getSelectedItems().stream().findFirst();
                 if (workflw.isPresent()) {
@@ -110,7 +110,7 @@ public class WorkFlowView extends SplitLayout {
             "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         var hl = new HorizontalLayout();
-        var createButton = new Button(VaadinIcon.PLUS.create(), buttonClickEvent -> {
+        var createButton = new Button(VaadinIcon.PLUS.create(), _ -> {
             this.getPrimaryComponent().setVisible(false);
             this.getSecondaryComponent().getElement().setEnabled(true);
             this.setSplitterPosition(0);
@@ -119,7 +119,7 @@ public class WorkFlowView extends SplitLayout {
         });
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        var updateButton  = new Button(VaadinIcon.EDIT.create(), buttonClickEvent -> {
+        var updateButton  = new Button(VaadinIcon.EDIT.create(), _ -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 startTab.getTemplateBinder().setBean(optTemp.get());
@@ -133,7 +133,7 @@ public class WorkFlowView extends SplitLayout {
         });
         updateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
-        var duplicateButton = new Button(VaadinIcon.COPY_O.create(), buttonClickEvent -> {
+        var duplicateButton = new Button(VaadinIcon.COPY_O.create(), _ -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 var issueTemplate = optTemp.get();
@@ -167,7 +167,7 @@ public class WorkFlowView extends SplitLayout {
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
-        var deleteButton = new Button(VaadinIcon.CLOSE.create(), buttonClickEvent -> {
+        var deleteButton = new Button(VaadinIcon.CLOSE.create(), _ -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 dialog.open();

@@ -9,6 +9,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 public class ChainGrid extends VerticalLayout {
@@ -17,14 +19,15 @@ public class ChainGrid extends VerticalLayout {
     private final Button updateButton  = new Button(VaadinIcon.EDIT.create());
     private final Button duplicateButton = new Button(VaadinIcon.COPY_O.create());
     private final Button deleteButton = new Button(VaadinIcon.CLOSE.create());
-    private final Grid<? extends WorkChain> grid = new Grid<>(WorkChain.class, false);
+    private Grid<WorkChain> grid = new Grid<>(WorkChain.class, false);
+    private WorkChain workChain;
 
-    public ChainGrid(Class<WorkChain> clazz) {
+    public ChainGrid(List<WorkChain> workChain) {
         super();
         this.setSizeUndefined();
 
-        //this.addColumn(WorkFlow::getName).setHeader("Имя");
-        //this.setItems(this.workFlowService.findAll());
+        grid.addColumn(WorkChain::getString).setHeader("Название цепочки:");
+        grid.setItems(workChain);
         grid.setHeight("200px");
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
@@ -34,7 +37,9 @@ public class ChainGrid extends VerticalLayout {
 
     }
 
-    public void setGridData(){
+    public void setGridData(List<WorkChain> workChain){
+        grid.setItems(workChain);
+        grid.getListDataView().refreshAll();
 
     }
 

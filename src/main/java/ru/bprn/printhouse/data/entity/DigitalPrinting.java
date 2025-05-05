@@ -83,7 +83,7 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
     private Integer quantityOfProduct = 0;
 
 
-    private void calc() {
+    public void calc() {
         calcPrintAreaSize();
         calcProductionsOnSheet();
     }

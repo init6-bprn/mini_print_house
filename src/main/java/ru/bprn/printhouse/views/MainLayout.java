@@ -19,6 +19,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import ru.bprn.printhouse.data.entity.User;
+import ru.bprn.printhouse.data.products.ProductsView;
 import ru.bprn.printhouse.security.AuthenticatedUser;
 import ru.bprn.printhouse.views.about.AboutView;
 import ru.bprn.printhouse.views.dictionary.*;
@@ -136,6 +137,14 @@ public class MainLayout extends AppLayout {
 
         if (accessChecker.hasAccess(AboutView.class))
             nav.addItem(new SideNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
+
+        dick = new SideNavItem("Продукты");
+        //if (accessChecker.hasAccess(TemplateView.class))
+        //    dick.addItem(new SideNavItem("Шаблоны работ", TemplateView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+
+        if (accessChecker.hasAccess(ProductsView.class))
+            dick.addItem(new SideNavItem("Products", ProductsView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        nav.addItem(dick);
 
         return nav;
     }
