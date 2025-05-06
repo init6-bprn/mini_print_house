@@ -25,6 +25,11 @@ public class WorkFlow {
     @NotBlank
     private String name = "Стандартное название";
 
+    private String description = "";
+
+    @NotBlank
+    private String type = "";
+
     @Column(columnDefinition = "mediumtext")
     private String strJSON = "";
 

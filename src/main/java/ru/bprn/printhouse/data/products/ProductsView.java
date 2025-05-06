@@ -44,7 +44,7 @@ public class ProductsView extends HorizontalLayout {
     private Component addCard(WorkFlow workFlow) {
         var card = new Card();
         card.setTitle(new Div(workFlow.getName()));
-        card.add(workFlow.getStrJSON());
+        card.add(workFlow.getDescription());
 
         Button bookVacationButton = new Button("Заказать");
         bookVacationButton.addClickListener(buttonClickEvent -> {
@@ -66,14 +66,8 @@ public class ProductsView extends HorizontalLayout {
     private VerticalLayout getProductLayout(WorkFlow wf) {
         var vl = new VerticalLayout();
         var list = JSONToObjectsHelper.getListOfObjects(wf.getStrJSON());
-        for (Object obj: list) {
-            switch (obj) {
-                case DigitalPrinting dp -> {
-                    vl.add (new OneSheetDigitalPrintingCalculateWorkView(dp));
-                }
-                default -> throw new IllegalStateException("Unexpected value: " + obj);
-            }
-        }
+
+        if (wf.getType().equals(DigitalPrinting.class.getSimpleName())) new OneSheetDigitalPrintingCalculateWorkView(list);
 
         return vl;
     }

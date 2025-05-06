@@ -7,6 +7,7 @@ import org.hibernate.proxy.HibernateProxy;
 import java.util.Objects;
 
 @Entity
+@Table(name = "variables_for_main_works")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,10 +15,11 @@ import java.util.Objects;
 @ToString
 public class VariablesForMainWorks {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
-    @EqualsAndHashCode.Include
+    //@EqualsAndHashCode.Include
     private Long id;
+
     private String clazz;
     private String name;
     private String description;

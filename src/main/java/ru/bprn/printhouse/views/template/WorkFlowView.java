@@ -110,7 +110,7 @@ public class WorkFlowView extends SplitLayout {
             "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         var hl = new HorizontalLayout();
-        var createButton = new Button(VaadinIcon.PLUS.create(), _ -> {
+        var createButton = new Button(VaadinIcon.PLUS.create(), event -> {
             this.getPrimaryComponent().setVisible(false);
             this.getSecondaryComponent().getElement().setEnabled(true);
             this.setSplitterPosition(0);
@@ -119,7 +119,7 @@ public class WorkFlowView extends SplitLayout {
         });
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        var updateButton  = new Button(VaadinIcon.EDIT.create(), _ -> {
+        var updateButton  = new Button(VaadinIcon.EDIT.create(), event -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 startTab.getTemplateBinder().setBean(optTemp.get());
@@ -133,7 +133,7 @@ public class WorkFlowView extends SplitLayout {
         });
         updateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
-        var duplicateButton = new Button(VaadinIcon.COPY_O.create(), _ -> {
+        var duplicateButton = new Button(VaadinIcon.COPY_O.create(), event -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 var issueTemplate = optTemp.get();
@@ -167,7 +167,7 @@ public class WorkFlowView extends SplitLayout {
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
-        var deleteButton = new Button(VaadinIcon.CLOSE.create(), _ -> {
+        var deleteButton = new Button(VaadinIcon.CLOSE.create(), event -> {
             var optTemp = templateGrid.getSelectedItems().stream().findFirst();
             if (optTemp.isPresent()) {
                 dialog.open();
@@ -261,18 +261,21 @@ public class WorkFlowView extends SplitLayout {
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> {
                 var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
                         costOfPrintSizeLeafAndColorService, formulasService, standartSizeService,gapService);
-                digitalPrinting.getTemplateBinder().setBean(new DigitalPrinting());
+                var dp = new DigitalPrinting();
+                dp.setVariables(populateVariables(dp.getClass().getSimpleName()));
+                digitalPrinting.getTemplateBinder().setBean(dp);
                 tabSheet.add(createTab("Цифровая печать"), digitalPrinting);
-                addDescriptionToName("Цифровая печать");
+                addDescriptionToName("Цифровая печать", DigitalPrinting.class.getSimpleName());
+
             }
         );
         subMenu.addItem("Резка", menuItemClickEvent -> {
             tabSheet.add(createTab("Резка"), new VerticalLayout());
-            addDescriptionToName("Резка");
+            addDescriptionToName("Резка", "Cuting");
         });
         subMenu.addItem("Верстка", menuItemClickEvent -> {
             tabSheet.add(createTab("Верстка"), new VerticalLayout());
-            addDescriptionToName("Верстка");
+            addDescriptionToName("Верстка", "DTP");
         });
         tabSheet.setPrefixComponent(menuBar);
 
@@ -280,11 +283,13 @@ public class WorkFlowView extends SplitLayout {
         return vel;
     }
 
-    private void addDescriptionToName (String str) {
+    private void addDescriptionToName (String str, String type) {
+        var bean = startTab.getTemplateBinder().getBean();
         if (startTab.getAutoNamed().getValue()) {
-            startTab.getTemplateBinder().getBean().setName(startTab.getTemplateBinder().getBean().getName() + "-"+ str);
+            bean.setName(bean.getName() + "-"+ str);
             startTab.getTemplateBinder().refreshFields();
         }
+        bean.setType(type);
     }
 
     private Tab createTab (String str){
@@ -399,7 +404,7 @@ public class WorkFlowView extends SplitLayout {
                 case DigitalPrinting dp -> {
                     var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
                             costOfPrintSizeLeafAndColorService, formulasService, standartSizeService, gapService);
-                    dp.setVariables(populateVariables(dp.getClass().getSimpleName()));
+                    //dp.setVariables(populateVariables(dp.getClass().getSimpleName()));
                     tabComp.getTemplateBinder().setBean(dp);
                     tabSheet.add(createTab("Цифровая печать"), tabComp);
                 }

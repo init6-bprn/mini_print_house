@@ -7,47 +7,54 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.Material;
 import ru.bprn.printhouse.data.entity.QuantityColors;
+import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.List;
 
 public class OneSheetDigitalPrintingCalculateWorkView extends VerticalLayout {
     private DigitalPrinting digitalPrinting;
 
-    public OneSheetDigitalPrintingCalculateWorkView(DigitalPrinting digitalPrinting) {
+    public OneSheetDigitalPrintingCalculateWorkView(List<Object> digitalPrinting) {
         super();
-        this.digitalPrinting = digitalPrinting;
-        add(addComponentView());
-        var quantity = new IntegerField("Тираж:", t->{
-            digitalPrinting.setQuantityOfProduct(t.getValue());
-            digitalPrinting.calc();
-            calculate();
-        });
-        add(quantity);
+        this.digitalPrinting = JSONToObjectsHelper.setBeanFromJSONStr(digitalPrinting, DigitalPrinting.class);
+        if (this.digitalPrinting != null) {
+            add(addComponentView());
+            var quantity = new IntegerField("Тираж:", t -> {
+                this.digitalPrinting.setQuantityOfProduct(t.getValue());
+                this.digitalPrinting.calc();
+                calculate();
+            });
+            add(quantity);
+        } else {
+            Notification.show("Что-то пошло не так...");
+        }
+
 
     }
 
     private VerticalLayout addComponentView() {
         var vl = new VerticalLayout();
 
-        var colorFrontSelector = new Select<QuantityColors>("", selectColor -> {
+        var colorFrontSelector = new Select<QuantityColors>("Цветность лицо:", selectColor -> {
             digitalPrinting.setQuantityColorsCover(selectColor.getValue());
             calculate();
         });
         colorFrontSelector.setItems(digitalPrinting.getPrintMashine().getQuantityColors());
         colorFrontSelector.setValue(digitalPrinting.getQuantityColorsCover());
 
-        var colorBackSelector = new Select<QuantityColors>("", selectColor -> {
+        var colorBackSelector = new Select<QuantityColors>("Цветность оборот:", selectColor -> {
             digitalPrinting.setQuantityColorsBack(selectColor.getValue());
             calculate();
         });
         colorBackSelector.setItems(digitalPrinting.getPrintMashine().getQuantityColors());
         colorBackSelector.setValue(digitalPrinting.getQuantityColorsBack());
 
-        var selectMaterial = new Select<Material>("", select ->{
+        var selectMaterial = new Select<Material>("Материал:", select ->{
             digitalPrinting.setDefaultMaterial(select.getValue());
             calculate();
         });

@@ -44,6 +44,16 @@ public class StartTabOfWorkFlowVerticalLayout extends VerticalLayout implements 
         setSizeUndefined();
 
         addNameOfTemplate();
+
+        addDescription();
+    }
+
+    private void addDescription(){
+        var description = new TextField("Добавьте описание продукта:");
+        description.setSizeFull();
+        description.setValueChangeMode(ValueChangeMode.ON_BLUR);
+        templateBinder.bind(description, WorkFlow::getDescription, WorkFlow::setDescription);
+        this.add(description);
     }
 
     private  void addNameOfTemplate() {

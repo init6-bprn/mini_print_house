@@ -14,6 +14,7 @@ import ru.bprn.printhouse.views.template.HasFormula;
 import ru.bprn.printhouse.views.template.HasMaterial;
 import ru.bprn.printhouse.views.template.WorkChain;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -77,7 +78,7 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
 // -----  Вспомогательные элементы для расчета ------
     // ----- Массив переменных для расчета формул работ, материалов.
     @JsonIgnore
-    private Map<String, Number> variables;
+    private Map<String, Number> variables = new HashMap<>();
 
     @PositiveOrZero
     private Integer quantityOfProduct = 0;
@@ -170,13 +171,14 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
 
     public void setProductSizeX(@Positive Double productSizeX) {
         this.productSizeX = productSizeX;
-        variables.put("productSizeX", productSizeX.longValue());
+        variables.put("productSizeX", productSizeX);
         calcFullProductSize();
     }
 
     public void setProductSizeY(@Positive Double productSizeY) {
         this.productSizeY = productSizeY;
-        variables.put("productSizeY", productSizeY.longValue());
+
+        variables.put("productSizeY", productSizeY);
         calcFullProductSize();
     }
 

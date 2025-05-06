@@ -66,6 +66,14 @@ public class JSONToObjectsHelper {
         }
     }
 
+    public static <T> T setBeanFromJSONStr(List<Object> list, Class<T> clazz) {
+        T t = null;
+        for (Object o : list) {
+            t = clazz.isInstance(o) ? clazz.cast(o) : null;
+        }
+        return t;
+    }
+
     public static <T> List<T> getListOfObjReqType(String str, Class<T> clazz) {
         var list = getListOfObjects(str).stream().filter(clazz::isInstance).toList();
         var output = new LinkedList<T>();
