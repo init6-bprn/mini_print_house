@@ -3,10 +3,9 @@ package ru.bprn.printhouse.data.products;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.card.Card;
-import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -23,6 +22,7 @@ import ru.bprn.printhouse.views.MainLayout;
 public class ProductsView extends HorizontalLayout {
 
     private final WorkFlowService workFlowService;
+    private final Dialog dialog = new Dialog();
 
     public ProductsView(WorkFlowService workFlowService){
         super();
@@ -48,10 +48,11 @@ public class ProductsView extends HorizontalLayout {
 
         Button bookVacationButton = new Button("Заказать");
         bookVacationButton.addClickListener(buttonClickEvent -> {
-            var form = new FormLayout();
-            form.setSizeFull();
-            form.add(getProductLayout(workFlow));
-            workFlow.getName();
+            var form = new OneSheetDigitalPrintingCalculateWorkView(JSONToObjectsHelper.getListOfObjects(workFlow.getStrJSON()));
+            form.setHeight("50%");
+            form.setWidth("50%");
+            form.setModal(true);
+            form.open();
         });
         card.addToFooter(bookVacationButton);
 
@@ -63,12 +64,11 @@ public class ProductsView extends HorizontalLayout {
         return card;
     }
 
-    private VerticalLayout getProductLayout(WorkFlow wf) {
-        var vl = new VerticalLayout();
+    private Component getProductLayout(WorkFlow wf) {
         var list = JSONToObjectsHelper.getListOfObjects(wf.getStrJSON());
 
-        if (wf.getType().equals(DigitalPrinting.class.getSimpleName())) new OneSheetDigitalPrintingCalculateWorkView(list);
+        if (wf.getType().equals(DigitalPrinting.class.getSimpleName())) return new OneSheetDigitalPrintingCalculateWorkView(list);
 
-        return vl;
+        return null;
     }
 }

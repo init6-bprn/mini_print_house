@@ -14,7 +14,6 @@ import ru.bprn.printhouse.views.template.HasFormula;
 import ru.bprn.printhouse.views.template.HasMaterial;
 import ru.bprn.printhouse.views.template.WorkChain;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,6 +33,8 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
     @GeneratedValue(strategy = GenerationType.UUID)
     @EqualsAndHashCode.Include
     private Long id;
+
+    private Map<String, Number> variables;// = new HashMap<>();
 
     private String name;
 
@@ -77,8 +78,8 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
 
 // -----  Вспомогательные элементы для расчета ------
     // ----- Массив переменных для расчета формул работ, материалов.
-    @JsonIgnore
-    private Map<String, Number> variables = new HashMap<>();
+
+
 
     @PositiveOrZero
     private Integer quantityOfProduct = 0;
@@ -90,54 +91,57 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
     }
 
     private void calcFullProductSize(){
-        double x = 0;
-        double y = 0;
-        if (bleed!=null) {
-            x += bleed.getGapLeft() + bleed.getGapRight();
-            y += bleed.getGapBottom() + bleed.getGapTop();
+        if (variables!= null) {
+            double x = 0;
+            double y = 0;
+            if (bleed != null) {
+                x += bleed.getGapLeft() + bleed.getGapRight();
+                y += bleed.getGapBottom() + bleed.getGapTop();
+            }
+            variables.put("fullProductSizeX", variables.get("productSizeX").doubleValue() + x);
+            variables.put("fullProductSizeY", variables.get("productSizeY").doubleValue() + y);
         }
-        variables.put("fullProductSizeX", variables.get("productSizeX").doubleValue() + x);
-        variables.put("fullProductSizeY", variables.get("productSizeY").doubleValue() + y);
     }
 
     private void calcPrintAreaSize(){
-        if (defaultMaterial!=null) {
+        if (defaultMaterial!=null & variables!= null)  {
             variables.put("printAreaSizeX", variables.get("printSheetSizeX").doubleValue() - margins.getGapRight() - margins.getGapLeft());
             variables.put("printAreaSizeY", variables.get("printSheetSizeY").doubleValue() - margins.getGapTop() - margins.getGapBottom());
         }
     }
 
     private void calcProductionsOnSheet(){
-        int[] mass = {1,1,1};
+        if (variables!= null) {
+            int[] mass = {1, 1, 1};
 
-        var mass1 = getQuantity(variables.get("printAreaSizeX").doubleValue(), variables.get("printAreaSizeY").doubleValue(), variables.get("fullProductSizeX").doubleValue(), variables.get("fullProductSizeY").doubleValue());
-        var mass2 = getQuantity(variables.get("printAreaSizeX").doubleValue(), variables.get("printAreaSizeY").doubleValue(), variables.get("fullProductSizeY").doubleValue(), variables.get("fullProductSizeX").doubleValue());
+            var mass1 = getQuantity(variables.get("printAreaSizeX").doubleValue(), variables.get("printAreaSizeY").doubleValue(), variables.get("fullProductSizeX").doubleValue(), variables.get("fullProductSizeY").doubleValue());
+            var mass2 = getQuantity(variables.get("printAreaSizeX").doubleValue(), variables.get("printAreaSizeY").doubleValue(), variables.get("fullProductSizeY").doubleValue(), variables.get("fullProductSizeX").doubleValue());
 
-        switch (this.orientation) {
-            case "Автоматически":
-                if (mass1[2] >= mass2[2]) mass = mass1;
-                else mass = mass2;
-                break;
-            case "Вертикальная":
-                mass = mass1;
-                break;
-            case "Горизонтальная":
-                mass = mass2;
-                break;
+            switch (this.orientation) {
+                case "Автоматически":
+                    if (mass1[2] >= mass2[2]) mass = mass1;
+                    else mass = mass2;
+                    break;
+                case "Вертикальная":
+                    mass = mass1;
+                    break;
+                case "Горизонтальная":
+                    mass = mass2;
+                    break;
+            }
+
+            int quantity = variables.get("quantityOfProduct").intValue();
+            if (quantity != 0 & mass[2] != 0) {
+                var q = quantity / mass[2];
+                if ((quantity % mass[2]) != 0) q++;
+                q += quantityOfExtraLeaves;
+                variables.put("quantityOfPrintSheets", q);
+            } else variables.put("quantityOfPrintSheets", 0);
+
+            variables.put("rowsOnSheet", mass[0]);
+            variables.put("columnsOnSheet", mass[1]);
+            variables.put("quantityProductionsOnSheet", mass[2]);
         }
-
-        int quantity = variables.get("quantityOfProduct").intValue();
-        if (quantity != 0) {
-            var q = quantity / mass[2];
-            if ((quantity % mass[2]) != 0) q++;
-            q += quantityOfExtraLeaves;
-            variables.put("quantityOfPrintSheets", q);
-        } else variables.put("quantityOfPrintSheets", 0);
-
-        variables.put("rowsOnSheet", mass[0]);
-        variables.put("columnsOnSheet", mass[1]);
-        variables.put("quantityProductionsOnSheet", mass[3]);
-
     }
 
     private int[] getQuantity(double sizeLeafX, double sizeLeafY, double sizeElementX, double sizeElementY) {
@@ -164,22 +168,27 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
 
     public void setDefaultMaterial(Material defaultMaterial) {
         this.defaultMaterial = defaultMaterial;
-        variables.put("printSheetSizeX", (long) defaultMaterial.getSizeOfPrintLeaf().getLength());
-        variables.put("printSheetSizeY", (long) defaultMaterial.getSizeOfPrintLeaf().getWidth());
-        calc();
+        if (variables!=null) {
+            variables.put("printSheetSizeX", (double) defaultMaterial.getSizeOfPrintLeaf().getLength());
+            variables.put("printSheetSizeY", (double) defaultMaterial.getSizeOfPrintLeaf().getWidth());
+            calc();
+        }
     }
 
     public void setProductSizeX(@Positive Double productSizeX) {
         this.productSizeX = productSizeX;
-        variables.put("productSizeX", productSizeX);
-        calcFullProductSize();
+        if (variables!=null) {
+            variables.put("productSizeX", productSizeX);
+            calcFullProductSize();
+        }
     }
 
     public void setProductSizeY(@Positive Double productSizeY) {
         this.productSizeY = productSizeY;
-
-        variables.put("productSizeY", productSizeY);
-        calcFullProductSize();
+        if (variables!=null) {
+            variables.put("productSizeY", productSizeY);
+            calcFullProductSize();
+        }
     }
 
     public void setBleed(Gap bleed) {
@@ -212,6 +221,7 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
     }
 
     @Override
+    @JsonIgnore
     public String getString() {
         return this.name;
     }

@@ -352,7 +352,7 @@ public class WorkFlowView extends SplitLayout {
 
     private void saveBean(ArrayList<String[]> str){
         var wf = startTab.getTemplateBinder().getBean();
-        wf.setStrJSON(addKeyVolumeToMap(str));
+        wf.setStrJSON(JSONToObjectsHelper.unionAllToOneString(str));
         workFlowService.save(wf);
     }
 
@@ -387,15 +387,6 @@ public class WorkFlowView extends SplitLayout {
             }
         }
         return listWorkflow;
-    }
-
-    private String addKeyVolumeToMap(List<String[]> list) {
-        var builder = new StringBuilder();
-        for (String[] str: list) {
-            builder.append(str[0]).append("@").append(str[1]).append("-");
-        }
-        if (!builder.isEmpty()) builder.deleteCharAt(builder.lastIndexOf("-"));
-        return builder.toString();
     }
 
     private void populateTabSheet(List<Object> list) {

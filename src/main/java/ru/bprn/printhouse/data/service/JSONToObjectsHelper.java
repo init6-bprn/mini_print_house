@@ -15,13 +15,25 @@ public class JSONToObjectsHelper {
         var list = new ArrayList<String[]>();
         if (str!= null) {
             if (!str.isBlank()) {
-                String[] arrayStr = str.split("-");
+                String[] arrayStr = str.split("-=+=-");
                 for (String s : arrayStr) {
-                    list.add(s.split("@"));
+                    list.add(s.split("-=@=-"));
                 }
             }
         }
         return list;
+    }
+
+    public static String unionAllToOneString(List<String[]> list) {
+        var builder = new StringBuilder();
+        boolean flag = true;
+
+        for (String[] str: list) {
+            if (flag) flag = false;
+            else builder.append("-=+=-");
+            builder.append(str[0]).append("-=@=-").append(str[1]);
+        }
+        return builder.toString();
     }
 
     // Сопоставляю с именем класса и распарсиваю данные в объект соответствующего класса

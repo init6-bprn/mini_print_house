@@ -83,6 +83,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         hLayout.setAlignItems(Alignment.START);
         var nameField = new TextField("Название цепочки");
         templateBinder.forField(nameField).asRequired().bind(DigitalPrinting::getName, DigitalPrinting::setName);
+        hLayout.add(nameField);
         return hLayout;
     }
 

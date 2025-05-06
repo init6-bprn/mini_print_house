@@ -1,9 +1,12 @@
 package ru.bprn.printhouse.data.calculate;
 
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.TextArea;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.Material;
 import ru.bprn.printhouse.data.entity.QuantityColors;
@@ -16,29 +19,25 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.List;
 
-public class OneSheetDigitalPrintingCalculateWorkView extends VerticalLayout {
+public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
     private DigitalPrinting digitalPrinting;
 
     public OneSheetDigitalPrintingCalculateWorkView(List<Object> digitalPrinting) {
         super();
+        //setSizeFull();
         this.digitalPrinting = JSONToObjectsHelper.setBeanFromJSONStr(digitalPrinting, DigitalPrinting.class);
         if (this.digitalPrinting != null) {
             add(addComponentView());
-            var quantity = new IntegerField("Тираж:", t -> {
-                this.digitalPrinting.setQuantityOfProduct(t.getValue());
-                this.digitalPrinting.calc();
-                calculate();
-            });
-            add(quantity);
-        } else {
+            addFooterComponents();
+        }
+        else {
             Notification.show("Что-то пошло не так...");
         }
-
-
     }
 
-    private VerticalLayout addComponentView() {
-        var vl = new VerticalLayout();
+    private FormLayout addComponentView() {
+        var vl = new FormLayout();
+        //vl.setSizeFull();
 
         var colorFrontSelector = new Select<QuantityColors>("Цветность лицо:", selectColor -> {
             digitalPrinting.setQuantityColorsCover(selectColor.getValue());
@@ -61,12 +60,31 @@ public class OneSheetDigitalPrintingCalculateWorkView extends VerticalLayout {
         selectMaterial.setItems(digitalPrinting.getSelectedMaterials());
         selectMaterial.setValue(digitalPrinting.getDefaultMaterial());
 
-        vl.add(colorFrontSelector,colorBackSelector,selectMaterial);
+        var text = new TextArea("Итоги:");
+        vl.setColspan(text, 2);
+
+        var quantity = new IntegerField("Тираж:", t -> {
+            this.digitalPrinting.setQuantityOfProduct(t.getValue());
+            this.digitalPrinting.calc();
+            text.setValue(calculate());
+
+        });
+
+        vl.add(colorFrontSelector,colorBackSelector,selectMaterial, quantity, text);
 
         return vl;
     }
 
-    private void calculate(){
+    private void addFooterComponents() {
+        var close = new Button("Close", buttonClickEvent -> close());
+        var confirm = new Button("Добавить", buttonClickEvent -> {
+
+        });
+        this.getFooter().add(confirm, close);
+    }
+
+    private String calculate(){
+
         var map = digitalPrinting.getVariables();
         var materialFormula = digitalPrinting.getMaterialFormula();
         map.put("priceOfWork", 5);
@@ -78,6 +96,8 @@ public class OneSheetDigitalPrintingCalculateWorkView extends VerticalLayout {
         var totalMaterial = computeFormula(sb, digitalPrinting.getMaterialFormula().getFormula());
         Double oneProductCoast = roundPrice (digitalPrinting.getQuantityOfProduct(), totalWork+totalMaterial);
         Double total = oneProductCoast * digitalPrinting.getQuantityOfProduct();
+
+        return total.toString();
     }
 
     private Double computeFormula(String mapStr, String formula){
@@ -86,7 +106,7 @@ public class OneSheetDigitalPrintingCalculateWorkView extends VerticalLayout {
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
 
             try {
-                total += (Double) engine.eval(mapStr + ";" + formula+";");
+                total += (Double) engine.eval(mapStr + "; " + formula+";");
             } catch (ScriptException e) {
                 Notification.show("Некорректный расчет!");
                 throw new RuntimeException(e);
