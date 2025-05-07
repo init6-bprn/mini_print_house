@@ -10,8 +10,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.calculate.OneSheetDigitalPrintingCalculateWorkView;
-import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.WorkFlow;
+import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
 import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
 import ru.bprn.printhouse.data.service.WorkFlowService;
 import ru.bprn.printhouse.views.MainLayout;
@@ -22,15 +22,16 @@ import ru.bprn.printhouse.views.MainLayout;
 public class ProductsView extends HorizontalLayout {
 
     private final WorkFlowService workFlowService;
+    private final CostOfPrintSizeLeafAndColorService costService;
     private final Dialog dialog = new Dialog();
 
-    public ProductsView(WorkFlowService workFlowService){
+    public ProductsView(WorkFlowService workFlowService, CostOfPrintSizeLeafAndColorService costService){
         super();
+        this.costService = costService;
         this.workFlowService = workFlowService;
         setWrap(true);
         setSizeFull();
         populateLayout();
-
 
     }
 
@@ -46,29 +47,24 @@ public class ProductsView extends HorizontalLayout {
         card.setTitle(new Div(workFlow.getName()));
         card.add(workFlow.getDescription());
 
-        Button bookVacationButton = new Button("Заказать");
-        bookVacationButton.addClickListener(buttonClickEvent -> {
-            var form = new OneSheetDigitalPrintingCalculateWorkView(JSONToObjectsHelper.getListOfObjects(workFlow.getStrJSON()));
+        Button buyButton = new Button("Заказать");
+        buyButton.addClickListener(buttonClickEvent -> {
+            var form = new OneSheetDigitalPrintingCalculateWorkView(
+                    JSONToObjectsHelper.getListOfObjects(
+                            workFlow.getStrJSON()), costService, "Заказ продукта "+workFlow.getName());
             form.setHeight("50%");
             form.setWidth("50%");
             form.setModal(true);
             form.open();
         });
-        card.addToFooter(bookVacationButton);
+        card.addToFooter(buyButton);
 
 
         card.setHeight("240px");
-        card.setMaxWidth("300px");
+        card.setMaxWidth("200px");
         add(card);
 
         return card;
     }
 
-    private Component getProductLayout(WorkFlow wf) {
-        var list = JSONToObjectsHelper.getListOfObjects(wf.getStrJSON());
-
-        if (wf.getType().equals(DigitalPrinting.class.getSimpleName())) return new OneSheetDigitalPrintingCalculateWorkView(list);
-
-        return null;
-    }
 }

@@ -10,6 +10,7 @@ import com.vaadin.flow.component.textfield.TextArea;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.Material;
 import ru.bprn.printhouse.data.entity.QuantityColors;
+import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
 import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
 
 import javax.script.ScriptEngine;
@@ -20,12 +21,13 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
-    private DigitalPrinting digitalPrinting;
+    private final DigitalPrinting digitalPrinting;
+    private final CostOfPrintSizeLeafAndColorService costService;
 
-    public OneSheetDigitalPrintingCalculateWorkView(List<Object> digitalPrinting) {
-        super();
-        //setSizeFull();
+    public OneSheetDigitalPrintingCalculateWorkView(List<Object> digitalPrinting, CostOfPrintSizeLeafAndColorService costService, String str) {
+        super(str);
         this.digitalPrinting = JSONToObjectsHelper.setBeanFromJSONStr(digitalPrinting, DigitalPrinting.class);
+        this.costService = costService;
         if (this.digitalPrinting != null) {
             add(addComponentView());
             addFooterComponents();
@@ -37,38 +39,43 @@ public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
 
     private FormLayout addComponentView() {
         var vl = new FormLayout();
-        //vl.setSizeFull();
+        var text = new TextArea("Итоги:");
+        vl.setColspan(text, 2);
+
 
         var colorFrontSelector = new Select<QuantityColors>("Цветность лицо:", selectColor -> {
             digitalPrinting.setQuantityColorsCover(selectColor.getValue());
-            calculate();
+            text.setValue(calculate());
         });
         colorFrontSelector.setItems(digitalPrinting.getPrintMashine().getQuantityColors());
         colorFrontSelector.setValue(digitalPrinting.getQuantityColorsCover());
 
         var colorBackSelector = new Select<QuantityColors>("Цветность оборот:", selectColor -> {
             digitalPrinting.setQuantityColorsBack(selectColor.getValue());
-            calculate();
+            text.setValue(calculate());
         });
         colorBackSelector.setItems(digitalPrinting.getPrintMashine().getQuantityColors());
         colorBackSelector.setValue(digitalPrinting.getQuantityColorsBack());
 
         var selectMaterial = new Select<Material>("Материал:", select ->{
             digitalPrinting.setDefaultMaterial(select.getValue());
-            calculate();
+            text.setValue(calculate());
         });
         selectMaterial.setItems(digitalPrinting.getSelectedMaterials());
         selectMaterial.setValue(digitalPrinting.getDefaultMaterial());
 
-        var text = new TextArea("Итоги:");
-        vl.setColspan(text, 2);
+
 
         var quantity = new IntegerField("Тираж:", t -> {
             this.digitalPrinting.setQuantityOfProduct(t.getValue());
-            this.digitalPrinting.calc();
+            digitalPrinting.getVariables().put("quantityOfProduct", t.getValue());
+            digitalPrinting.calc();
             text.setValue(calculate());
 
         });
+        quantity.setMin(1);
+        quantity.setMax(100000);
+        quantity.setValue(1);
 
         vl.add(colorFrontSelector,colorBackSelector,selectMaterial, quantity, text);
 
@@ -87,29 +94,45 @@ public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
 
         var map = digitalPrinting.getVariables();
         var materialFormula = digitalPrinting.getMaterialFormula();
-        map.put("priceOfWork", 5);
-        map.put("priceOfMaterial", digitalPrinting.getMaterial().getPriceOfLeaf());
+        setPrices();
         String sb = map.entrySet().toString();
+
         sb = sb.replace(",", ";");
         sb = sb.substring(1, sb.length()-1);
+        sb = sb + "; ";
+
         var totalWork = computeFormula(sb, digitalPrinting.getFormula().getFormula());
         var totalMaterial = computeFormula(sb, digitalPrinting.getMaterialFormula().getFormula());
         Double oneProductCoast = roundPrice (digitalPrinting.getQuantityOfProduct(), totalWork+totalMaterial);
         Double total = oneProductCoast * digitalPrinting.getQuantityOfProduct();
 
-        return total.toString();
+        return "СЕБЕСТОИМОСТЬ тиража: "+total.toString();
     }
 
-    private Double computeFormula(String mapStr, String formula){
+    private void setPrices() {
+        digitalPrinting.getVariables().put("OSDP_MaterialPrice", digitalPrinting.getMaterial().getPriceOfLeaf());
+
+        Double d = costService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf(digitalPrinting.getPrintMashine(),
+                digitalPrinting.getQuantityColorsCover(),
+                digitalPrinting.getDefaultMaterial().getSizeOfPrintLeaf()).getCoast();
+        digitalPrinting.getVariables().put("OSDP_FrontPrice", d);
+
+        d = costService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf(digitalPrinting.getPrintMashine(),
+                digitalPrinting.getQuantityColorsBack(),
+                digitalPrinting.getDefaultMaterial().getSizeOfPrintLeaf()).getCoast();
+        digitalPrinting.getVariables().put("OSDP_BackPrice", d);
+    }
+
+    private Double computeFormula(String variableStr, String formulaStr){
         double total = 0;
 
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
 
             try {
-                total += (Double) engine.eval(mapStr + "; " + formula+";");
+                total += (Double) engine.eval(variableStr+"; "+formulaStr+";");
             } catch (ScriptException e) {
                 Notification.show("Некорректный расчет!");
-                throw new RuntimeException(e);
+                //throw new RuntimeException(e);
             }
         return total;
 
@@ -123,6 +146,10 @@ public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
         if (50 <= quantity & quantity < 100) df.applyPattern("#.#");
         if (quantity >= 100) df.applyPattern("#.##");
 
-        return Double.valueOf(df.format(total/quantity));
+        String str = df.format(total/quantity);
+        str = str.replace("," , ".");
+
+        if (quantity!=0) return Double.parseDouble(str);
+        else return 0d;
     }
 }

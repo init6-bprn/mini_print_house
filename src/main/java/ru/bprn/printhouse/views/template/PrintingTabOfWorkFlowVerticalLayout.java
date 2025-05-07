@@ -183,7 +183,13 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         templateBinder.forField(materialSelect).asRequired().bind(DigitalPrinting::getDefaultMaterial, DigitalPrinting::setDefaultMaterial);
         templateBinder.forField(dialog.getGrid().asMultiSelect()).bind(DigitalPrinting::getMaterials, DigitalPrinting::setMaterials);
 
-        add(new HorizontalLayout(Alignment.BASELINE, button, materialSelect));
+        var materialFormula = new Select<Formulas>();
+        materialFormula.setLabel("Формула расчета материала");
+        materialFormula.setItems(formulasService.findAll());
+        materialFormula.setEmptySelectionAllowed(false);
+        templateBinder.forField(materialFormula).asRequired().bind(DigitalPrinting::getMaterialFormula, DigitalPrinting::setMaterialFormula);
+
+        add(new HorizontalLayout(Alignment.BASELINE, button, materialSelect, materialFormula));
     }
 
     private <T> void comboBoxViewFirstElement(Select<T> combo) {
