@@ -12,7 +12,7 @@ import java.util.List;
 @Service
 public class CostOfPrintSizeLeafAndColorService {
 
-    private CostOfPrintSizeLeafAndColorRepository costOfPrintSizeLeafAndColorRepository;
+    private final CostOfPrintSizeLeafAndColorRepository costOfPrintSizeLeafAndColorRepository;
 
     public CostOfPrintSizeLeafAndColorService (CostOfPrintSizeLeafAndColorRepository costOfPrintSizeLeafAndColorRepository) {
         this.costOfPrintSizeLeafAndColorRepository = costOfPrintSizeLeafAndColorRepository;

@@ -106,6 +106,12 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(VariablesForMainWorksDictionary.class))
             dick.addItem(new SideNavItem("Переменные для работ", VariablesForMainWorksDictionary.class, VaadinIcon.RECORDS.create()));
 
+        if (accessChecker.hasAccess(PriceOfMaterialDictionary.class))
+            dick.addItem(new SideNavItem("Стоимость материалов", PriceOfMaterialDictionary.class, VaadinIcon.RECORDS.create()));
+
+        if (accessChecker.hasAccess(TimeOfDigitalPrintOperationDictionary.class))
+            dick.addItem(new SideNavItem("Скорость печати на разных материалах", TimeOfDigitalPrintOperationDictionary.class, VaadinIcon.RECORDS.create()));
+
         nav.addItem(dick);
 
         dick = new SideNavItem("Оборудование");

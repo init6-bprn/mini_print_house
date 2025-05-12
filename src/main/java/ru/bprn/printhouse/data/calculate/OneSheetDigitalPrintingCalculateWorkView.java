@@ -7,15 +7,20 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.Material;
 import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
 import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
+import ru.bprn.printhouse.data.service.PriceOfMaterialService;
+import ru.bprn.printhouse.data.service.PrintSpeedMaterialDensityService;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.List;
@@ -23,11 +28,19 @@ import java.util.List;
 public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
     private final DigitalPrinting digitalPrinting;
     private final CostOfPrintSizeLeafAndColorService costService;
+    private final PriceOfMaterialService materialService;
+    private final PrintSpeedMaterialDensityService materialDensityService;
 
-    public OneSheetDigitalPrintingCalculateWorkView(List<Object> digitalPrinting, CostOfPrintSizeLeafAndColorService costService, String str) {
+    public OneSheetDigitalPrintingCalculateWorkView(List<Object> digitalPrinting,
+                                                    CostOfPrintSizeLeafAndColorService costService,
+                                                    PriceOfMaterialService priceOfMaterialService,
+                                                    PrintSpeedMaterialDensityService materialDensityService,
+                                                    String str) {
         super(str);
         this.digitalPrinting = JSONToObjectsHelper.setBeanFromJSONStr(digitalPrinting, DigitalPrinting.class);
         this.costService = costService;
+        this.materialService = priceOfMaterialService;
+        this.materialDensityService = materialDensityService;
         if (this.digitalPrinting != null) {
             add(addComponentView());
             addFooterComponents();
@@ -41,6 +54,8 @@ public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
         var vl = new FormLayout();
         var text = new TextArea("Итоги:");
         vl.setColspan(text, 2);
+        BigDecimal b = new BigDecimal(0);
+
 
 
         var colorFrontSelector = new Select<QuantityColors>("Цветность лицо:", selectColor -> {
@@ -101,35 +116,69 @@ public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
         sb = sb.substring(1, sb.length()-1);
         sb = sb + "; ";
 
-        var totalWork = computeFormula(sb, digitalPrinting.getFormula().getFormula());
-        var totalMaterial = computeFormula(sb, digitalPrinting.getMaterialFormula().getFormula());
-        Double oneProductCoast = roundPrice (digitalPrinting.getQuantityOfProduct(), totalWork+totalMaterial);
-        Double total = oneProductCoast * digitalPrinting.getQuantityOfProduct();
+        double totalWork = computeFormula(sb, digitalPrinting.getFormula().getFormula());
+        double totalMaterial = computeFormula(sb, digitalPrinting.getMaterialFormula().getFormula());
+        double totalEmployer = computeFormula(sb,
+                digitalPrinting.getVariables().get("OSDP_EmployerPrice").toString()
+                + "*"+digitalPrinting.getVariables().get("quantityOfPrintSheets").toString());
+        int oneProductCost = roundHalfUp((int) (totalWork + totalMaterial + totalEmployer), digitalPrinting.getQuantityOfProduct());
+        int total = oneProductCost * digitalPrinting.getQuantityOfProduct();
 
-        return "СЕБЕСТОИМОСТЬ тиража: "+total.toString();
+        return "СЕБЕСТОИМОСТЬ работ: "+ totalWork/100
+                +"; СЕБЕСТОИМОСТЬ материала: "+ totalMaterial/100
+                +"; СЕБЕСТОИМОСТЬ времени: "+ totalEmployer/100
+                +"; СЕБЕСТОИМОСТЬ тиража: "+precisionPrice(total);
+    }
+
+    private int roundHalfUp(int dividend, int divisor) {
+        if (divisor>0) {
+            int quotient = dividend / divisor;
+            int remainder = dividend % divisor;
+            if (divisor <= remainder * 2) quotient++;
+            return quotient;
+        }
+        else return 0;
     }
 
     private void setPrices() {
-        digitalPrinting.getVariables().put("OSDP_MaterialPrice", digitalPrinting.getMaterial().getPriceOfLeaf());
 
-        Double d = costService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf(digitalPrinting.getPrintMashine(),
+        //Цена единицы материала
+        digitalPrinting.getVariables().put("OSDP_MaterialPrice",
+                (materialService.find(digitalPrinting.getMaterial()).getPrice()));
+
+        //Цена печатного клика лица
+        int d = costService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf(digitalPrinting.getPrintMashine(),
                 digitalPrinting.getQuantityColorsCover(),
-                digitalPrinting.getDefaultMaterial().getSizeOfPrintLeaf()).getCoast();
+                digitalPrinting.getDefaultMaterial().getSizeOfPrintLeaf()).getCost();
         digitalPrinting.getVariables().put("OSDP_FrontPrice", d);
 
+        //Цена печатного клика оборота
         d = costService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf(digitalPrinting.getPrintMashine(),
                 digitalPrinting.getQuantityColorsBack(),
-                digitalPrinting.getDefaultMaterial().getSizeOfPrintLeaf()).getCoast();
+                digitalPrinting.getDefaultMaterial().getSizeOfPrintLeaf()).getCost();
         digitalPrinting.getVariables().put("OSDP_BackPrice", d);
+
+        //Цена единицы работы (время работы печатника на 1 клик)
+        var priceForSec = 50;
+
+        var priceOneOperation = priceForSec * materialDensityService.findTimeOfOperation(digitalPrinting.getPrintMashine(),
+                digitalPrinting.getDefaultMaterial().getThickness(), digitalPrinting.getDefaultMaterial().getSizeOfPrintLeaf());
+        digitalPrinting.getVariables().put("OSDP_EmployerPrice",  (double) priceOneOperation);
+        int i = 0;
+        if (digitalPrinting.getVariables().get("OSDP_FrontPrice").intValue() > 0) i++;
+        if (digitalPrinting.getVariables().get("OSDP_BackPrice").intValue() > 0) i++;
+        digitalPrinting.getVariables().put("OSDP_EmployerPrice", digitalPrinting.getVariables().get("OSDP_EmployerPrice").doubleValue()*i);
+
     }
 
-    private Double computeFormula(String variableStr, String formulaStr){
+    private double computeFormula(String variableStr, String formulaStr){
         double total = 0;
 
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
 
             try {
-                total += (Double) engine.eval(variableStr+"; "+formulaStr+";");
+
+                total += (double) engine.eval(variableStr+"; "+formulaStr+";");
             } catch (ScriptException e) {
                 Notification.show("Некорректный расчет!");
                 //throw new RuntimeException(e);
@@ -138,18 +187,15 @@ public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
 
     }
 
-    private Double roundPrice(Integer quantity, Double total) {
+    private String precisionPrice(int quantity) {
         DecimalFormat df = new DecimalFormat();
         df.setRoundingMode(RoundingMode.HALF_UP);
 
-        if (quantity < 50) df.applyPattern("#");
-        if (50 <= quantity & quantity < 100) df.applyPattern("#.#");
-        if (quantity >= 100) df.applyPattern("#.##");
+        // В рубли из копеек
+        if (quantity <= 99) df.applyPattern("#");
+        if (100 <= quantity & quantity < 1000) df.applyPattern("#.#");
+        if (quantity >= 1000) df.applyPattern("#.##");
 
-        String str = df.format(total/quantity);
-        str = str.replace("," , ".");
-
-        if (quantity!=0) return Double.parseDouble(str);
-        else return 0d;
+       return df.format(quantity/100d);
     }
 }

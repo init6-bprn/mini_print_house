@@ -20,12 +20,13 @@ import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @UIScope
 @AnonymousAllowed
 public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
-        implements HasBinder, ExtraLeaves, Price {
+        implements HasBinder, ExtraLeaves {
 
     private final PrintMashineService printerService;
     private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
@@ -291,42 +292,6 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     @Override
     public int getExtraLeaves() {
         return 0; //templateBinder.getBean().getQuantityOfExtraLeaves();
-    }
-
-    @Override
-    public double getPriceOfOperation() {
-        double total = .0;
-        CostOfPrintSizeLeafAndColor costCover = costOfPrintSizeLeafAndColorService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf
-                (templateBinder.getBean().getPrintMashine(),
-                        templateBinder.getBean().getQuantityColorsCover(),
-                        templateBinder.getBean().getDefaultMaterial().getSizeOfPrintLeaf());
-        if (costCover != null) total += costCover.getCoast();
-        CostOfPrintSizeLeafAndColor costBack = costOfPrintSizeLeafAndColorService.findByPrintMashineAndQuantityColorsSizeOfPrintLeaf
-                (templateBinder.getBean().getPrintMashine(),
-                        templateBinder.getBean().getQuantityColorsBack(),
-                        templateBinder.getBean().getDefaultMaterial().getSizeOfPrintLeaf());
-        if (costBack!=null) total += costBack.getCoast();
-    return total;
-    }
-
-    @Override
-    public double getPriceOfWork() {
-        return 0;
-    }
-
-    @Override
-    public double getPriceOfAmmo() {
-        return 0;
-    }
-
-    @Override
-    public int getTimeOfOperationPerSec() {
-        return 0;
-    }
-
-    @Override
-    public String getFormula() {
-        return formulaCombo.getValue().getFormula();
     }
 
     private void postConstruct() {

@@ -3,6 +3,8 @@ package ru.bprn.printhouse.data.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "cost_of_print_size_leaf_and_color")
 @NoArgsConstructor
@@ -26,5 +28,6 @@ public class CostOfPrintSizeLeafAndColor {
     @ManyToOne (fetch = FetchType.EAGER)
     private QuantityColors quantityColors;
 
-    private Double coast;
+    //цена в копейках (минимальная единица)
+    private int cost;
 }

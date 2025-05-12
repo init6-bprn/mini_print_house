@@ -22,21 +22,18 @@ public class PrintSpeedMaterialDensity extends AbstractEntity {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-    @JoinColumn(name = "thickness", nullable = false )
-    private Thickness density;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Thickness thickness;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private SizeOfPrintLeaf sizeOfPrintLeaf;
 
     @NotNull
     @PositiveOrZero
-    @Max(300)
-    private Integer speed = 0;
+    @Max(3600)
+    private int timeOfOperation = 0;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-    @JoinColumn(name = "type_of_material", nullable = false )
-    private TypeOfMaterial typeOfMaterial;
-
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-    @JoinColumn(name = "print_mashine", nullable = false )
+    @ManyToOne(fetch = FetchType.EAGER)
     private PrintMashine printMashine;
 
 }

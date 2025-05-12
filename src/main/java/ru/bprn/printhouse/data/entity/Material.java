@@ -54,7 +54,10 @@ public class Material {
     private Set<PrintMashine> printers = new HashSet<>();
 
     private String measureString = "";
-
+/*
+    @OneToOne(mappedBy = "material")
+    private PriceOfMaterial priceOfMaterial;
+*/
     private Double priceOfLeaf = 0d;
 
     private int quantity = 0;

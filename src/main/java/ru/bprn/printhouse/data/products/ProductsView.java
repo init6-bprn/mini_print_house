@@ -11,9 +11,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.calculate.OneSheetDigitalPrintingCalculateWorkView;
 import ru.bprn.printhouse.data.entity.WorkFlow;
-import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
-import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
-import ru.bprn.printhouse.data.service.WorkFlowService;
+import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
 @PageTitle("Продукты")
@@ -23,12 +21,17 @@ public class ProductsView extends HorizontalLayout {
 
     private final WorkFlowService workFlowService;
     private final CostOfPrintSizeLeafAndColorService costService;
+    private final PriceOfMaterialService materialService;
+    private final PrintSpeedMaterialDensityService speedMaterialDensityService;
     private final Dialog dialog = new Dialog();
 
-    public ProductsView(WorkFlowService workFlowService, CostOfPrintSizeLeafAndColorService costService){
+    public ProductsView(WorkFlowService workFlowService, CostOfPrintSizeLeafAndColorService costService,
+                        PriceOfMaterialService materialService, PrintSpeedMaterialDensityService speedMaterialDensityService){
         super();
         this.costService = costService;
         this.workFlowService = workFlowService;
+        this.materialService = materialService;
+        this.speedMaterialDensityService = speedMaterialDensityService;
         setWrap(true);
         setSizeFull();
         populateLayout();
@@ -51,7 +54,7 @@ public class ProductsView extends HorizontalLayout {
         buyButton.addClickListener(buttonClickEvent -> {
             var form = new OneSheetDigitalPrintingCalculateWorkView(
                     JSONToObjectsHelper.getListOfObjects(
-                            workFlow.getStrJSON()), costService, "Заказ продукта "+workFlow.getName());
+                            workFlow.getStrJSON()), costService, materialService, speedMaterialDensityService, "Заказ продукта "+workFlow.getName());
             form.setHeight("50%");
             form.setWidth("50%");
             form.setModal(true);

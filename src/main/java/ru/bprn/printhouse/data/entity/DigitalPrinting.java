@@ -42,10 +42,10 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
     private StandartSize standartSize;
 
     @Positive
-    private Double productSizeX = 1.0;
+    private Double productSizeX = 1d;
 
     @Positive
-    private Double productSizeY = 1.0;
+    private Double productSizeY = 1d;
 
     private Gap bleed;
 
@@ -61,7 +61,7 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
     private QuantityColors quantityColorsBack;
 
     @PositiveOrZero
-    private Integer quantityOfExtraLeaves = 0;
+    private int quantityOfExtraLeaves = 0;
 
     private Gap margins;
 
@@ -82,7 +82,7 @@ public class DigitalPrinting implements WorkChain, HasMaterial, HasFormula {
 
 
     @PositiveOrZero
-    private Integer quantityOfProduct = 0;
+    private int quantityOfProduct = 0;
 
 
     public void calc() {

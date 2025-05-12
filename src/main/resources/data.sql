@@ -1,36 +1,44 @@
-insert into application_user (version, id, username,name,hashed_password,profile_picture) values (1, '1','user','John Normal','$2a$10$xdbKoM48VySZqVSU/cSlVeJn0Z04XCZ7KZBjUBC00eKo5uLswyOpe','')
-insert into user_roles (user_id, roles) values ('1', 'USER')
-insert into application_user (version, id, username,name,hashed_password,profile_picture) values (1, '2','admin','Emma Powerful','$2a$10$jpLNVNeA7Ar/ZQ2DKbKCm.MuT2ESe.Qop96jipKMq7RaUgCoQedV.','')
-insert into user_roles (user_id, roles) values ('2', 'USER')
-insert into user_roles (user_id, roles) values ('2', 'ADMIN')
-insert into quantity_colors (id, name) values ('1', 'Black only')
-insert into quantity_colors (id, name) values ('2', 'CMYK')
-insert into quantity_colors (id, name) values ('3', 'CMYK + 1 Spot')
-insert into quantity_colors (id, name) values ('4', 'CMYK + 2 Spots')
-insert into quantity_colors (id, name) values ('5', '1 Spot')
-insert into quantity_colors (id, name) values ('6', '2 Spot')
-insert into quantity_colors (id, name) values ('7', '3 Spot')
-insert into quantity_colors (id, name) values ('8', '4 Spot')
-insert into type_of_printer (id, name) values ('1', 'Laser jet')
-insert into type_of_printer (id, name) values ('2', 'Ink jet')
-insert into type_of_printer (id, name) values ('3', 'Duplicator')
-insert into type_of_printer (id, name) values ('4', 'Foil printer')
-insert into type_of_material (id, name) values ('1','Plain Paper')
-insert into type_of_material (id, name) values ('2','Coated Paper')
-insert into type_of_material (id, name) values ('3','Syntetic Paper')
-insert into type_of_material (id, name) values ('4','High quality Paper')
-insert into type_of_material (id, name) values ('5','Laser jet Film')
-insert into type_of_material (id, name) values ('6','Ink jet Paper')
-insert into variables_for_main_works(id,clazz,description,name) values ('1','DigitalPrinting','Тираж изделий','quantityOfProduct')
-insert into variables_for_main_works(id,clazz,description,name) values ('2','DigitalPrinting','Количество печатных листов','quantityOfPrintSheets')
-insert into variables_for_main_works(id,clazz,description,name) values ('3','DigitalPrinting','Длина изделия','productSizeX')
-insert into variables_for_main_works(id,clazz,description,name) values ('4','DigitalPrinting','Ширина изделия','productSizeY')
-insert into variables_for_main_works(id,clazz,description,name) values ('5','DigitalPrinting','Длина изделия с полями','fullProductSizeX')
-insert into variables_for_main_works(id,clazz,description,name) values ('6','DigitalPrinting','Ширина изделия с полями','fullProductSizeY')
-insert into variables_for_main_works(id,clazz,description,name) values ('7','DigitalPrinting','Длина печатного листа','printSheetSizeX')
-insert into variables_for_main_works(id,clazz,description,name) values ('8','DigitalPrinting','Ширина печатного листа','printSheetSizeY')
-insert into variables_for_main_works(id,clazz,description,name) values ('9','DigitalPrinting','Длина печатной области','printAreaSizeX')
-insert into variables_for_main_works(id,clazz,description,name) values ('10','DigitalPrinting','Ширина печатной области','printAreaSizeY')
-insert into variables_for_main_works(id,clazz,description,name) values ('11','DigitalPrinting','Колонок на печатном листе','columnsOnSheet')
-insert into variables_for_main_works(id,clazz,description,name) values ('12','DigitalPrinting','Строк на печатном листе','rowsOnSheet')
-insert into variables_for_main_works(id,clazz,description,name) values ('13','DigitalPrinting','Изделий на печатном листе','quantityProductionsOnSheet')
+insert into application_user (version, id, username,name,hashed_password,profile_picture) values (1, '1','user','John Normal','$2a$10$xdbKoM48VySZqVSU/cSlVeJn0Z04XCZ7KZBjUBC00eKo5uLswyOpe','');
+insert into user_roles (user_id, roles) values ('1', 'USER');
+insert into application_user (version, id, username,name,hashed_password,profile_picture) values (1, '2','admin','Emma Powerful','$2a$10$jpLNVNeA7Ar/ZQ2DKbKCm.MuT2ESe.Qop96jipKMq7RaUgCoQedV.','');
+insert into user_roles (user_id, roles) values ('2', 'USER');
+insert into user_roles (user_id, roles) values ('2', 'ADMIN');
+insert into quantity_colors (id, name) values ('1', 'Не печатаем');
+insert into quantity_colors (id, name) values ('2', 'Цветная печать');
+insert into quantity_colors (id, name) values ('3', 'Печать только черным');
+insert into quantity_colors (id, name) values ('4', 'CMYK + 1 Spot');
+insert into quantity_colors (id, name) values ('5', 'CMYK + 2 Spots');
+insert into quantity_colors (id, name) values ('6', '1 Spot');
+insert into quantity_colors (id, name) values ('7', '2 Spot');
+insert into quantity_colors (id, name) values ('8', '3 Spot');
+insert into quantity_colors (id, name) values ('9', '4 Spot');
+insert into type_of_printer (id, name) values ('1', 'Laser jet');
+insert into type_of_printer (id, name) values ('2', 'Ink jet');
+insert into type_of_printer (id, name) values ('3', 'Duplicator');
+insert into type_of_printer (id, name) values ('4', 'Foil printer');
+insert into type_of_material (id, name) values ('1','Plain Paper');
+insert into type_of_material (id, name) values ('2','Coated Paper');
+insert into type_of_material (id, name) values ('3','Syntetic Paper');
+insert into type_of_material (id, name) values ('4','High quality Paper');
+insert into type_of_material (id, name) values ('5','Laser jet Film');
+insert into type_of_material (id, name) values ('6','Ink jet Paper');
+insert into variables_for_main_works(id,clazz,description,name) values ('1','DigitalPrinting','Тираж изделий','quantityOfProduct');
+insert into variables_for_main_works(id,clazz,description,name) values ('2','DigitalPrinting','Количество печатных листов','quantityOfPrintSheets');
+insert into variables_for_main_works(id,clazz,description,name) values ('3','DigitalPrinting','Длина изделия','productSizeX');
+insert into variables_for_main_works(id,clazz,description,name) values ('4','DigitalPrinting','Ширина изделия','productSizeY');
+insert into variables_for_main_works(id,clazz,description,name) values ('5','DigitalPrinting','Длина изделия с полями','fullProductSizeX');
+insert into variables_for_main_works(id,clazz,description,name) values ('6','DigitalPrinting','Ширина изделия с полями','fullProductSizeY');
+insert into variables_for_main_works(id,clazz,description,name) values ('7','DigitalPrinting','Длина печатного листа','printSheetSizeX');
+insert into variables_for_main_works(id,clazz,description,name) values ('8','DigitalPrinting','Ширина печатного листа','printSheetSizeY');
+insert into variables_for_main_works(id,clazz,description,name) values ('9','DigitalPrinting','Длина печатной области','printAreaSizeX');
+insert into variables_for_main_works(id,clazz,description,name) values ('10','DigitalPrinting','Ширина печатной области','printAreaSizeY');
+insert into variables_for_main_works(id,clazz,description,name) values ('11','DigitalPrinting','Колонок на печатном листе','columnsOnSheet');
+insert into variables_for_main_works(id,clazz,description,name) values ('12','DigitalPrinting','Строк на печатном листе','rowsOnSheet');
+insert into variables_for_main_works(id,clazz,description,name) values ('13','DigitalPrinting','Изделий на печатном листе','quantityProductionsOnSheet');
+insert into variables_for_main_works(id,clazz,description,name) values ('14','DigitalPrinting','Стоимость одного листа печатного материала','OSDP_MaterialPrice');
+insert into variables_for_main_works(id,clazz,description,name) values ('15','DigitalPrinting','Стоимость одного отпечатка на лицевой стороне','OSDP_FrontPrice');
+insert into variables_for_main_works(id,clazz,description,name) values ('16','DigitalPrinting','Стоимость одного отпечатка на оборотной стороне','OSDP_BackPrice');
+insert into variables_for_main_works(id,clazz,description,name) values ('17','DigitalPrinting','Стоимость работы по печати одного отпечатка','OSDP_EmployerPrice');
+INSERT INTO formulas (id,description,formula,name) VALUES (1,'Формула расчета однолистовой цифровой печати','quantityOfPrintSheets*(OSDP_FrontPrice+OSDP_BackPrice)','Формула расчета однолистовой цифровой печати');
+INSERT INTO formulas (id,description,formula,name) VALUES (2,'Формула расчета материала однолистовой цифровой печати','quantityOfPrintSheets*OSDP_MaterialPrice','Формула расчета материала однолистовой цифровой печати');
+INSERT INTO formulas (id,description,formula,name) VALUES (3,'Формула расчета однолистовой цифровой печати','quantityOfPrintSheets*(OSDP_FrontPrice+OSDP_BackPrice)','Guano apes');
