@@ -7,8 +7,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.data.entity.Material;
 import ru.bprn.printhouse.data.entity.QuantityColors;
@@ -177,11 +175,14 @@ public class OneSheetDigitalPrintingCalculateWorkView extends Dialog {
         ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
 
             try {
-
-                total += (double) engine.eval(variableStr+"; "+formulaStr+";");
+                Object obj = engine.eval(variableStr+"; "+formulaStr+";");
+                switch (obj) {
+                    case Double n-> total += (Double) obj;
+                    case Integer n -> total += (Integer) obj;
+                    default -> Notification.show("Некорректный расчет!");
+                }
             } catch (ScriptException e) {
                 Notification.show("Некорректный расчет!");
-                //throw new RuntimeException(e);
             }
         return total;
 

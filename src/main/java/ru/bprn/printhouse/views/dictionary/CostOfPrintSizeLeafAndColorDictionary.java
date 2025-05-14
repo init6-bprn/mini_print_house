@@ -38,12 +38,12 @@ public class CostOfPrintSizeLeafAndColorDictionary extends VerticalLayout{
                 }
             };
             formFactory.setUseBeanValidation(true);
-            formFactory.setVisibleProperties("printMashine", "sizeOfPrintLeaf", "quantityColors", "coast");
+            formFactory.setVisibleProperties("printMashine", "sizeOfPrintLeaf", "quantityColors", "cost");
 
             GridCrud<CostOfPrintSizeLeafAndColor> crud = new GridCrud<>(CostOfPrintSizeLeafAndColor.class, new HorizontalSplitCrudLayout(), formFactory);
             crud.setClickRowToUpdate(true);
             crud.setUpdateOperationVisible(false);
-            crud.getGrid().setColumns("printMashine", "sizeOfPrintLeaf", "quantityColors", "coast");
+            crud.getGrid().setColumns("printMashine", "sizeOfPrintLeaf", "quantityColors", "cost");
 
             crud.getCrudFormFactory().setFieldProvider("printMashine",
                     new ComboBoxProvider<>(printMashineService.findAll()));
