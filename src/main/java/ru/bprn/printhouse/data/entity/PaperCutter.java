@@ -28,47 +28,18 @@ public class PaperCutter {
 
     @NotNull
     @PositiveOrZero
-    private Integer maxSizeX=0;
+    private int maxSizeX=0;
 
     @NotNull
     @PositiveOrZero
-    private Integer maxSizeY=0;
+    private int maxSizeY=0;
 
     @NotNull
     @PositiveOrZero
-    private Integer maxSizeZ=0;
+    private int maxSizeZ=0;
 
     @NotNull
     @PositiveOrZero
-    private Integer gap=10;
-
-    @NotNull
-    @PositiveOrZero
-    private Integer costOfCutter=0;
-
-    @NotNull
-    @PositiveOrZero
-    private Integer cuts=0;
-
-    @NotNull
-    @PositiveOrZero
-    private Integer madeOfCuts=0;
-
-    @NotNull
-    @PositiveOrZero
-    private Integer costOfKnifeSharpening=0;
-
-    @NotNull
-    @PositiveOrZero
-    private Integer cutsToSharpening=0;
-
-    @NotNull
-    @PositiveOrZero
-    private Integer madeOfCutsBeforeSharpening=0;
-
-    @NotNull
-    @PositiveOrZero
-    private Float finalCostOfCut=0f;
-
+    private int minSize = 35;
 
 }

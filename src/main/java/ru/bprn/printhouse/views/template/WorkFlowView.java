@@ -81,8 +81,7 @@ public class WorkFlowView extends SplitLayout {
         this.formulasService = formulasService;
         this.variablesForMainWorksService = variablesForMainWorksService;
 
-        startTab = new StartTabOfWorkFlowVerticalLayout(this.standartSizeService,
-                this.typeOfMaterialService, this.materialService, this.gapService, this.imposeCaseService);
+        startTab = new StartTabOfWorkFlowVerticalLayout();
 
         calc = new ComputeAnyElementsDialog(workFlowService);
 
@@ -180,10 +179,7 @@ public class WorkFlowView extends SplitLayout {
         vl.add(hl);
 
         templateGrid.addColumn(WorkFlow::getName).setHeader("Имя");
-        /*
-        templateGrid.addColumn(WorkFlow::getStandartSize).setHeader("Размер");
-        templateGrid.addColumn(WorkFlow::getMaterial).setHeader("Материал");
-*/
+
         templateGrid.setItems(this.workFlowService.findAll());
         templateGrid.setHeight("200px");
         templateGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
@@ -271,7 +267,7 @@ public class WorkFlowView extends SplitLayout {
         );
         subMenu.addItem("Резка", menuItemClickEvent -> {
             tabSheet.add(createTab("Резка"), new VerticalLayout());
-            addDescriptionToName("Резка", "Cuting");
+            addDescriptionToName("Резка", "Cutting");
         });
         subMenu.addItem("Верстка", menuItemClickEvent -> {
             tabSheet.add(createTab("Верстка"), new VerticalLayout());

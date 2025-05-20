@@ -20,13 +20,6 @@ public class PaperCutterService {
     }
 
     public PaperCutter save(PaperCutter paperCutter) {
-        var i = 0f;
-        if (paperCutter.getCuts()!=0){
-            i = paperCutter.getCostOfCutter().floatValue()/paperCutter.getCuts();
-        }
-
-        i = i + paperCutter.getCostOfKnifeSharpening().floatValue()/paperCutter.getCutsToSharpening();
-        paperCutter.setFinalCostOfCut(i);
         return this.paperCutterRepository.save(paperCutter);
     }
 

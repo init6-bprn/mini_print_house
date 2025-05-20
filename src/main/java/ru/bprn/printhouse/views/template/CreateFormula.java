@@ -18,7 +18,7 @@ import java.util.List;
 
 public class CreateFormula extends Dialog {
 
-    private final TextField formulaField = new TextField("Фомула");
+    private final TextField formulaField = new TextField("Формула");
     private final BeanValidationBinder<Formulas> formulaBinder;
     private final StringBuilder strVariables = new StringBuilder();
     private final List<VariablesRecord> list;
