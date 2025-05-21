@@ -8,7 +8,6 @@ import lombok.*;
 @Getter
 @Setter
 @EqualsAndHashCode
-@ToString(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "type_of_work")
 public class TypeOfWorks {
@@ -17,7 +16,7 @@ public class TypeOfWorks {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ToString.Include
     private String name = "";
 
+    public String toString() {return name;}
 }

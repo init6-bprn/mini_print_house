@@ -8,6 +8,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
+import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
 import ru.bprn.printhouse.data.entity.AdditionalWorksBean;
@@ -35,12 +36,19 @@ public class AdditionalWorksBeanDictionary extends VerticalLayout {
             }
         };
         formFactory.setUseBeanValidation(true);
-        formFactory.setVisibleProperties("name", "typeOfWorks", "actionFormula", "haveAction", "materialFormula","haveMaterial");
+        formFactory.setVisibleProperties("name", "typeOfWorks", "haveAction", "actionFormula", "haveMaterial", "materialFormula");
 
         GridCrud<AdditionalWorksBean> crud = new GridCrud<>(AdditionalWorksBean.class, new HorizontalSplitCrudLayout(), formFactory);
         crud.setClickRowToUpdate(true);
         crud.setUpdateOperationVisible(false);
-        crud.getGrid().setColumns("name");
+        crud.getGrid().setColumns("name", "typeOfWorks");
+
+        crud.getCrudFormFactory().setFieldProvider("typeOfWorks",
+                new ComboBoxProvider<>(typeOfWorksService.findAll()));
+        crud.getCrudFormFactory().setFieldProvider("actionFormula",
+                new ComboBoxProvider<>(formulasService.findAll()));
+        crud.getCrudFormFactory().setFieldProvider("materialFormula",
+                new ComboBoxProvider<>(formulasService.findAll()));
 
         setSizeFull();
         this.add(crud);

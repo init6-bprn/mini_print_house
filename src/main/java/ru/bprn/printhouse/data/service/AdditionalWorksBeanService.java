@@ -9,7 +9,7 @@ import java.util.List;
 
 @Service
 public class AdditionalWorksBeanService {
-    private AdditionalWorksBeanRepository repository;
+    private final AdditionalWorksBeanRepository repository;
 
     private AdditionalWorksBeanService(AdditionalWorksBeanRepository repository) {
         this.repository = repository;
