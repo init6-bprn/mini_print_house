@@ -5,6 +5,6 @@ import java.util.List;
 public interface HasMaterials {
     List<Material> getListOfMaterials();
     Material getDefaultMaterial();
-    String getMaterialFormula();
+    Formulas getMaterialFormula();
     boolean haveMaterials();
 }

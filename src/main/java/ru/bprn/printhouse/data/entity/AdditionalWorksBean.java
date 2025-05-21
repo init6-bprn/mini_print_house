@@ -1,42 +1,57 @@
 package ru.bprn.printhouse.data.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
 import java.util.List;
 
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
+@Entity
+@Table(name = "additional_works_beans")
+@EqualsAndHashCode
 public class AdditionalWorksBean implements HasAction, HasMaterials{
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    private String name;
+    @NotBlank
+    private String name = "Additional Work";
 
-    private TypeOfWork typeOfWork;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private TypeOfWorks typeOfWorks;
 
-    private List<String> parentClassList;
+    //private List<String> parentClassList;
 
-    private String actionFormula;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Formulas actionFormula;
 
     private boolean haveAction = true;
 
+    @ManyToMany
     private List<Material> listOfMaterials;
 
+    @ManyToOne
     private Material defaultMaterial;
 
-    private String materialFormula;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private Formulas materialFormula;
 
     private boolean haveMaterial = true;
 
 
     @Override
-    public String getActionFormula() {
+    public Formulas getActionFormula() {
         return actionFormula;
     }
 
     @Override
-    public void setActionFormula(String formula) {
+    public void setActionFormula(Formulas formula) {
         this.actionFormula = formula;
     }
 
@@ -61,7 +76,7 @@ public class AdditionalWorksBean implements HasAction, HasMaterials{
     }
 
     @Override
-    public String getMaterialFormula() {
+    public Formulas getMaterialFormula() {
         return materialFormula;
     }
 

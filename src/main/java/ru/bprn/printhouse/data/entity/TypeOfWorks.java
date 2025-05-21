@@ -11,7 +11,7 @@ import lombok.*;
 @ToString(onlyExplicitlyIncluded = true)
 @Entity
 @Table(name = "type_of_work")
-public class TypeOfWork {
+public class TypeOfWorks {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

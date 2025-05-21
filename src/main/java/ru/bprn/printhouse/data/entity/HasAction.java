@@ -1,8 +1,8 @@
 package ru.bprn.printhouse.data.entity;
 
 public interface HasAction {
-    String getActionFormula();
-    void setActionFormula(String formula);
+    Formulas getActionFormula();
+    void setActionFormula(Formulas formula);
     String getActionName();
     boolean haveAction();
 }

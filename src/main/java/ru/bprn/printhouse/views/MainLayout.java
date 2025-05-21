@@ -88,6 +88,9 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(TypeOfMaterialDictionary.class))
             dick.addItem(new SideNavItem("Тип материала", TypeOfMaterialDictionary.class, VaadinIcon.RECORDS.create()));
 
+        if (accessChecker.hasAccess(TypeOfWorksDictionary.class))
+            dick.addItem(new SideNavItem("Типы работ", TypeOfWorksDictionary.class, VaadinIcon.RECORDS.create()));
+
         if (accessChecker.hasAccess(ThicknessDictionary.class))
             dick.addItem(new SideNavItem("Плотность материала", ThicknessDictionary.class, VaadinIcon.RECORDS.create()));
 
@@ -150,6 +153,12 @@ public class MainLayout extends AppLayout {
 
         if (accessChecker.hasAccess(ProductsView.class))
             dick.addItem(new SideNavItem("Products", ProductsView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        nav.addItem(dick);
+
+        dick = new SideNavItem("Работы");
+
+        if (accessChecker.hasAccess(AdditionalWorksBeanDictionary.class))
+            dick.addItem(new SideNavItem("Дополнительные работы", AdditionalWorksBeanDictionary.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
         return nav;
