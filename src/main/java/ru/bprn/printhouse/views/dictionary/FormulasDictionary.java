@@ -1,6 +1,8 @@
 package ru.bprn.printhouse.views.dictionary;
 
 
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
@@ -16,7 +18,6 @@ import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
-import ru.bprn.printhouse.views.template.VariablesRecord;
 
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class FormulasDictionary extends VerticalLayout {
     private List<VariablesForMainWorks> list;
     private final FormulasService formulasService;
     private final VariablesForMainWorksService variables;
+    private Dialog dialog;
 
     @Getter
     private Formulas formulaBean = new Formulas();
@@ -41,7 +43,28 @@ public class FormulasDictionary extends VerticalLayout {
         formulaBinder = new BeanValidationBinder<>(Formulas.class);
         formulaBinder.setBean(formulaBean);
 
+
+        addDialog();
+        addGrid();
         addComponents();
+    }
+
+    private void addDialog() {
+        dialog = new Dialog("Формула");
+        dialog.setHeight("75%");
+        dialog.setWidth("75%");
+        dialog.setCloseOnOutsideClick(true);
+
+
+    }
+
+    private void addGrid() {
+        Grid<Formulas> grid = new Grid<>();
+        grid.setItems(formulasService.findAll());
+        grid.addItemClickListener(formulasEvent -> {
+           dialog.open();
+        });
+        this.add(grid);
     }
 
     private void addComponents(){
