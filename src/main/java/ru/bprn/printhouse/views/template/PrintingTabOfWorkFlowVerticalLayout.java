@@ -20,7 +20,6 @@ import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 
-import java.math.BigDecimal;
 import java.util.Objects;
 
 @UIScope
@@ -51,7 +50,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
             FormulasService formulasService,
             StandartSizeService standartSizeService,
-            GapService gapService)
+            GapService gapService,
+            VariablesForMainWorksService variables)
     {
         this.printerService = printerService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
@@ -59,7 +59,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         this.standartSizeService = standartSizeService;
         this.gapService = gapService;
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
-        dialogFormula = new CreateFormula(formulasService);
+        dialogFormula = new CreateFormula(formulasService, variables);
 
         add(addName());
         add(addSizeOfProductSection());

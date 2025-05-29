@@ -1,7 +1,6 @@
 package ru.bprn.printhouse.views.dictionary;
 
 
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
@@ -18,6 +17,7 @@ import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.template.CreateFormula;
 
 import java.util.List;
 
@@ -31,14 +31,17 @@ public class FormulasDictionary extends VerticalLayout {
     private List<VariablesForMainWorks> list;
     private final FormulasService formulasService;
     private final VariablesForMainWorksService variables;
-    private Dialog dialog;
+    private CreateFormula dialog;
 
     @Getter
     private Formulas formulaBean = new Formulas();
     
     public FormulasDictionary(FormulasService formulasService, VariablesForMainWorksService variables){
+        super();
         this.formulasService = formulasService;
         this.variables = variables;
+
+        this.setSizeFull();
 
         formulaBinder = new BeanValidationBinder<>(Formulas.class);
         formulaBinder.setBean(formulaBean);
@@ -50,7 +53,7 @@ public class FormulasDictionary extends VerticalLayout {
     }
 
     private void addDialog() {
-        dialog = new Dialog("Формула");
+        dialog = new CreateFormula(formulasService, variables);
         dialog.setHeight("75%");
         dialog.setWidth("75%");
         dialog.setCloseOnOutsideClick(true);
@@ -59,9 +62,12 @@ public class FormulasDictionary extends VerticalLayout {
     }
 
     private void addGrid() {
-        Grid<Formulas> grid = new Grid<>();
+        Grid<Formulas> grid = new Grid<>(Formulas.class, false);
+        grid.addColumn(Formulas::getName).setHeader("Название");
         grid.setItems(formulasService.findAll());
+        grid.setHeight("30%");
         grid.addItemClickListener(formulasEvent -> {
+           dialog.setFormulaBean(formulasEvent.getItem());
            dialog.open();
         });
         this.add(grid);

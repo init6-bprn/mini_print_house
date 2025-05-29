@@ -256,7 +256,7 @@ public class WorkFlowView extends SplitLayout {
         SubMenu subMenu = item.getSubMenu();
         subMenu.addItem("Цифровая печать", menuItemClickEvent -> {
                 var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
-                        costOfPrintSizeLeafAndColorService, formulasService, standartSizeService,gapService);
+                        costOfPrintSizeLeafAndColorService, formulasService, standartSizeService,gapService, variablesForMainWorksService);
                 var dp = new DigitalPrinting();
                 dp.setVariables(populateVariables(dp.getClass().getSimpleName()));
                 digitalPrinting.getTemplateBinder().setBean(dp);
@@ -390,7 +390,7 @@ public class WorkFlowView extends SplitLayout {
             switch (obj) {
                 case DigitalPrinting dp -> {
                     var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
-                            costOfPrintSizeLeafAndColorService, formulasService, standartSizeService, gapService);
+                            costOfPrintSizeLeafAndColorService, formulasService, standartSizeService, gapService, variablesForMainWorksService);
                     //dp.setVariables(populateVariables(dp.getClass().getSimpleName()));
                     tabComp.getTemplateBinder().setBean(dp);
                     tabSheet.add(createTab("Цифровая печать"), tabComp);

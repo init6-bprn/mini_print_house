@@ -9,31 +9,32 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.Formulas;
+import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.FormulasService;
+import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.util.List;
 
 public class CreateFormula extends Dialog {
 
     private final TextField formulaField = new TextField("Формула");
     private final BeanValidationBinder<Formulas> formulaBinder;
     private final StringBuilder strVariables = new StringBuilder();
-    private final List<VariablesRecord> list;
+    private final VariablesForMainWorksService list;
 
     @Getter
     private Formulas formulaBean = new Formulas();
 
-    public CreateFormula(FormulasService formulasService) {
+    public CreateFormula(FormulasService formulasService, VariablesForMainWorksService variables) {
         setModal(true);
         formulaBinder = new BeanValidationBinder<>(Formulas.class);
         formulaBinder.setBean(formulaBean);
+        this.list = variables;
 
-        list = new ListOfVariables().getList();
-        for (VariablesRecord rec:list){
-            strVariables.append(rec.name()).append(" = 1;");
+        for (VariablesForMainWorks rec : list.findAll()){
+            strVariables.append(rec.getName()).append(" = 1;");
         }
 
         this.setHeaderTitle("Редактирование формулы");
@@ -76,9 +77,9 @@ public class CreateFormula extends Dialog {
 
     private Div addVariablesButton() {
         var div = new Div();
-        for (VariablesRecord rec:list) {
-            var button = new Button(rec.name(), buttonClickEvent -> formulaField.setValue(formulaField.getValue()+rec.name()+" "));
-            button.setTooltipText(rec.description());
+        for (VariablesForMainWorks rec : list.findAll()) {
+            var button = new Button(rec.getName(), buttonClickEvent -> formulaField.setValue(formulaField.getValue()+rec.getName()+" "));
+            button.setTooltipText(rec.getDescription());
             //button.setThemeName();
             div.add(button);
         }
