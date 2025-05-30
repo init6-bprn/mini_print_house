@@ -54,8 +54,8 @@ public class FormulasDictionary extends VerticalLayout {
 
     private void addDialog() {
         dialog = new CreateFormula(formulasService, variables);
-        dialog.setHeight("75%");
-        dialog.setWidth("75%");
+        dialog.setHeight("50%");
+        dialog.setWidth("50%");
         dialog.setCloseOnOutsideClick(true);
 
 

@@ -25,9 +25,7 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.data.entity.DigitalPrinting;
-import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
-import ru.bprn.printhouse.data.entity.WorkFlow;
+import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 
@@ -40,16 +38,14 @@ import java.util.*;
 public class WorkFlowView extends SplitLayout {
 
     private final PrintMashineService printMashineService;
-    private final MaterialService materialService;
     private final StandartSizeService standartSizeService;
-    private final TypeOfMaterialService typeOfMaterialService;
     private final GapService gapService;
     private final WorkFlowService workFlowService;
-    private final ImposeCaseService imposeCaseService;
-    private final QuantityColorsService quantityColorsService;
     private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
     private final FormulasService formulasService;
     private final VariablesForMainWorksService variablesForMainWorksService;
+    private final TypeOfWorksService typeOfWorksService;
+    private final AdditionalWorksBeanService worksBeanService;
 
     private final TabSheet tabSheet = new TabSheet();
     private StartTabOfWorkFlowVerticalLayout startTab;
@@ -59,27 +55,23 @@ public class WorkFlowView extends SplitLayout {
 
     public WorkFlowView(PrintMashineService printMashineService,
                         StandartSizeService standartSizeService,
-                        TypeOfMaterialService typeOfMaterialService,
-                        MaterialService materialService,
                         GapService gapService,
                         WorkFlowService workFlowService,
-                        ImposeCaseService imposeCaseService,
-                        QuantityColorsService quantityColorsService,
                         CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
                         FormulasService formulasService,
-                        VariablesForMainWorksService variablesForMainWorksService){
+                        VariablesForMainWorksService variablesForMainWorksService,
+                        TypeOfWorksService typeOfWorksService,
+                        AdditionalWorksBeanService worksBeanService){
 
         this.printMashineService = printMashineService;
-        this.materialService = materialService;
         this.standartSizeService = standartSizeService;
-        this.typeOfMaterialService = typeOfMaterialService;
         this.gapService = gapService;
         this.workFlowService = workFlowService;
-        this.imposeCaseService = imposeCaseService;
-        this.quantityColorsService = quantityColorsService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
         this.formulasService = formulasService;
         this.variablesForMainWorksService = variablesForMainWorksService;
+        this.typeOfWorksService = typeOfWorksService;
+        this.worksBeanService = worksBeanService;
 
         startTab = new StartTabOfWorkFlowVerticalLayout();
 
@@ -254,25 +246,34 @@ public class WorkFlowView extends SplitLayout {
         MenuBar menuBar = new MenuBar();
         MenuItem item = menuBar.addItem(new Icon(VaadinIcon.PLUS));
         SubMenu subMenu = item.getSubMenu();
-        subMenu.addItem("Цифровая печать", menuItemClickEvent -> {
+        MenuItem oneSheet = subMenu.addItem("Однолистовая печать");
+        SubMenu oneSheetSubMenu = oneSheet.getSubMenu();
+        oneSheetSubMenu.addItem("Однолистовая цифровая печать", menuItemClickEvent -> {
                 var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
                         costOfPrintSizeLeafAndColorService, formulasService, standartSizeService,gapService, variablesForMainWorksService);
                 var dp = new DigitalPrinting();
                 dp.setVariables(populateVariables(dp.getClass().getSimpleName()));
                 digitalPrinting.getTemplateBinder().setBean(dp);
-                tabSheet.add(createTab("Цифровая печать"), digitalPrinting);
-                addDescriptionToName("Цифровая печать", DigitalPrinting.class.getSimpleName());
+                tabSheet.add(createTab("Однолистовая цифровая печать"), digitalPrinting);
+                addDescriptionToName("Однолистовая цифровая печать", DigitalPrinting.class.getSimpleName());
 
             }
         );
-        subMenu.addItem("Резка", menuItemClickEvent -> {
-            tabSheet.add(createTab("Резка"), new VerticalLayout());
-            addDescriptionToName("Резка", "Cutting");
-        });
-        subMenu.addItem("Верстка", menuItemClickEvent -> {
-            tabSheet.add(createTab("Верстка"), new VerticalLayout());
-            addDescriptionToName("Верстка", "DTP");
-        });
+
+        for (TypeOfWorks tow : typeOfWorksService.findAll()) {
+            // Узел меню доп.работ
+            MenuItem item1 = subMenu.addItem(tow.getName());
+            SubMenu subMenu1 = item1.getSubMenu();
+
+            for (AdditionalWorksBean work : worksBeanService.findAllByType(tow)) {
+                // Пункты доп.работ
+                subMenu1.addItem(work.getName(), menuItemClickEvent -> {
+                    tabSheet.add(createTab(work.getName()), new AdditionalWorksLayout(work, worksBeanService));
+                    addDescriptionToName(work.getName(), "Cutting");
+                });
+            }
+        }
+
         tabSheet.setPrefixComponent(menuBar);
 
         vel.add(tabSheet);
@@ -395,6 +396,7 @@ public class WorkFlowView extends SplitLayout {
                     tabComp.getTemplateBinder().setBean(dp);
                     tabSheet.add(createTab("Цифровая печать"), tabComp);
                 }
+                case AdditionalWorksBean wb ->  tabSheet.add(createTab(wb.getName()), new AdditionalWorksLayout(wb, worksBeanService));
                 default -> throw new IllegalStateException("Unexpected value: " + obj);
             }
         }

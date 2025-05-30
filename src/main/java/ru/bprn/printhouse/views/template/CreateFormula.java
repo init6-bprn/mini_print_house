@@ -1,12 +1,15 @@
 package ru.bprn.printhouse.views.template;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.theme.lumo.LumoUtility;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
@@ -19,7 +22,7 @@ import javax.script.ScriptException;
 
 public class CreateFormula extends Dialog {
 
-    private final TextField formulaField = new TextField("Формула");
+    private final TextArea formulaField = new TextArea("Формула");
     private final BeanValidationBinder<Formulas> formulaBinder;
     private final StringBuilder strVariables = new StringBuilder();
     private final VariablesForMainWorksService list;
@@ -53,6 +56,11 @@ public class CreateFormula extends Dialog {
             return true;
         }, "Формула не верна!").bind(Formulas::getFormula, Formulas::setFormula);
 
+        name.setWidthFull();
+        formulaField.setWidthFull();
+        formulaField.setClearButtonVisible(true);
+        formulaField.setMaxRows(3);
+
         this.add(name, formulaField, addVariablesButton());
 
         var saveButton = new Button("Save", buttonClickEvent -> {
@@ -77,10 +85,12 @@ public class CreateFormula extends Dialog {
 
     private Div addVariablesButton() {
         var div = new Div();
+        div.addClassNames(LumoUtility.Border.ALL, LumoUtility.Whitespace.NORMAL);
         for (VariablesForMainWorks rec : list.findAll()) {
             var button = new Button(rec.getName(), buttonClickEvent -> formulaField.setValue(formulaField.getValue()+rec.getName()+" "));
             button.setTooltipText(rec.getDescription());
-            //button.setThemeName();
+            button.addThemeVariants(ButtonVariant.LUMO_SMALL);
+            button.addClassNames(LumoUtility.Margin.SMALL);
             div.add(button);
         }
 
