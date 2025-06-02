@@ -32,7 +32,8 @@ import java.util.Optional;
 public class TemplatesView extends SplitLayout {
 
     private final TemplatesService templatesService;
-    private final BeanValidationBinder<Templates> templatesBean;
+    private final BeanValidationBinder<Templates> templatesBinder;
+    private final BeanValidationBinder<Chains> chainBinder;
 
     private final Grid<Templates> templateGrid = new Grid<>(Templates.class, false);
 
@@ -40,12 +41,14 @@ public class TemplatesView extends SplitLayout {
 
     private final ConfirmDialog confirm;
 
-    private Templates bean;
+    private Templates beanForTempl;
 
     public TemplatesView(TemplatesService templatesService){
         this.templatesService = templatesService;
-        templatesBean = new BeanValidationBinder<>(Templates.class);
-        templatesBean.setChangeDetectionEnabled(true);
+        templatesBinder = new BeanValidationBinder<>(Templates.class);
+        templatesBinder.setChangeDetectionEnabled(true);
+
+        chainBinder = new BeanValidationBinder<>(Chains.class);
 
         confirm = new ConfirmDialog("Шаблон был изменен",
                 "Вы хотите сохранить изменения?",
@@ -74,23 +77,79 @@ public class TemplatesView extends SplitLayout {
         var vl = new VerticalLayout();
         var name = new TextField("Название шаблона:");
         name.setWidthFull();
-        templatesBean.bind(name, Templates::getName, Templates::setName);
+        templatesBinder.bind(name, Templates::getName, Templates::setName);
 
         var description = new TextArea("Краткое описание:");
         description.setWidthFull();
         description.setMaxRows(5);
-        templatesBean.bind(description, Templates::getDescription, Templates::setDescription);
-
-        chainGrid.setWidthFull();
-        chainGrid.addColumn(Chains::getName).setHeader("Название цепочки");
-
+        templatesBinder.bind(description, Templates::getDescription, Templates::setDescription);
 
         var saveButton = new Button("Save", o -> saveBean());
         var cancelButton = new Button("Cancel", o ->cancelBean());
         var hl = new HorizontalLayout(FlexComponent.Alignment.END, saveButton, cancelButton);
 
-        vl.add(name, description, chainGrid, hl);
+        vl.add(name, description, chainGrid(), hl);
         return vl;
+    }
+
+    private Component chainGrid() {
+        var hlay = new HorizontalLayout();
+        hlay.setWidthFull();
+        chainGrid.setWidthFull();
+        chainGrid.addColumn(Chains::getName).setHeader("Название цепочки");
+
+        var vl = new VerticalLayout();
+        vl.setSizeUndefined();
+
+        var dialogChain = new ConfirmDialog("Внимание!" , "", "Да", confirmEvent ->
+        {
+            if (!chainGrid.asSingleSelect().isEmpty()) {
+                var opt = chainGrid.asSingleSelect().getValue();
+                beanForTempl.getChains().remove(opt);
+                chainGrid.setItems(beanForTempl.getChains());
+                Notification.show("Рабочая цепочка удалена!");
+            }
+        },
+                "Нет", cancelEvent -> cancelEvent.getSource().close());
+
+        var hl = new HorizontalLayout();
+        var createButton = new Button(VaadinIcon.PLUS.create(), event -> {
+            chainBinder.setBean(new Chains());
+        });
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        var updateButton  = new Button(VaadinIcon.EDIT.create(), event -> {
+            if (!chainGrid.asSingleSelect().isEmpty()) {
+                chainBinder.setBean(chainGrid.asSingleSelect().getValue());
+                Notification.show("Рабочая цепочка удалена!");
+            }
+        });
+        updateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+
+        var duplicateButton = new Button(VaadinIcon.COPY_O.create(), event -> {
+
+        });
+        duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+
+        var deleteButton = new Button(VaadinIcon.CLOSE.create(), event -> {
+
+            if (!chainGrid.asSingleSelect().isEmpty()) {
+                dialogChain.setText("Вы уверены, что хотите удалить цепочку " + chainBinder.getBean().getName() + " ?");
+                dialogChain.open();
+            }
+        });
+        deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+
+        hl.add(createButton, updateButton, duplicateButton, deleteButton);
+        vl.add(hl, chainGrid);
+
+        chainGrid.addColumn(Chains::getName).setHeader("Название цепочки");
+        chainGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        chainGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+
+
+        hlay.add(vl);
+        return hlay;
     }
 
     private Component templatesGrid() {
@@ -113,8 +172,8 @@ public class TemplatesView extends SplitLayout {
 
         var hl = new HorizontalLayout();
         var createButton = new Button(VaadinIcon.PLUS.create(), event -> {
-             bean = new Templates();
-             templatesBean.readBean(bean);
+             beanForTempl = new Templates();
+             templatesBinder.readBean(beanForTempl);
 
         });
         createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -123,8 +182,8 @@ public class TemplatesView extends SplitLayout {
             if (!templateGrid.asSingleSelect().isEmpty()) {
                 var opt = templatesService.findById(templateGrid.asSingleSelect().getValue().getId());
                 if (opt.isPresent()) {
-                    bean = opt.get();
-                    templatesBean.readBean(bean);
+                    beanForTempl = opt.get();
+                    templatesBinder.readBean(beanForTempl);
                 }
             }
         });
@@ -136,8 +195,10 @@ public class TemplatesView extends SplitLayout {
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), event -> {
-            dialog.setText("Вы уверены, что хотите удалить шаблон " + bean.getName()+" ?");
-            dialog.open();
+            if (beanForTempl != null) {
+                dialog.setText("Вы уверены, что хотите удалить шаблон " + beanForTempl.getName() + " ?");
+                dialog.open();
+            }
         });
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
@@ -155,13 +216,13 @@ public class TemplatesView extends SplitLayout {
         vl.add(templateGrid);
 
         templateGrid.asSingleSelect().addValueChangeListener(listener ->{
-            if (templatesBean.hasChanges()) confirm.open();
+            if (templatesBinder.hasChanges()) confirm.open();
             else {
                 if (listener.getValue() != null) {
                     Optional<Templates> templFromBackend = templatesService.findById(listener.getValue().getId());
                     if (templFromBackend.isPresent()) {
-                        bean = templFromBackend.get();
-                        templatesBean.readBean(bean);
+                        beanForTempl = templFromBackend.get();
+                        templatesBinder.readBean(beanForTempl);
                         chainGrid.setItems(templFromBackend.get().getChains());
                     } else Notification.show("Не найдено такого шаблона!");
                 }
@@ -173,10 +234,10 @@ public class TemplatesView extends SplitLayout {
     }
 
     private void saveBean() {
-        if (bean != null) {
+        if (beanForTempl != null) {
             try {
-                templatesBean.writeBean(bean);
-                templatesService.save(bean);
+                templatesBinder.writeBean(beanForTempl);
+                templatesService.save(beanForTempl);
                 templateGrid.setItems(templatesService.findAll());
                 templateGrid.select(null);
                 Notification.show("Сохранено!");
@@ -188,9 +249,9 @@ public class TemplatesView extends SplitLayout {
     }
 
     private void cancelBean(){
-        templatesBean.removeBean();
-        templatesBean.refreshFields();
-        bean = null;
+        templatesBinder.removeBean();
+        templatesBinder.refreshFields();
+        beanForTempl = null;
         templateGrid.select(null);
     }
 }
