@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.template;
+package ru.bprn.printhouse.views.templates;
 
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.textfield.IntegerField;

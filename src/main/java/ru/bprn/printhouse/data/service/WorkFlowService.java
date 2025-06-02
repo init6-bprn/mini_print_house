@@ -1,12 +1,10 @@
 package ru.bprn.printhouse.data.service;
 
-import com.vaadin.flow.component.notification.Notification;
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.repository.WorkFlowRepository;
-import ru.bprn.printhouse.views.template.ExtraLeaves;
-import ru.bprn.printhouse.views.template.IsMainPrintWork;
-import ru.bprn.printhouse.views.template.Price;
+import ru.bprn.printhouse.views.templates.ExtraLeaves;
+import ru.bprn.printhouse.views.templates.Price;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;

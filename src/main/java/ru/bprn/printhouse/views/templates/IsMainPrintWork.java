@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.template;
+package ru.bprn.printhouse.views.templates;
 
 public interface IsMainPrintWork {
 

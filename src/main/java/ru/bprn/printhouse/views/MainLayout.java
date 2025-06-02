@@ -27,7 +27,8 @@ import ru.bprn.printhouse.views.machine.cutters.PaperCuttersView;
 import ru.bprn.printhouse.views.machine.printers.PrintSpeedMaterialDensityView;
 import ru.bprn.printhouse.views.machine.printers.PrintersView;
 import ru.bprn.printhouse.views.material.MaterialView;
-import ru.bprn.printhouse.views.template.WorkFlowView;
+import ru.bprn.printhouse.views.templates.TemplatesView;
+import ru.bprn.printhouse.views.templates.WorkFlowView;
 
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
@@ -147,8 +148,8 @@ public class MainLayout extends AppLayout {
             dick.addItem(new SideNavItem("WorkFlows", WorkFlowView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
-        if (accessChecker.hasAccess(AboutView.class))
-            nav.addItem(new SideNavItem("About", AboutView.class, LineAwesomeIcon.FILE.create()));
+        if (accessChecker.hasAccess(TemplatesView.class))
+            nav.addItem(new SideNavItem("Новый редактор шаблонов", TemplatesView.class, LineAwesomeIcon.FILE.create()));
 
         dick = new SideNavItem("Продукты");
         //if (accessChecker.hasAccess(TemplateView.class))

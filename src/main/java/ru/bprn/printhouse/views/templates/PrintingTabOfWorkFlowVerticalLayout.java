@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.template;
+package ru.bprn.printhouse.views.templates;
 
 import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;

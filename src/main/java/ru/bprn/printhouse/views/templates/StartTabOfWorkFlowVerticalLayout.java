@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.template;
+package ru.bprn.printhouse.views.templates;
 
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
