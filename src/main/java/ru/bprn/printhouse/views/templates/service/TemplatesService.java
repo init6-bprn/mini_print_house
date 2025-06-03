@@ -1,14 +1,14 @@
 package ru.bprn.printhouse.views.templates.service;
 
 import org.springframework.stereotype.Service;
-import ru.bprn.printhouse.views.templates.entity.Chains;
+import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.repository.ChainsRepository;
 import ru.bprn.printhouse.views.templates.repository.TemplatesRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class TemplatesService {
@@ -22,6 +22,13 @@ public class TemplatesService {
     }
 
     public List<Templates> findAll() {return this.repository.findAll();}
+
+    public List<AbstractTemplate> findAllAsAbstractTemplates() {
+        List<AbstractTemplate> aList = new ArrayList<>();
+        for (Templates t : this.repository.findAll())
+            aList.add((AbstractTemplate) t);
+        return aList ;
+    }
 
     public void delete(Templates templates) {this.repository.delete(templates);}
 

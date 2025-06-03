@@ -1,12 +1,12 @@
 package ru.bprn.printhouse.views.templates.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -16,15 +16,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "templates")
-public class Templates {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Long id;
-
-    @NotBlank
-    private String name = "Название шаблона";
+public class Templates extends AbstractTemplate {
 
     private String description = "Описание изделия";
 

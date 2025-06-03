@@ -1,7 +1,7 @@
 package ru.bprn.printhouse.views.templates.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -13,15 +13,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @Entity
-@Table(name = "chains")
-public class Chains {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Long id;
-
-    @NotBlank
-    private String name = "Название цепочки";
+public class Chains extends AbstractTemplate {
 
     @Column(columnDefinition = "mediumtext")
     private String strJSON = "";

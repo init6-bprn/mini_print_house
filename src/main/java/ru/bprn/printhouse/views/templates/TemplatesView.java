@@ -14,16 +14,20 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @PageTitle("Редактирование шаблонов")
@@ -37,11 +41,13 @@ public class TemplatesView extends SplitLayout {
 
     private final Grid<Templates> templateGrid = new Grid<>(Templates.class, false);
 
-    private final Grid<Chains> chainGrid = new Grid<>(Chains.class, false);
+    private final TreeGrid<AbstractTemplate> chainGrid = new TreeGrid<>(AbstractTemplate.class, false);
 
     private final ConfirmDialog confirm;
 
     private Templates beanForTempl;
+
+    private final SplitLayout split = new SplitLayout(Orientation.VERTICAL);
 
     public TemplatesView(TemplatesService templatesService){
         this.templatesService = templatesService;
@@ -63,13 +69,15 @@ public class TemplatesView extends SplitLayout {
         this.setSizeFull();
         this.addToPrimary(templatesGrid());
         this.addToSecondary(templatesView());
+
+        split.setSplitterPosition(50.0);
     }
 
     private Component templatesView() {
-        var split = new SplitLayout(Orientation.HORIZONTAL);
         split.setSplitterPosition(40.0);
         split.setSizeFull();
         split.addToPrimary(formLayout());
+        //split.remove(split.getSecondaryComponent());
         return split;
     }
 
@@ -96,31 +104,36 @@ public class TemplatesView extends SplitLayout {
         var hlay = new HorizontalLayout();
         hlay.setWidthFull();
         chainGrid.setWidthFull();
-        chainGrid.addColumn(Chains::getName).setHeader("Название цепочки");
 
         var vl = new VerticalLayout();
-        vl.setSizeUndefined();
+        vl.setWidthFull();
 
         var dialogChain = new ConfirmDialog("Внимание!" , "", "Да", confirmEvent ->
         {
             if (!chainGrid.asSingleSelect().isEmpty()) {
                 var opt = chainGrid.asSingleSelect().getValue();
                 beanForTempl.getChains().remove(opt);
-                chainGrid.setItems(beanForTempl.getChains());
+                //chainGrid.setItems(beanForTempl.getChains());
                 Notification.show("Рабочая цепочка удалена!");
             }
         },
                 "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         var hl = new HorizontalLayout();
-        var createButton = new Button(VaadinIcon.PLUS.create(), event -> {
+        var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
+
             chainBinder.setBean(new Chains());
         });
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        var createChainButton = new Button(VaadinIcon.PLUS.create(), event -> {
+            chainBinder.setBean(new Chains());
+        });
+        createChainButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         var updateButton  = new Button(VaadinIcon.EDIT.create(), event -> {
             if (!chainGrid.asSingleSelect().isEmpty()) {
-                chainBinder.setBean(chainGrid.asSingleSelect().getValue());
+                //chainBinder.setBean(chainGrid.asSingleSelect().getValue());
                 Notification.show("Рабочая цепочка удалена!");
             }
         });
@@ -140,16 +153,43 @@ public class TemplatesView extends SplitLayout {
         });
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
-        hl.add(createButton, updateButton, duplicateButton, deleteButton);
+        hl.add(createTemplateButton, createChainButton, updateButton, duplicateButton, deleteButton);
         vl.add(hl, chainGrid);
 
-        chainGrid.addColumn(Chains::getName).setHeader("Название цепочки");
+        chainGrid.addColumn(AbstractTemplate::getName).setHeader("Название цепочки");
         chainGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         chainGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        chainGrid.setItems(templatesService.findAllAsAbstractTemplates(), this::getChains);
+
+        chainGrid.asSingleSelect().addValueChangeListener(e->{
+            if (e.getValue()!= null) {
+                var component = split.getSecondaryComponent();
+                if (component != null) split.remove(component);
+                switch (e.getValue()) {
+                    case Templates template:
+                        split.addToSecondary(new TemplateEditor(template, templatesService));
+
+                        break;
+                    case Chains chain:
+                        split.addToSecondary(new ChainEditor());
+
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + e.getValue());
+                }
+            }
+        });
 
 
         hlay.add(vl);
         return hlay;
+    }
+
+    private List<AbstractTemplate> getChains(AbstractTemplate abstractTemplate) {
+        var template = templatesService.findById(abstractTemplate.getId());
+        List<AbstractTemplate> list = new ArrayList<>();
+        template.ifPresent(templates -> list.addAll(templates.getChains()));
+        return list;
     }
 
     private Component templatesGrid() {
@@ -223,7 +263,7 @@ public class TemplatesView extends SplitLayout {
                     if (templFromBackend.isPresent()) {
                         beanForTempl = templFromBackend.get();
                         templatesBinder.readBean(beanForTempl);
-                        chainGrid.setItems(templFromBackend.get().getChains());
+                        //chainGrid.setItems(templFromBackend.get().getChains());
                     } else Notification.show("Не найдено такого шаблона!");
                 }
             }
@@ -232,6 +272,8 @@ public class TemplatesView extends SplitLayout {
         templateGrid.addItemDoubleClickListener(__->updateButton.click());
         return vl;
     }
+
+
 
     private void saveBean() {
         if (beanForTempl != null) {
