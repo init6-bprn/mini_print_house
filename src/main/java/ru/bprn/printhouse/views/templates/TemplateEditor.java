@@ -7,21 +7,25 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
+import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
 public class TemplateEditor extends VerticalLayout {
-    private Templates template;
+    private final Templates template;
     private final BeanValidationBinder<Templates> templatesBinder = new BeanValidationBinder<>(Templates.class);
-    private TemplatesService service;
+    private final TemplatesService service;
+    private final TreeGrid<AbstractTemplate> treeGrid;
 
-    public TemplateEditor(Templates template, TemplatesService service){
+    public TemplateEditor(Templates template, TreeGrid<AbstractTemplate> treeGrid, TemplatesService service){
         super();
 
         this.template = template;
         this.service = service;
+        this.treeGrid = treeGrid;
         this.setSizeFull();
 
         templatesBinder.setBean(template);
@@ -47,6 +51,7 @@ public class TemplateEditor extends VerticalLayout {
                 templatesBinder.writeBean(template);
                 service.save(template);
                 Notification.show("Сохранено!");
+                treeGrid.getDataProvider().refreshAll();
             } catch (ValidationException e) {
                 Notification.show("Есть невалидные значения. Не сохранено!");
             }
@@ -57,5 +62,6 @@ public class TemplateEditor extends VerticalLayout {
     private void cancelBean(){
         templatesBinder.removeBean();
         templatesBinder.refreshFields();
+        treeGrid.getDataProvider().refreshAll();
     }
 }

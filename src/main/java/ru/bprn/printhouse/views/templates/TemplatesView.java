@@ -24,6 +24,7 @@ import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.Templates;
+import ru.bprn.printhouse.views.templates.service.ChainsService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import java.util.Optional;
 public class TemplatesView extends SplitLayout {
 
     private final TemplatesService templatesService;
+    private final ChainsService chainsService;
     private final BeanValidationBinder<Templates> templatesBinder;
     private final BeanValidationBinder<Chains> chainBinder;
 
@@ -49,8 +51,9 @@ public class TemplatesView extends SplitLayout {
 
     private final SplitLayout split = new SplitLayout(Orientation.VERTICAL);
 
-    public TemplatesView(TemplatesService templatesService){
+    public TemplatesView(TemplatesService templatesService, ChainsService chainsService){
         this.templatesService = templatesService;
+        this.chainsService = chainsService;
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);
 
@@ -112,6 +115,8 @@ public class TemplatesView extends SplitLayout {
         {
             if (!chainGrid.asSingleSelect().isEmpty()) {
                 var opt = chainGrid.asSingleSelect().getValue();
+
+                // Надо обратить внимание ниже. Тут неправильно!!!
                 beanForTempl.getChains().remove(opt);
                 //chainGrid.setItems(beanForTempl.getChains());
                 Notification.show("Рабочая цепочка удалена!");
@@ -122,17 +127,30 @@ public class TemplatesView extends SplitLayout {
         var hl = new HorizontalLayout();
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
 
-            chainBinder.setBean(new Chains());
+            templatesBinder.setBean(new Templates());
         });
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createTemplateButton.setTooltipText("Создать новый шаблон");
 
         var createChainButton = new Button(VaadinIcon.PLUS.create(), event -> {
             chainBinder.setBean(new Chains());
         });
         createChainButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createTemplateButton.setTooltipText("Создать новую рабочую цепочку");
 
         var updateButton  = new Button(VaadinIcon.EDIT.create(), event -> {
             if (!chainGrid.asSingleSelect().isEmpty()) {
+                switch (chainGrid.asSingleSelect().getValue()) {
+                    case Templates template:
+                        templatesBinder.readBean(template);
+                        split.addToSecondary(new TemplateEditor(template, chainGrid, templatesService));
+                        break;
+                    case Chains chain:
+                        chainBinder.setBean(chain);
+                        split.addToSecondary(new ChainEditor(chain, chainsService));
+                        break;
+                    default:
+                }
                 //chainBinder.setBean(chainGrid.asSingleSelect().getValue());
                 Notification.show("Рабочая цепочка удалена!");
             }
@@ -167,11 +185,11 @@ public class TemplatesView extends SplitLayout {
                 if (component != null) split.remove(component);
                 switch (e.getValue()) {
                     case Templates template:
-                        split.addToSecondary(new TemplateEditor(template, templatesService));
+                        split.addToSecondary(new TemplateEditor(template, chainGrid, templatesService));
 
                         break;
                     case Chains chain:
-                        split.addToSecondary(new ChainEditor());
+                        split.addToSecondary(new ChainEditor(chain, chainsService));
 
                         break;
                     default:
