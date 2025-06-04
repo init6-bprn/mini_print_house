@@ -5,63 +5,85 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.binder.ValidationException;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TemplateEditor extends VerticalLayout {
-    private final Templates template;
+
+    private Templates template;
+
     private final BeanValidationBinder<Templates> templatesBinder = new BeanValidationBinder<>(Templates.class);
     private final TemplatesService service;
     private final TreeGrid<AbstractTemplate> treeGrid;
+    private final SplitLayout splitLayout;
 
-    public TemplateEditor(Templates template, TreeGrid<AbstractTemplate> treeGrid, TemplatesService service){
-        super();
-
-        this.template = template;
+    public TemplateEditor(SplitLayout splitLayout, TreeGrid<AbstractTemplate> treeGrid, TemplatesService service){
+        this.template = new Templates();
         this.service = service;
         this.treeGrid = treeGrid;
+        this.splitLayout = splitLayout;
         this.setSizeFull();
 
-        templatesBinder.setBean(template);
         var name = new TextField("Название шаблона:");
         name.setWidthFull();
-        templatesBinder.bind(name, Templates::getName, Templates::setName);
+        this.templatesBinder.bind(name, Templates::getName, Templates::setName);
 
         var description = new TextArea("Краткое описание:");
         description.setWidthFull();
         description.setMaxRows(5);
-        templatesBinder.bind(description, Templates::getDescription, Templates::setDescription);
+        this.templatesBinder.bind(description, Templates::getDescription, Templates::setDescription);
 
         var saveButton = new Button("Save", o -> saveBean());
         var cancelButton = new Button("Cancel", o ->cancelBean());
         var hl = new HorizontalLayout(FlexComponent.Alignment.END, saveButton, cancelButton);
 
         this.add(name, description, hl);
+
+        templatesBinder.readBean(this.template);
+        this.templatesBinder.refreshFields();
     }
 
     private void saveBean() {
-        if (template != null) {
-            try {
-                templatesBinder.writeBean(template);
-                service.save(template);
-                Notification.show("Сохранено!");
-                treeGrid.getDataProvider().refreshAll();
-            } catch (ValidationException e) {
-                Notification.show("Есть невалидные значения. Не сохранено!");
-            }
+        if (templatesBinder.writeBeanIfValid(template)) {
+            service.save(template);
+            Notification.show("Сохранено!");
+            showPrimary();
+            treeGrid.setItems(service.findAllAsAbstractTemplates(), this::getChains);
         }
-        else Notification.show("Нечего сохранять!");
     }
 
     private void cancelBean(){
+        treeGrid.setItems(service.findAllAsAbstractTemplates(), this::getChains);
+        showPrimary();
+    }
+
+    private void showPrimary(){
+        splitLayout.getPrimaryComponent().setVisible(true);
+        splitLayout.getSecondaryComponent().getElement().setEnabled(false);
+        splitLayout.setSplitterPosition(50);
+    }
+
+    private List<AbstractTemplate> getChains(AbstractTemplate abstractTemplate) {
+        var template = service.findById(abstractTemplate.getId());
+        List<AbstractTemplate> list = new ArrayList<>();
+        template.ifPresent(templates -> list.addAll(templates.getChains()));
+        return list;
+    }
+
+    public void setTemplate(Templates template) {
         templatesBinder.removeBean();
         templatesBinder.refreshFields();
-        treeGrid.getDataProvider().refreshAll();
+        this.template = template;
+        templatesBinder.readBean(this.template);
+
     }
 }

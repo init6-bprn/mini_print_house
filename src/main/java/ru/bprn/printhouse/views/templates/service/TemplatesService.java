@@ -2,6 +2,7 @@ package ru.bprn.printhouse.views.templates.service;
 
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
+import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.repository.ChainsRepository;
 import ru.bprn.printhouse.views.templates.repository.TemplatesRepository;
@@ -35,5 +36,10 @@ public class TemplatesService {
     public Templates save(Templates templates) {return  this.repository.save(templates);}
 
     public Optional<Templates> findById(Long id) {return this.repository.findById(id);}
+
+    public List<Chains> getChainsForTemplate(Templates templates) {
+        var temp = findById(templates.getId());
+        return temp.map(value -> value.getChains().stream().toList()).orElse(null);
+    }
 
 }
