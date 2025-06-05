@@ -7,7 +7,6 @@ import org.hibernate.proxy.HibernateProxy;
 
 import java.util.Objects;
 
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -33,4 +32,7 @@ public class Chains extends AbstractTemplate {
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
+
+    @Override
+    public String toString(){return name;}
 }

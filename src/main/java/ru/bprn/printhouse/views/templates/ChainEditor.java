@@ -9,6 +9,8 @@ import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
+import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import lombok.Setter;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
@@ -17,7 +19,8 @@ import ru.bprn.printhouse.views.templates.service.ChainsService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Objects;
 
 public class ChainEditor extends VerticalLayout {
 
@@ -35,7 +38,6 @@ public class ChainEditor extends VerticalLayout {
 
     public ChainEditor(SplitLayout splitLayout, TreeGrid<AbstractTemplate> treeGrid, ChainsService service, TemplatesService templatesService){
         this.templatesService = templatesService;
-        this.chains = new Chains();
         this.service = service;
         this.treeGrid = treeGrid;
         this.splitLayout = splitLayout;
@@ -51,26 +53,34 @@ public class ChainEditor extends VerticalLayout {
 
         this.add(name, hl);
 
-        chainsBinder.readBean(this.chains);
-        this.chainsBinder.refreshFields();
+        //chainsBinder.readBean(this.chains);
+        //this.chainsBinder.refreshFields();
 }
 
 private void saveBean() {
     if (chainsBinder.writeBeanIfValid(chains)) {
         service.save(chains);
         Notification.show("Цепочка сохранена!");
-        var set = template.getChains();
-        service.findById(chains.getId()).ifPresent(set::add);
-        template.setChains(set);
-        templatesService.save(template);
+
+        var set = templatesService.getChainsForTemplate(template);
+        boolean flag = true;
+        for (Chains c : set)
+            if (Objects.equals(c.getId(), chains.getId())) {
+                flag = false;
+                break;
+            }
+        if (flag) {
+            set.add(chains);
+            template.setChains(set);
+            templatesService.save(template);
+        }
         Notification.show("Шаблон сохранен!");
         showPrimary();
-        treeGrid.setItems(templatesService.findAllAsAbstractTemplates(), this::getChains);
+        populateGrid();
     }
 }
 
 private void cancelBean(){
-    treeGrid.setItems(templatesService.findAllAsAbstractTemplates(), this::getChains);
     showPrimary();
 }
 
@@ -80,12 +90,20 @@ private void showPrimary(){
     splitLayout.setSplitterPosition(50);
 }
 
-private List<AbstractTemplate> getChains(AbstractTemplate abstractTemplate) {
-    var template = templatesService.findById(abstractTemplate.getId());
-    List<AbstractTemplate> list = new ArrayList<>();
-    template.ifPresent(templates -> list.addAll(templates.getChains()));
-    return list;
-}
+    private void populateGrid() {
+        Collection<AbstractTemplate> collection = templatesService.findAllAsAbstractTemplates();
+        TreeData<AbstractTemplate> data = new TreeData<>();
+        data.addItems(null, collection);
+        for (AbstractTemplate temp : collection) {
+            if (temp instanceof Templates) {
+                Templates t = (Templates) temp;
+                Collection<AbstractTemplate> c = new ArrayList<>(t.getChains());
+                data.addItems(temp, c);
+            }
+        }
+        TreeDataProvider<AbstractTemplate> treeData = new TreeDataProvider<>(data);
+        treeGrid.setDataProvider(treeData);
+    }
 
 public void setChains(Chains chains) {
     chainsBinder.removeBean();

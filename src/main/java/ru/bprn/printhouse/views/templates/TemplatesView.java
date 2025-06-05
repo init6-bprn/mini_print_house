@@ -13,7 +13,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
+import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -25,7 +26,7 @@ import ru.bprn.printhouse.views.templates.service.ChainsService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 @PageTitle("Редактирование шаблонов")
 @Route(value = "templates", layout = MainLayout.class)
@@ -38,8 +39,6 @@ public class TemplatesView extends SplitLayout {
     private final BeanValidationBinder<Chains> chainBinder;
 
     private final TreeGrid<AbstractTemplate> chainGrid = new TreeGrid<>(AbstractTemplate.class, false);
-
-    private final ConfirmDialog confirm;
 
     private Templates beanForTempl;
 
@@ -62,14 +61,6 @@ public class TemplatesView extends SplitLayout {
         chainEditor.setVisible(false);
         chainEditor.setEnabled(false);
 
-        confirm = new ConfirmDialog("Шаблон был изменен",
-                "Вы хотите сохранить изменения?",
-                "Сохранить", s->saveBean(),
-                "Отменить", c->{
-            cancelBean();
-            c.getSource().close();
-        });
-
         this.setOrientation(Orientation.VERTICAL);
         this.setSplitterPosition(50.0);
         this.setSizeFull();
@@ -87,17 +78,11 @@ public class TemplatesView extends SplitLayout {
         var vl = new VerticalLayout();
         vl.setWidthFull();
 
-        var dialogChain = new ConfirmDialog("Внимание!" , "", "Да", confirmEvent ->
-        {
-            if (!chainGrid.asSingleSelect().isEmpty()) {
-                var opt = chainGrid.asSingleSelect().getValue();
-
-                // Надо обратить внимание ниже. Тут неправильно!!!
-                beanForTempl.getChains().remove(opt);
-                //chainGrid.setItems(beanForTempl.getChains());
-                Notification.show("Рабочая цепочка удалена!");
-            }
-        },
+        var dialogChain = new ConfirmDialog("Внимание!" , "", "Да",
+                confirmEvent -> {
+                    deleteElement();
+                    Notification.show("Элемент удален!");
+                },
                 "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         var hl = new HorizontalLayout();
@@ -111,12 +96,14 @@ public class TemplatesView extends SplitLayout {
 
         var createChainButton = new Button(VaadinIcon.PLUS.create(), event -> {
             var abs = chainGrid.asSingleSelect().getValue();
-            if (abs instanceof Templates){
-                beanForTempl = (Templates) abs;
+            if (abs!=null) {
+                if (abs instanceof Templates) beanForTempl = (Templates) abs;
+                else beanForTempl = (Templates) chainGrid.getDataCommunicator().getParentItem(abs);
                 chainEditor.setTemplate(beanForTempl);
                 chainEditor.setChains(new Chains());
                 hideTemplateAndShowChain(true);
             }
+            else Notification.show("Сначала выделите шаблон");
         });
         createChainButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createChainButton.setTooltipText("Создать новую рабочую цепочку");
@@ -130,6 +117,7 @@ public class TemplatesView extends SplitLayout {
                         hideTemplateAndShowChain(false);
                         break;
                     case Chains chain:
+                        beanForTempl=(Templates) chainGrid.getDataCommunicator().getParentItem(chain);
                         chainEditor.setTemplate(beanForTempl);
                         chainEditor.setChains(chain);
                         hideTemplateAndShowChain(true);
@@ -146,9 +134,8 @@ public class TemplatesView extends SplitLayout {
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), event -> {
-
             if (!chainGrid.asSingleSelect().isEmpty()) {
-                dialogChain.setText("Вы уверены, что хотите удалить цепочку " + chainBinder.getBean().getName() + " ?");
+                dialogChain.setText("Вы уверены, что хотите удалить " + chainGrid.asSingleSelect().getValue().getName() + " ?");
                 dialogChain.open();
             }
         });
@@ -157,10 +144,10 @@ public class TemplatesView extends SplitLayout {
         hl.add(createTemplateButton, createChainButton, updateButton, duplicateButton, deleteButton);
         vl.add(hl, chainGrid);
 
-        chainGrid.addColumn(AbstractTemplate::getName).setHeader("Название цепочки");
+        chainGrid.addHierarchyColumn(AbstractTemplate::getName);
         chainGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         chainGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        chainGrid.setItems(templatesService.findAllAsAbstractTemplates(), this::getChains);
+        populateGrid();
 
         chainGrid.asSingleSelect().addValueChangeListener(e->{
             if (e.getValue()!= null) {
@@ -172,6 +159,7 @@ public class TemplatesView extends SplitLayout {
                         templateEditor.setVisible(true);
                         break;
                     case Chains chain:
+                        if (beanForTempl==null) beanForTempl= (Templates) chainGrid.getDataCommunicator().getParentItem(chain);
                         chainEditor.setChains(chain);
                         chainEditor.setTemplate(beanForTempl);
                         templateEditor.setVisible(false);
@@ -188,32 +176,6 @@ public class TemplatesView extends SplitLayout {
         return hlay;
     }
 
-    private List<AbstractTemplate> getChains(AbstractTemplate abstractTemplate) {
-        var template = templatesService.findById(abstractTemplate.getId());
-        List<AbstractTemplate> list = new ArrayList<>();
-        template.ifPresent(templates -> list.addAll(templates.getChains()));
-        return list;
-    }
-
-    private void saveBean() {
-        if (beanForTempl != null) {
-            try {
-                templatesBinder.writeBean(beanForTempl);
-                templatesService.save(beanForTempl);
-                Notification.show("Сохранено!");
-            } catch (ValidationException e) {
-                Notification.show("Есть невалидные значения. Не сохранено!");
-            }
-        }
-        else Notification.show("Нечего сохранять!");
-    }
-
-    private void cancelBean(){
-        templatesBinder.removeBean();
-        templatesBinder.refreshFields();
-        beanForTempl = null;
-    }
-
     private void hideSecondary(){
         this.getPrimaryComponent().setVisible(false);
         this.getSecondaryComponent().getElement().setEnabled(true);
@@ -226,5 +188,39 @@ public class TemplatesView extends SplitLayout {
             chainEditor.setEnabled(aBoolean);
             templateEditor.setEnabled(!aBoolean);
             hideSecondary();
+    }
+
+    private void populateGrid() {
+        Collection<AbstractTemplate> collection = templatesService.findAllAsAbstractTemplates();
+        TreeData<AbstractTemplate> data = new TreeData<>();
+        data.addItems(null, collection);
+        for (AbstractTemplate temp : collection) {
+            if (temp instanceof Templates) {
+                Templates t = (Templates) temp;
+                Collection<AbstractTemplate> c = new ArrayList<>(t.getChains());
+                data.addItems(temp, c);
+            }
+        }
+        TreeDataProvider<AbstractTemplate> treeData = new TreeDataProvider<>(data);
+        chainGrid.setDataProvider(treeData);
+    }
+
+
+    private void deleteElement(){
+        var abstractTemplate = chainGrid.asSingleSelect().getValue();
+        switch (abstractTemplate) {
+            case Templates template:
+                templatesService.delete(template);
+                break;
+            case Chains chain:
+                beanForTempl= (Templates) chainGrid.getDataCommunicator().getParentItem(chain);
+                var data = beanForTempl.getChains();
+                data.remove(chain);
+                beanForTempl.setChains(data);
+                templatesService.save(beanForTempl);
+                break;
+            default:
+        }
+        populateGrid();
     }
 }

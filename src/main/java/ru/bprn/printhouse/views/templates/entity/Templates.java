@@ -6,7 +6,6 @@ import jakarta.persistence.OneToMany;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,7 +22,7 @@ public class Templates extends AbstractTemplate {
     // Здесь надо добавить фотку(ки) изделия
 
     @OneToMany (fetch = FetchType.EAGER)
-    private Set<Chains> chains = new HashSet<>();
+    private Set<Chains> chains;
 
     @Override
     public final boolean equals(Object o) {

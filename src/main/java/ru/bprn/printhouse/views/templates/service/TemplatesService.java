@@ -10,6 +10,7 @@ import ru.bprn.printhouse.views.templates.repository.TemplatesRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class TemplatesService {
@@ -37,9 +38,9 @@ public class TemplatesService {
 
     public Optional<Templates> findById(Long id) {return this.repository.findById(id);}
 
-    public List<Chains> getChainsForTemplate(Templates templates) {
+    public Set<Chains> getChainsForTemplate(Templates templates) {
         var temp = findById(templates.getId());
-        return temp.map(value -> value.getChains().stream().toList()).orElse(null);
+        return temp.map(Templates::getChains).orElse(null);
     }
 
 }
