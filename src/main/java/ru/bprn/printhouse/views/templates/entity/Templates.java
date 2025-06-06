@@ -1,8 +1,6 @@
 package ru.bprn.printhouse.views.templates.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -21,7 +19,11 @@ public class Templates extends AbstractTemplate {
 
     // Здесь надо добавить фотку(ки) изделия
 
-    @OneToMany (fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "templates_chains",
+            joinColumns = @JoinColumn(name = "templates_id"),
+            inverseJoinColumns = @JoinColumn(name = "chains_id"))
     private Set<Chains> chains;
 
     @Override

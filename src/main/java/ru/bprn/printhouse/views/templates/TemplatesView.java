@@ -27,6 +27,8 @@ import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 @PageTitle("Редактирование шаблонов")
 @Route(value = "templates", layout = MainLayout.class)
@@ -129,7 +131,19 @@ public class TemplatesView extends SplitLayout {
         updateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
         var duplicateButton = new Button(VaadinIcon.COPY_O.create(), event -> {
-
+            if (!chainGrid.asSingleSelect().isEmpty()) {
+                switch (chainGrid.asSingleSelect().getValue()) {
+                    case Templates template: duplicateTemplate(template);
+                        break;
+                    case Chains chain:
+                        beanForTempl=(Templates) chainGrid.getDataCommunicator().getParentItem(chain);
+                        chainEditor.setTemplate(beanForTempl);
+                        chainEditor.setChains(chain);
+                        hideTemplateAndShowChain(true);
+                        break;
+                    default:
+                }
+            }
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 
@@ -205,7 +219,6 @@ public class TemplatesView extends SplitLayout {
         chainGrid.setDataProvider(treeData);
     }
 
-
     private void deleteElement(){
         var abstractTemplate = chainGrid.asSingleSelect().getValue();
         switch (abstractTemplate) {
@@ -222,5 +235,29 @@ public class TemplatesView extends SplitLayout {
             default:
         }
         populateGrid();
+    }
+
+    private void duplicateTemplate(Templates template){
+        var newTemplate = new Templates();
+        newTemplate.setDescription(template.getDescription());
+        newTemplate.setName(template.getName()+" - Дубликат");
+        Set<Chains> set = new HashSet<>();
+        for (Chains c:template.getChains()) {
+            var dc = duplicateChain(c);
+            if (dc != null) set.add(dc);
+        }
+        newTemplate.setChains(set);
+        templatesService.save(newTemplate);
+        populateGrid();
+    }
+
+    private Chains duplicateChain(Chains chain) {
+        var newChain = new Chains();
+        chainsService.save(newChain);
+        var newId = newChain.getId();
+        newChain = chain;
+        newChain.setId(newId);
+        chainsService.save(newChain);
+        return chainsService.findById(newId).orElse(null);
     }
 }
