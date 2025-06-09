@@ -46,6 +46,7 @@ public class TemplatesView extends SplitLayout {
 
     private final TemplateEditor templateEditor;
     private final ChainEditor chainEditor;
+    private AddChainDialog addChainDialog;
 
     public TemplatesView(TemplatesService templatesService, ChainsService chainsService){
         this.templatesService = templatesService;
@@ -68,7 +69,6 @@ public class TemplatesView extends SplitLayout {
         this.setSizeFull();
         this.addToPrimary(chainGrid());
         this.addToSecondary(templateEditor, chainEditor);
-
 
     }
 
@@ -129,6 +129,7 @@ public class TemplatesView extends SplitLayout {
             }
         });
         updateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+        updateButton.setTooltipText("Изменить шаблон/цепочку");
 
         var duplicateButton = new Button(VaadinIcon.COPY_O.create(), event -> {
             if (!chainGrid.asSingleSelect().isEmpty()) {
@@ -136,16 +137,38 @@ public class TemplatesView extends SplitLayout {
                     case Templates template: duplicateTemplate(template);
                         break;
                     case Chains chain:
+                        var newChain = duplicateChain(chain);
                         beanForTempl=(Templates) chainGrid.getDataCommunicator().getParentItem(chain);
-                        chainEditor.setTemplate(beanForTempl);
-                        chainEditor.setChains(chain);
-                        hideTemplateAndShowChain(true);
+                        var ch = beanForTempl.getChains();
+                        if (ch.add(newChain)) {
+                            beanForTempl.setChains(ch);
+                            templatesService.save(beanForTempl);
+                        }
                         break;
                     default:
                 }
+                populateGrid();
             }
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+        duplicateButton.setTooltipText("Создать дубликат шаблона/цепочки");
+
+        var addChainButton = new Button(VaadinIcon.ADD_DOCK.create(), event -> {
+
+            if (!chainGrid.asSingleSelect().isEmpty()) {
+                switch (chainGrid.asSingleSelect().getValue()) {
+                    case Templates template:
+                        beanForTempl = template;
+                        break;
+                    case Chains chain:
+                        beanForTempl=(Templates) chainGrid.getDataCommunicator().getParentItem(chain);
+                        break;
+                    default:
+                }
+                if (addChainDialog == null) addChainDialog = new AddChainDialog(beanForTempl, chainsService);
+                populateGrid();
+            }
+        });
 
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), event -> {
             if (!chainGrid.asSingleSelect().isEmpty()) {
@@ -154,6 +177,7 @@ public class TemplatesView extends SplitLayout {
             }
         });
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        deleteButton.setTooltipText("Удалить элемент");
 
         hl.add(createTemplateButton, createChainButton, updateButton, duplicateButton, deleteButton);
         vl.add(hl, chainGrid);
@@ -227,9 +251,7 @@ public class TemplatesView extends SplitLayout {
                 break;
             case Chains chain:
                 beanForTempl= (Templates) chainGrid.getDataCommunicator().getParentItem(chain);
-                var data = beanForTempl.getChains();
-                data.remove(chain);
-                beanForTempl.setChains(data);
+                beanForTempl.getChains().remove(chain);
                 templatesService.save(beanForTempl);
                 break;
             default:
@@ -248,16 +270,14 @@ public class TemplatesView extends SplitLayout {
         }
         newTemplate.setChains(set);
         templatesService.save(newTemplate);
-        populateGrid();
     }
 
     private Chains duplicateChain(Chains chain) {
         var newChain = new Chains();
+        newChain.setName(chain.getName());
+        newChain.setStrJSON(chain.getStrJSON());
         chainsService.save(newChain);
-        var newId = newChain.getId();
-        newChain = chain;
-        newChain.setId(newId);
-        chainsService.save(newChain);
-        return chainsService.findById(newId).orElse(null);
+        return newChain;
     }
+
 }

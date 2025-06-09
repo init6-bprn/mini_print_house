@@ -19,7 +19,7 @@ public class Templates extends AbstractTemplate {
 
     // Здесь надо добавить фотку(ки) изделия
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinTable(
             name = "templates_chains",
             joinColumns = @JoinColumn(name = "templates_id"),
