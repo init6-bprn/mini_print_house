@@ -27,8 +27,6 @@ import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 @PageTitle("Редактирование шаблонов")
 @Route(value = "templates", layout = MainLayout.class)
@@ -134,10 +132,10 @@ public class TemplatesView extends SplitLayout {
         var duplicateButton = new Button(VaadinIcon.COPY_O.create(), event -> {
             if (!chainGrid.asSingleSelect().isEmpty()) {
                 switch (chainGrid.asSingleSelect().getValue()) {
-                    case Templates template: duplicateTemplate(template);
+                    case Templates template: templatesService.duplicateTemplate(template);
                         break;
                     case Chains chain:
-                        var newChain = duplicateChain(chain);
+                        var newChain = templatesService.duplicateChain(chain);
                         beanForTempl=(Templates) chainGrid.getDataCommunicator().getParentItem(chain);
                         var ch = beanForTempl.getChains();
                         if (ch.add(newChain)) {
@@ -165,10 +163,19 @@ public class TemplatesView extends SplitLayout {
                         break;
                     default:
                 }
-                if (addChainDialog == null) addChainDialog = new AddChainDialog(beanForTempl, chainsService);
+                if (addChainDialog == null) {
+                    addChainDialog = new AddChainDialog(beanForTempl, templatesService);
+                    addChainDialog.open();
+                }
+                else {
+                    addChainDialog.setTemplate(beanForTempl);
+                    addChainDialog.open();
+                }
                 populateGrid();
             }
         });
+        addChainButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+        addChainButton.setTooltipText("Добавить существующую цепочку");
 
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), event -> {
             if (!chainGrid.asSingleSelect().isEmpty()) {
@@ -179,7 +186,7 @@ public class TemplatesView extends SplitLayout {
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
         deleteButton.setTooltipText("Удалить элемент");
 
-        hl.add(createTemplateButton, createChainButton, updateButton, duplicateButton, deleteButton);
+        hl.add(createTemplateButton, createChainButton, updateButton, duplicateButton, addChainButton, deleteButton);
         vl.add(hl, chainGrid);
 
         chainGrid.addHierarchyColumn(AbstractTemplate::getName);
@@ -258,26 +265,4 @@ public class TemplatesView extends SplitLayout {
         }
         populateGrid();
     }
-
-    private void duplicateTemplate(Templates template){
-        var newTemplate = new Templates();
-        newTemplate.setDescription(template.getDescription());
-        newTemplate.setName(template.getName()+" - Дубликат");
-        Set<Chains> set = new HashSet<>();
-        for (Chains c:template.getChains()) {
-            var dc = duplicateChain(c);
-            if (dc != null) set.add(dc);
-        }
-        newTemplate.setChains(set);
-        templatesService.save(newTemplate);
-    }
-
-    private Chains duplicateChain(Chains chain) {
-        var newChain = new Chains();
-        newChain.setName(chain.getName());
-        newChain.setStrJSON(chain.getStrJSON());
-        chainsService.save(newChain);
-        return newChain;
-    }
-
 }

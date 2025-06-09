@@ -7,10 +7,7 @@ import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.repository.ChainsRepository;
 import ru.bprn.printhouse.views.templates.repository.TemplatesRepository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class TemplatesService {
@@ -42,5 +39,28 @@ public class TemplatesService {
         var temp = findById(templates.getId());
         return temp.map(Templates::getChains).orElse(null);
     }
+
+    public Chains duplicateChain(Chains chain) {
+        var newChain = new Chains();
+        newChain.setName(chain.getName());
+        newChain.setStrJSON(chain.getStrJSON());
+        chainsRepository.save(newChain);
+        return newChain;
+    }
+
+    public void duplicateTemplate(Templates template){
+        var newTemplate = new Templates();
+        newTemplate.setDescription(template.getDescription());
+        newTemplate.setName(template.getName()+" - Дубликат");
+        Set<Chains> set = new HashSet<>();
+        for (Chains c:template.getChains()) {
+            var dc = this.duplicateChain(c);
+            if (dc != null) set.add(dc);
+        }
+        newTemplate.setChains(set);
+        this.save(newTemplate);
+    }
+
+    public List<Chains> finAllChains() {return this.chainsRepository.findAll();}
 
 }
