@@ -26,8 +26,9 @@ public class AddChainDialog extends Dialog {
         this.templatesService=templatesService;
         this.setHeaderTitle("Добавить цепочку");
         this.setWidth("60%");
-        this.setHeight("40%");
+        this.setHeight("60%");
         this.add(components());
+
     }
 
     private void addChainToTemplate(Set<Chains> set) {
@@ -35,7 +36,7 @@ public class AddChainDialog extends Dialog {
         Set<Chains> newSet = new HashSet<>(oldSet);
         for (Chains c : set) newSet.add(templatesService.duplicateChain(c));
         template.setChains(newSet);
-        templatesService.save(template);
+        templatesService.saveAndFlush(template);
     }
 
     private Component components() {
@@ -43,9 +44,10 @@ public class AddChainDialog extends Dialog {
         vl.setSizeFull();
         var grid = new Grid<>(Chains.class, true);
         grid.setSizeFull();
-        grid.setHeight("40%");
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
         grid.setItems(templatesService.finAllChains());
+        this.addOpenedChangeListener(openedChangeEvent -> grid.setItems(templatesService.finAllChains()));
+
         vl.add(grid);
 
         var hl = new HorizontalLayout();
@@ -53,7 +55,7 @@ public class AddChainDialog extends Dialog {
             addChainToTemplate(grid.asMultiSelect().getSelectedItems());
             this.close();
         });
-        var cancelButton = new Button("Отменить", buttonClickEvent -> this.close());
+        var cancelButton = new Button("Отменить", event -> this.close());
         hl.add(saveButton, cancelButton);
         vl.add(hl);
         return vl;

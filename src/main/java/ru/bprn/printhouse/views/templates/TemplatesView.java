@@ -13,8 +13,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.provider.hierarchy.TreeData;
-import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -24,9 +22,6 @@ import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.ChainsService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 @PageTitle("Редактирование шаблонов")
 @Route(value = "templates", layout = MainLayout.class)
@@ -145,7 +140,7 @@ public class TemplatesView extends SplitLayout {
                         break;
                     default:
                 }
-                populateGrid();
+                chainGrid.setDataProvider(templatesService.populateGrid());
             }
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
@@ -165,14 +160,16 @@ public class TemplatesView extends SplitLayout {
                 }
                 if (addChainDialog == null) {
                     addChainDialog = new AddChainDialog(beanForTempl, templatesService);
+                    addChainDialog.addDialogCloseActionListener(closeEvent -> chainGrid.setDataProvider(templatesService.populateGrid()));
                     addChainDialog.open();
                 }
                 else {
                     addChainDialog.setTemplate(beanForTempl);
                     addChainDialog.open();
                 }
-                populateGrid();
+                //chainGrid.setDataProvider(templatesService.populateGrid());
             }
+            else Notification.show("Сначала выделите шаблон");
         });
         addChainButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         addChainButton.setTooltipText("Добавить существующую цепочку");
@@ -192,7 +189,7 @@ public class TemplatesView extends SplitLayout {
         chainGrid.addHierarchyColumn(AbstractTemplate::getName);
         chainGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         chainGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        populateGrid();
+        chainGrid.setDataProvider(templatesService.populateGrid());
 
         chainGrid.asSingleSelect().addValueChangeListener(e->{
             if (e.getValue()!= null) {
@@ -235,21 +232,6 @@ public class TemplatesView extends SplitLayout {
             hideSecondary();
     }
 
-    private void populateGrid() {
-        Collection<AbstractTemplate> collection = templatesService.findAllAsAbstractTemplates();
-        TreeData<AbstractTemplate> data = new TreeData<>();
-        data.addItems(null, collection);
-        for (AbstractTemplate temp : collection) {
-            if (temp instanceof Templates) {
-                Templates t = (Templates) temp;
-                Collection<AbstractTemplate> c = new ArrayList<>(t.getChains());
-                data.addItems(temp, c);
-            }
-        }
-        TreeDataProvider<AbstractTemplate> treeData = new TreeDataProvider<>(data);
-        chainGrid.setDataProvider(treeData);
-    }
-
     private void deleteElement(){
         var abstractTemplate = chainGrid.asSingleSelect().getValue();
         switch (abstractTemplate) {
@@ -263,6 +245,6 @@ public class TemplatesView extends SplitLayout {
                 break;
             default:
         }
-        populateGrid();
+        chainGrid.setDataProvider(templatesService.populateGrid());
     }
 }

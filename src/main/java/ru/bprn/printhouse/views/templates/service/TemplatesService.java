@@ -1,5 +1,7 @@
 package ru.bprn.printhouse.views.templates.service;
 
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
+import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
@@ -33,6 +35,8 @@ public class TemplatesService {
 
     public Templates save(Templates templates) {return  this.repository.save(templates);}
 
+    public Templates saveAndFlush(Templates templates) {return this.repository.saveAndFlush(templates);}
+
     public Optional<Templates> findById(Long id) {return this.repository.findById(id);}
 
     public Set<Chains> getChainsForTemplate(Templates templates) {
@@ -62,5 +66,19 @@ public class TemplatesService {
     }
 
     public List<Chains> finAllChains() {return this.chainsRepository.findAll();}
+
+    public TreeDataProvider<AbstractTemplate> populateGrid() {
+        Collection<AbstractTemplate> collection = this.findAllAsAbstractTemplates();
+        TreeData<AbstractTemplate> data = new TreeData<>();
+        data.addItems(null, collection);
+        for (AbstractTemplate temp : collection) {
+            if (temp instanceof Templates) {
+                Templates t = (Templates) temp;
+                Collection<AbstractTemplate> c = new ArrayList<>(t.getChains());
+                data.addItems(temp, c);
+            }
+        }
+        return new TreeDataProvider<>(data);
+    }
 
 }

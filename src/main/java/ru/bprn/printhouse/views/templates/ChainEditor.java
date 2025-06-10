@@ -105,11 +105,11 @@ private void showPrimary(){
         treeGrid.setDataProvider(treeData);
     }
 
-public void setChains(Chains chains) {
-    chainsBinder.removeBean();
-    chainsBinder.refreshFields();
-    this.chains = chains;
-    chainsBinder.readBean(this.chains);
+    public void setChains(Chains chains) {
+        chainsBinder.removeBean();
+        chainsBinder.refreshFields();
+        this.chains = chains;
+        chainsBinder.readBean(this.chains);
 
-}
+    }
 }
