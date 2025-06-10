@@ -160,14 +160,21 @@ public class TemplatesView extends SplitLayout {
                 }
                 if (addChainDialog == null) {
                     addChainDialog = new AddChainDialog(beanForTempl, templatesService);
-                    addChainDialog.addDialogCloseActionListener(closeEvent -> chainGrid.setDataProvider(templatesService.populateGrid()));
+                    addChainDialog.addOpenedChangeListener(closeEvent -> {
+                        if (closeEvent.isOpened()) {
+                            addChainDialog.populate();
+                        }
+                        else {
+                            chainGrid.setDataProvider(templatesService.populateGrid());
+                            chainGrid.getDataProvider().refreshAll();
+                        }
+                    });
                     addChainDialog.open();
                 }
                 else {
                     addChainDialog.setTemplate(beanForTempl);
                     addChainDialog.open();
                 }
-                //chainGrid.setDataProvider(templatesService.populateGrid());
             }
             else Notification.show("Сначала выделите шаблон");
         });
