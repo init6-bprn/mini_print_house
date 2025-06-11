@@ -6,13 +6,16 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -34,6 +37,7 @@ public class TemplatesView extends SplitLayout {
     private final BeanValidationBinder<Chains> chainBinder;
 
     private final TreeGrid<AbstractTemplate> chainGrid = new TreeGrid<>(AbstractTemplate.class, false);
+    private final TextField filterField = new TextField();
 
     private Templates beanForTempl;
 
@@ -72,6 +76,12 @@ public class TemplatesView extends SplitLayout {
 
         var vl = new VerticalLayout();
         vl.setWidthFull();
+
+        filterField.setWidth("50%");
+        filterField.setPlaceholder("Поиск");
+        filterField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
+        filterField.setValueChangeMode(ValueChangeMode.LAZY);
+        filterField.addValueChangeListener(e -> populate(e.getValue().trim()));
 
         var dialogChain = new ConfirmDialog("Внимание!" , "", "Да",
                 confirmEvent -> {
@@ -140,7 +150,7 @@ public class TemplatesView extends SplitLayout {
                         break;
                     default:
                 }
-                chainGrid.setDataProvider(templatesService.populateGrid());
+                populate(filterField.getValue().trim());
             }
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
@@ -164,10 +174,7 @@ public class TemplatesView extends SplitLayout {
                         if (closeEvent.isOpened()) {
                             addChainDialog.populate();
                         }
-                        else {
-                            chainGrid.setDataProvider(templatesService.populateGrid());
-                            chainGrid.getDataProvider().refreshAll();
-                        }
+                        else populate(filterField.getValue().trim());
                     });
                     addChainDialog.open();
                 }
@@ -191,12 +198,12 @@ public class TemplatesView extends SplitLayout {
         deleteButton.setTooltipText("Удалить элемент");
 
         hl.add(createTemplateButton, createChainButton, updateButton, duplicateButton, addChainButton, deleteButton);
-        vl.add(hl, chainGrid);
+        vl.add(filterField, hl, chainGrid);
 
         chainGrid.addHierarchyColumn(AbstractTemplate::getName);
         chainGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         chainGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-        chainGrid.setDataProvider(templatesService.populateGrid());
+        populate(filterField.getValue().trim());
 
         chainGrid.asSingleSelect().addValueChangeListener(e->{
             if (e.getValue()!= null) {
@@ -252,6 +259,10 @@ public class TemplatesView extends SplitLayout {
                 break;
             default:
         }
-        chainGrid.setDataProvider(templatesService.populateGrid());
+        populate(filterField.getValue().trim());
+    }
+
+    private void populate(String filter) {
+        chainGrid.setDataProvider(templatesService.populateGrid(filter));
     }
 }

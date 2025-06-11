@@ -24,6 +24,10 @@ public class TemplatesService {
 
     public List<Templates> findAll() {return this.repository.findAll();}
 
+    public List<Chains> findAllChains(String filter) {
+        if (filter==null||filter.isEmpty()) return this.chainsRepository.findAll();
+        else return this.chainsRepository.search(filter);}
+
     public List<AbstractTemplate> findAllAsAbstractTemplates() {
         List<AbstractTemplate> aList = new ArrayList<>();
         for (Templates t : this.repository.findAll())
@@ -35,7 +39,7 @@ public class TemplatesService {
 
     public Templates save(Templates templates) {return  this.repository.save(templates);}
 
-    public Templates saveAndFlush(Templates templates) {return this.repository.saveAndFlush(templates);}
+    public void saveAndFlush(Templates templates) {this.repository.saveAndFlush(templates);}
 
     public Optional<Templates> findById(Long id) {return this.repository.findById(id);}
 
@@ -65,10 +69,11 @@ public class TemplatesService {
         this.save(newTemplate);
     }
 
-    public List<Chains> finAllChains() {return this.chainsRepository.findAll();}
-
-    public TreeDataProvider<AbstractTemplate> populateGrid() {
-        Collection<AbstractTemplate> collection = this.findAllAsAbstractTemplates();
+    public TreeDataProvider<AbstractTemplate> populateGrid(String filter) {
+        Collection<AbstractTemplate> collection;
+        if (filter == null || filter.isEmpty())
+            collection = this.findAllAsAbstractTemplates();
+        else collection = this.repository.search(filter);
         TreeData<AbstractTemplate> data = new TreeData<>();
         data.addItems(null, collection);
         for (AbstractTemplate temp : collection) {
