@@ -10,15 +10,9 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.provider.hierarchy.TreeData;
-import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public class TemplateEditor extends VerticalLayout {
 
@@ -59,12 +53,10 @@ public class TemplateEditor extends VerticalLayout {
             service.save(template);
             Notification.show("Сохранено!");
             showPrimary();
-            populateGrid();
-        }
+            treeGrid.setDataProvider(service.populateGrid(null));        }
     }
 
     private void cancelBean(){
-        //treeGrid.setItems(service.findAllAsAbstractTemplates(), this::getChains);
         showPrimary();
     }
 
@@ -74,33 +66,11 @@ public class TemplateEditor extends VerticalLayout {
         splitLayout.setSplitterPosition(50);
     }
 
-    private List<AbstractTemplate> getChains(AbstractTemplate abstractTemplate) {
-        var template = service.findById(abstractTemplate.getId());
-        List<AbstractTemplate> list = new ArrayList<>();
-        template.ifPresent(templates -> list.addAll(templates.getChains()));
-        return list;
-    }
-
     public void setTemplate(Templates template) {
         templatesBinder.removeBean();
         templatesBinder.refreshFields();
         this.template = template;
         templatesBinder.readBean(this.template);
 
-    }
-
-    private void populateGrid() {
-        Collection<AbstractTemplate> collection = service.findAllAsAbstractTemplates();
-        TreeData<AbstractTemplate> data = new TreeData<>();
-        data.addItems(null, collection);
-        for (AbstractTemplate temp : collection) {
-            if (temp instanceof Templates) {
-                Templates t = (Templates) temp;
-                Collection<AbstractTemplate> c = new ArrayList<>(t.getChains());
-                data.addItems(temp, c);
-            }
-        }
-        TreeDataProvider<AbstractTemplate> treeData = new TreeDataProvider<>(data);
-        treeGrid.setDataProvider(treeData);
     }
 }

@@ -19,6 +19,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
@@ -33,6 +34,13 @@ public class TemplatesView extends SplitLayout {
 
     private final TemplatesService templatesService;
     private final ChainsService chainsService;
+    private final TypeOfWorksService typeOfWorksService;
+    private final AdditionalWorksBeanService worksBeanService;
+    private final VariablesForMainWorksService variablesForMainWorksService;
+    private final FormulasService formulasService;
+    private final StandartSizeService standartSizeService;
+    private final GapService gapService;
+    private final MaterialService materialService;
     private final BeanValidationBinder<Templates> templatesBinder;
     private final BeanValidationBinder<Chains> chainBinder;
 
@@ -45,9 +53,20 @@ public class TemplatesView extends SplitLayout {
     private final ChainEditor chainEditor;
     private AddChainDialog addChainDialog;
 
-    public TemplatesView(TemplatesService templatesService, ChainsService chainsService){
+    public TemplatesView(TemplatesService templatesService, ChainsService chainsService,
+                         TypeOfWorksService typeOfWorksService, AdditionalWorksBeanService worksBeanService,
+                         VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
+                         StandartSizeService standartSizeService, GapService gapService,
+                         MaterialService materialService){
         this.templatesService = templatesService;
         this.chainsService = chainsService;
+        this.typeOfWorksService = typeOfWorksService;
+        this.worksBeanService = worksBeanService;
+        this.variablesForMainWorksService = variablesForMainWorksService;
+        this.formulasService = formulasService;
+        this.standartSizeService = standartSizeService;
+        this.gapService = gapService;
+        this.materialService = materialService;
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);
 
@@ -57,7 +76,10 @@ public class TemplatesView extends SplitLayout {
         templateEditor.setVisible(false);
         templateEditor.setEnabled(false);
 
-        chainEditor = new ChainEditor(this, chainGrid, chainsService, templatesService);
+        chainEditor = new ChainEditor(this, chainGrid, chainsService, templatesService,
+                typeOfWorksService, worksBeanService,
+                variablesForMainWorksService, formulasService,
+                standartSizeService, gapService, materialService);
         chainEditor.setVisible(false);
         chainEditor.setEnabled(false);
 
@@ -82,6 +104,7 @@ public class TemplatesView extends SplitLayout {
         filterField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
         filterField.setValueChangeMode(ValueChangeMode.LAZY);
         filterField.addValueChangeListener(e -> populate(e.getValue().trim()));
+        filterField.setClearButtonVisible(true);
 
         var dialogChain = new ConfirmDialog("Внимание!" , "", "Да",
                 confirmEvent -> {

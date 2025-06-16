@@ -4,11 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
-import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 
 import java.util.Collection;
-import java.util.List;
 
 public interface TemplatesRepository extends JpaRepository<Templates, Long> {
 

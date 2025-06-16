@@ -57,6 +57,7 @@ public class AddChainDialog extends Dialog {
         text.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
         text.setValueChangeMode(ValueChangeMode.LAZY);
         text.addValueChangeListener(e -> populate());
+        text.setClearButtonVisible(true);
 
         vl.add(text, grid);
 
