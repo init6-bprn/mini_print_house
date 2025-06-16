@@ -38,7 +38,7 @@ public class OneSheetPrintingVerticalLayout extends VerticalLayout
     @Getter
     private final BeanValidationBinder<OneSheetPrinting> templateBinder;
 
-    public OneSheetPrintingVerticalLayout(
+    public OneSheetPrintingVerticalLayout (
             FormulasService formulasService,
             StandartSizeService standartSizeService,
             GapService gapService,
@@ -197,5 +197,12 @@ public class OneSheetPrintingVerticalLayout extends VerticalLayout
     @Override
     public String[] getBeanAsString(){
         return JSONToObjectsHelper.getBeanAsJSONStr(templateBinder.getBean());
+    }
+
+    @Override
+    public String getDescription() {
+        return "Однолистовая печать, размер: "+templateBinder.getBean().getProductSizeX()+"X"+templateBinder.getBean().getProductSizeY()
+                +", материал: "+templateBinder.getBean().getDefaultMaterial().getName()+", плотность: "+
+                templateBinder.getBean().getDefaultMaterial().getThickness().toString();
     }
 }

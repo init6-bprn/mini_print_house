@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.views.templates;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -32,9 +33,7 @@ import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.ChainsService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class ChainEditor extends VerticalLayout {
 
@@ -43,7 +42,6 @@ public class ChainEditor extends VerticalLayout {
 
     @Setter
     private Templates template;
-
     private final BeanValidationBinder<Chains> chainsBinder = new BeanValidationBinder<>(Chains.class);
     private final ChainsService service;
     private final TemplatesService templatesService;
@@ -84,11 +82,12 @@ public class ChainEditor extends VerticalLayout {
         var hl = new HorizontalLayout(FlexComponent.Alignment.END, saveButton, cancelButton);
 
         addTabSheetSection();
-
         this.add(name, hl, tabSheet);
     }
 
     private void saveBean() {
+        var optList = validateBean();
+        optList.ifPresent(strings -> chainsBinder.getBean().setStrJSON(JSONToObjectsHelper.unionAllToOneString(strings)));
         if (chainsBinder.writeBeanIfValid(chains)) {
             service.save(chains);
             Notification.show("Цепочка сохранена!");
@@ -106,14 +105,61 @@ public class ChainEditor extends VerticalLayout {
                 templatesService.save(template);
             }
             Notification.show("Шаблон сохранен!");
+            removeTabs();
             showPrimary();
             treeGrid.setDataProvider(templatesService.populateGrid(null));
         }
     }
 
+    private Optional<ArrayList<String[]>> validateBean() {
+        var flag = true;
+        var list = getListOfComponents(HasBinder.class);
+        var listWorkflow = new ArrayList<String[]>();
+        StringBuilder str = new StringBuilder();
+        for (Component comp : list) {
+            HasBinder hb = (HasBinder) comp;
+            if (!hb.isValid()) {
+                Notification.show("Заполните все требуемые поля!");
+                tabSheet.setSelectedTab(tabSheet.getTab(comp));
+                listWorkflow.clear();
+                flag = false;
+                break;
+            } else {
+                str.append(hb.getDescription()).append(" ");
+                listWorkflow.add(hb.getBeanAsString());
+            }
+        }
+        if (flag) {
+            chainsBinder.getBean().setName(str.toString().trim());
+            chainsBinder.refreshFields();
+            return Optional.of(listWorkflow);
+        }
+        else return Optional.empty();
+    }
+
+    public List<Component> getListOfComponents(Class<?> clazz) {
+        var listWorkflow = new ArrayList<Component>();
+        var list = getListOfTabs();
+        if (list.isPresent()) {
+            for (Component comp : list.get()) {
+                Component layout = tabSheet.getComponent((Tab) comp);
+                if (Arrays.stream(layout.getClass().getInterfaces()).toList().contains(clazz)) {
+                    listWorkflow.add(layout);
+                }
+            }
+        }
+        return listWorkflow;
+    }
+
+    public Optional<List<Component>> getListOfTabs(){
+        Optional<Component> component = tabSheet.getChildren().filter(Tabs.class::isInstance).findFirst();
+        return component.map(value -> value.getChildren().filter(Tab.class::isInstance).toList());
+    }
+
     private void cancelBean(){
-    showPrimary();
-}
+        removeTabs();
+        showPrimary();
+    }
 
     private void showPrimary(){
         splitLayout.getPrimaryComponent().setVisible(true);
@@ -125,7 +171,8 @@ public class ChainEditor extends VerticalLayout {
         chainsBinder.removeBean();
         chainsBinder.refreshFields();
         this.chains = chains;
-        chainsBinder.readBean(this.chains);
+        chainsBinder.setBean(this.chains);
+        populateTabSheet(JSONToObjectsHelper.getListOfObjects(this.chainsBinder.getBean().getStrJSON()));
     }
 
     private void addTabSheetSection(){
@@ -145,7 +192,6 @@ public class ChainEditor extends VerticalLayout {
                     oneSheetPrinting.setVariables(populateVariables(oneSheetPrinting.getClass().getSimpleName()));
                     oneSheetPrintingLayout.getTemplateBinder().setBean(oneSheetPrinting);
 
-                     
                     tabSheet.add(createTab("Однолистовая печать"), oneSheetPrintingLayout);
                     addDescriptionToName("Однолистовая печать", OneSheetPrinting.class.getSimpleName());
 
@@ -167,6 +213,14 @@ public class ChainEditor extends VerticalLayout {
         }
 
         tabSheet.setPrefixComponent(menuBar);
+    }
+
+    public void removeTabs(){
+        var list = getListOfTabs();
+        if (list.isPresent())
+            for (Component comp: list.get())
+                if (!(tabSheet.getComponent((Tab) comp) instanceof StartTabOfWorkFlowVerticalLayout))
+                    tabSheet.remove((Tab) comp);
     }
 
     private void addDescriptionToName (String str, String type) {
@@ -237,6 +291,22 @@ public class ChainEditor extends VerticalLayout {
         vla.add(la);
         tab.add(vla);
         return tab;
+    }
+
+    private void populateTabSheet(List<Object> list) {
+        for (Object obj: list) {
+            switch (obj) {
+                case OneSheetPrinting dp -> {
+                    var tabComp = new OneSheetPrintingVerticalLayout(formulasService,
+                            standartSizeService, gapService, variablesForMainWorksService, materialService);
+                    tabComp.getTemplateBinder().setBean(dp);
+                    tabSheet.add(createTab("Однолистовая печать"), tabComp);
+                }
+                case AdditionalWorksBean wb ->  tabSheet.add(createTab(wb.getName()), new AdditionalWorksLayout(wb, worksBeanService));
+                default -> throw new IllegalStateException("Unexpected value: " + obj);
+            }
+        }
+
     }
 
     private Map<String, Number> populateVariables(String name) {

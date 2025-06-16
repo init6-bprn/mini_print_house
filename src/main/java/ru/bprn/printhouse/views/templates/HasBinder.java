@@ -6,4 +6,6 @@ public interface HasBinder {
 
     public String[] getBeanAsString();
 
+    public String getDescription();
+
 }
