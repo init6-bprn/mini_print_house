@@ -290,6 +290,11 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     }
 
     @Override
+    public String getDescription() {
+        return "";
+    }
+
+    @Override
     public int getExtraLeaves() {
         return 0; //templateBinder.getBean().getQuantityOfExtraLeaves();
     }

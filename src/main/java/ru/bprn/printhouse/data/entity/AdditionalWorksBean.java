@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
-import java.util.List;
+import java.util.Set;
 
 @ToString
 @NoArgsConstructor
@@ -26,17 +26,15 @@ public class AdditionalWorksBean implements HasAction, HasMaterials{
     @ManyToOne(fetch = FetchType.EAGER)
     private TypeOfWorks typeOfWorks;
 
-    //private List<String> parentClassList;
-
     @ManyToOne(fetch = FetchType.EAGER)
     private Formulas actionFormula;
 
     private boolean haveAction = true;
 
-    @ManyToMany
-    private List<Material> listOfMaterials;
+    @ManyToMany(fetch = FetchType.EAGER)
+    private Set<Material> listOfMaterials;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private Material defaultMaterial;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -66,7 +64,7 @@ public class AdditionalWorksBean implements HasAction, HasMaterials{
     }
 
     @Override
-    public List<Material> getListOfMaterials() {
+    public Set<Material> getListOfMaterials() {
         return listOfMaterials;
     }
 

@@ -87,27 +87,30 @@ public class ChainEditor extends VerticalLayout {
 
     private void saveBean() {
         var optList = validateBean();
-        optList.ifPresent(strings -> chainsBinder.getBean().setStrJSON(JSONToObjectsHelper.unionAllToOneString(strings)));
-        if (chainsBinder.writeBeanIfValid(chains)) {
-            service.save(chains);
-            Notification.show("Цепочка сохранена!");
+        if (!optList.isEmpty()) {
+            chainsBinder.getBean().setStrJSON(JSONToObjectsHelper.unionAllToOneString(optList.get()));
+            //optList.ifPresent(strings -> chainsBinder.getBean().setStrJSON(JSONToObjectsHelper.unionAllToOneString(strings)));
+            if (chainsBinder.writeBeanIfValid(chains)) {
+                service.save(chains);
+                Notification.show("Цепочка сохранена!");
 
-            var set = templatesService.getChainsForTemplate(template);
-            boolean flag = true;
-            for (Chains c : set)
-                if (Objects.equals(c.getId(), chains.getId())) {
-                    flag = false;
-                    break;
+                var set = templatesService.getChainsForTemplate(template);
+                boolean flag = true;
+                for (Chains c : set)
+                    if (Objects.equals(c.getId(), chains.getId())) {
+                        flag = false;
+                        break;
+                    }
+                if (flag) {
+                    set.add(chains);
+                    template.setChains(set);
+                    templatesService.save(template);
                 }
-            if (flag) {
-                set.add(chains);
-                template.setChains(set);
-                templatesService.save(template);
+                Notification.show("Шаблон сохранен!");
+                removeTabs();
+                showPrimary();
+                treeGrid.setDataProvider(templatesService.populateGrid(null));
             }
-            Notification.show("Шаблон сохранен!");
-            removeTabs();
-            showPrimary();
-            treeGrid.setDataProvider(templatesService.populateGrid(null));
         }
     }
 
@@ -207,7 +210,7 @@ public class ChainEditor extends VerticalLayout {
                 // Пункты доп.работ
                 subMenu1.addItem(work.getName(), menuItemClickEvent -> {
                     tabSheet.add(createTab(work.getName()), new AdditionalWorksLayout(work, worksBeanService));
-                    addDescriptionToName(work.getName(), "Cutting");
+                    addDescriptionToName(work.getName(), "Резка");
                 });
             }
         }

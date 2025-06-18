@@ -6,6 +6,7 @@ import ru.bprn.printhouse.data.entity.TypeOfWorks;
 import ru.bprn.printhouse.data.repository.AdditionalWorksBeanRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AdditionalWorksBeanService {
@@ -19,4 +20,23 @@ public class AdditionalWorksBeanService {
     public List<AdditionalWorksBean> findAllByType(TypeOfWorks type) {return this.repository.findAllByTypeOfWorks(type);}
     public AdditionalWorksBean save(AdditionalWorksBean bean) {return this.repository.save(bean);}
     public void delete(AdditionalWorksBean bean) {this.repository.delete(bean);}
+    public List<AdditionalWorksBean> populate (String str){
+        if (str == null) return findAll();
+        else return this.repository.search(str);
+    }
+    public Optional<AdditionalWorksBean> duplicate(AdditionalWorksBean bean) {
+        if (bean!= null){
+            var work = new AdditionalWorksBean();
+            work.setName(bean.getName());
+            work.setHaveAction(bean.isHaveAction());
+            work.setActionFormula(bean.getActionFormula());
+            work.setTypeOfWorks(bean.getTypeOfWorks());
+            work.setHaveMaterial(bean.isHaveMaterial());
+            work.setMaterialFormula(bean.getMaterialFormula());
+            work.setListOfMaterials(bean.getListOfMaterials());
+            work.setDefaultMaterial(bean.getDefaultMaterial());
+            return Optional.of(this.repository.save(work));
+        }
+        else return Optional.empty();
+    }
 }

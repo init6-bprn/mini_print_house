@@ -12,16 +12,21 @@ public class AdditionalWorksLayout extends VerticalLayout {
         this.setSizeFull();
 
         if (worksBean.isHaveAction()) {
-            TextArea textArea = new TextArea();
-            textArea.setWidthFull();
-            textArea.setLabel(worksBean.getActionFormula().getDescription());
-            textArea.setMaxRows(3);
-            textArea.setValue(worksBean.getActionFormula().getFormula());
-            this.add(textArea);
+            TextArea actionTextArea = new TextArea();
+            actionTextArea.setWidthFull();
+            actionTextArea.setLabel(worksBean.getActionFormula().getDescription());
+            actionTextArea.setMaxRows(3);
+            actionTextArea.setValue(worksBean.getActionFormula().getFormula());
+            this.add(actionTextArea);
         }
 
         if (worksBean.isHaveMaterial()) {
-            //worksBean.getListOfMaterials();
+            TextArea materialTextArea = new TextArea();
+            materialTextArea.setWidthFull();
+            materialTextArea.setLabel(worksBean.getActionFormula().getDescription());
+            materialTextArea.setMaxRows(3);
+            materialTextArea.setValue(worksBean.getActionFormula().getFormula());
+            this.add(materialTextArea);
         }
 
     }

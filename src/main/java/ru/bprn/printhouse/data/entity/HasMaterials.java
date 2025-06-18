@@ -1,9 +1,9 @@
 package ru.bprn.printhouse.data.entity;
 
-import java.util.List;
+import java.util.Set;
 
 public interface HasMaterials {
-    List<Material> getListOfMaterials();
+    Set<Material> getListOfMaterials();
     Material getDefaultMaterial();
     Formulas getMaterialFormula();
     boolean haveMaterials();
