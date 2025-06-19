@@ -22,6 +22,9 @@ public class Formulas {
     @NotBlank
     private String name = "";
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    private TypeOfWorks typeOfWorks;
+
     private String formula = "";
 
     private String description = "";

@@ -44,6 +44,7 @@ public class AdditionalWorksBeanDictionary extends VerticalLayout {
     private final MaterialService materialService;
     private final BeanValidationBinder<AdditionalWorksBean> bean = new BeanValidationBinder<>(AdditionalWorksBean.class);
     private final SelectMaterailsDialog materialDialog = new SelectMaterailsDialog("Выберите материалы");
+    private final Select<Material> materialSelect = new Select<>();
 
     public AdditionalWorksBeanDictionary(AdditionalWorksBeanService service,
                                          FormulasService formulasService,
@@ -75,6 +76,7 @@ public class AdditionalWorksBeanDictionary extends VerticalLayout {
 
         grid.addItemClickListener(e->{
            bean.setBean(e.getItem());
+           materialSelect.setItems(bean.getBean().getListOfMaterials());
            bean.refreshFields();
         });
 
@@ -84,7 +86,6 @@ public class AdditionalWorksBeanDictionary extends VerticalLayout {
     }
 
     private Component addForm() {
-        var materialSelect = new Select<Material>();
         materialSelect.setLabel("Материал по умолчанию");
 
         materialDialog.addOpenedChangeListener(openedChangeEvent -> {
