@@ -1,6 +1,7 @@
 package ru.bprn.printhouse.views.dictionary;
 
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -11,6 +12,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -36,7 +38,7 @@ public class FormulasDictionary extends VerticalLayout {
     private List<VariablesForMainWorks> list;
     private final FormulasService formulasService;
     private final VariablesForMainWorksService variables;
-    private CreateFormula dialog;
+    private CreateFormula formLayout;
     private final Grid<Formulas> grid = new Grid<>(Formulas.class, false);
     private final TextField filterField = new TextField();
 
@@ -44,9 +46,14 @@ public class FormulasDictionary extends VerticalLayout {
     private Formulas formulaBean = new Formulas();
     
     public FormulasDictionary(FormulasService formulasService, VariablesForMainWorksService variables){
-        super();
         this.formulasService = formulasService;
         this.variables = variables;
+
+        formLayout = new CreateFormula(formulasService, variables);
+        var split = new SplitLayout(addGrid(), formLayout, SplitLayout.Orientation.HORIZONTAL);
+        split.setSizeFull();
+        split.setSplitterPosition(40.0);
+        this.add(split);
 
         this.setSizeFull();
 
@@ -54,21 +61,11 @@ public class FormulasDictionary extends VerticalLayout {
         formulaBinder.setBean(formulaBean);
 
 
-        addDialog();
-        addGrid();
+        //addDialog();
         addComponents();
     }
 
-    private void addDialog() {
-        dialog = new CreateFormula(formulasService, variables);
-        dialog.setHeight("50%");
-        dialog.setWidth("50%");
-        dialog.setCloseOnOutsideClick(true);
-
-
-    }
-
-    private void addGrid() {
+    private Component addGrid() {
         filterField.setWidth("50%");
         filterField.setPlaceholder("Поиск");
         filterField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
@@ -79,12 +76,11 @@ public class FormulasDictionary extends VerticalLayout {
         grid.addColumn(Formulas::getName).setHeader("Название");
         grid.addColumn(Formulas::getTypeOfWorks).setHeader("Тип работы");
         grid.setItems(formulasService.findAll());
-        grid.setHeight("30%");
+        grid.setHeight("50%");
         grid.addItemClickListener(formulasEvent -> {
-           dialog.setFormulaBean(formulasEvent.getItem());
-           dialog.open();
+           formLayout.setFormulaBean(formulasEvent.getItem());
         });
-        this.add(buttons(), filterField, grid);
+        return new VerticalLayout(buttons(), filterField, grid);
     }
 
     private void addComponents(){

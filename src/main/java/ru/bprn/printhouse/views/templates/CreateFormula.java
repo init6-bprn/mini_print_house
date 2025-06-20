@@ -5,6 +5,8 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
@@ -20,7 +22,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-public class CreateFormula extends Dialog {
+public class CreateFormula extends VerticalLayout {
 
     private final TextArea formulaField = new TextArea("Формула");
     private final BeanValidationBinder<Formulas> formulaBinder;
@@ -31,7 +33,6 @@ public class CreateFormula extends Dialog {
     private Formulas formulaBean = new Formulas();
 
     public CreateFormula(FormulasService formulasService, VariablesForMainWorksService variables) {
-        setModal(true);
         formulaBinder = new BeanValidationBinder<>(Formulas.class);
         formulaBinder.setBean(formulaBean);
         this.list = variables;
@@ -40,7 +41,7 @@ public class CreateFormula extends Dialog {
             strVariables.append(rec.getName()).append(" = 1;");
         }
 
-        this.setHeaderTitle("Редактирование формулы");
+        //this.setHeaderTitle("Редактирование формулы");
         var name = new TextField("Название формулы");
         formulaBinder.forField(name).withValidator(s -> !s.isEmpty(), "Не может быть пустым!")
                 .bind(Formulas::getName, Formulas::setName);
@@ -71,16 +72,15 @@ public class CreateFormula extends Dialog {
                 } catch (ValidationException e) {
                     Notification.show("Невозможно сохранить объект в БД");
                 }
-                this.close();
+                //this.close();
             }
         });
         var cancelButton = new Button("Cancel", buttonClickEvent -> {
             formulaBinder.removeBean();
-            this.close();
+           // this.close();
         });
 
-        this.getFooter().add(cancelButton);
-        this.getFooter().add(saveButton);
+        this.add(new HorizontalLayout(JustifyContentMode.END,cancelButton, saveButton));
     }
 
     private Div addVariablesButton() {
