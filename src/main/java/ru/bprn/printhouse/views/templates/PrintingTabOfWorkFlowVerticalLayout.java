@@ -34,7 +34,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     private final StandartSizeService standartSizeService;
     private final GapService gapService;
 
-    private final CreateFormula dialogFormula;
+    private final CreateFormulaDialog dialogFormula;
     private final Select<Formulas> formulaCombo = new Select<>();
     private final Select<PrintMashine> printerCombo = new Select<>();
     private final Select<QuantityColors> backQuantityOfColor = new Select<>();
@@ -51,7 +51,8 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             FormulasService formulasService,
             StandartSizeService standartSizeService,
             GapService gapService,
-            VariablesForMainWorksService variables)
+            VariablesForMainWorksService variables,
+            TypeOfWorksService worksService)
     {
         this.printerService = printerService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
@@ -59,7 +60,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         this.standartSizeService = standartSizeService;
         this.gapService = gapService;
         templateBinder = new BeanValidationBinder<>(DigitalPrinting.class);
-        dialogFormula = new CreateFormula(formulasService, variables);
+        dialogFormula = new CreateFormulaDialog(formulasService, variables, worksService);
 
         add(addName());
         add(addSizeOfProductSection());

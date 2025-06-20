@@ -7,6 +7,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
@@ -14,8 +15,10 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.Formulas;
+import ru.bprn.printhouse.data.entity.TypeOfWorks;
 import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.FormulasService;
+import ru.bprn.printhouse.data.service.TypeOfWorksService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 
 import javax.script.ScriptEngine;
@@ -28,11 +31,13 @@ public class CreateFormula extends VerticalLayout {
     private final BeanValidationBinder<Formulas> formulaBinder;
     private final StringBuilder strVariables = new StringBuilder();
     private final VariablesForMainWorksService list;
+    private final TypeOfWorksService worksService;
 
     @Getter
     private Formulas formulaBean = new Formulas();
 
-    public CreateFormula(FormulasService formulasService, VariablesForMainWorksService variables) {
+    public CreateFormula(FormulasService formulasService, VariablesForMainWorksService variables, TypeOfWorksService worksService) {
+        this.worksService = worksService;
         formulaBinder = new BeanValidationBinder<>(Formulas.class);
         formulaBinder.setBean(formulaBean);
         this.list = variables;
@@ -41,7 +46,11 @@ public class CreateFormula extends VerticalLayout {
             strVariables.append(rec.getName()).append(" = 1;");
         }
 
-        //this.setHeaderTitle("Редактирование формулы");
+        var selectType = new Select<TypeOfWorks>();
+        selectType.setItems(worksService.findAll());
+        selectType.setLabel("Тип работы");
+        formulaBinder.forField(selectType).asRequired().bind(Formulas::getTypeOfWorks, Formulas::setTypeOfWorks);
+
         var name = new TextField("Название формулы");
         formulaBinder.forField(name).withValidator(s -> !s.isEmpty(), "Не может быть пустым!")
                 .bind(Formulas::getName, Formulas::setName);
@@ -62,7 +71,7 @@ public class CreateFormula extends VerticalLayout {
         formulaField.setClearButtonVisible(true);
         formulaField.setMaxRows(3);
 
-        this.add(name, formulaField, addVariablesButton());
+        this.add(selectType, name, formulaField, addVariablesButton());
 
         var saveButton = new Button("Save", buttonClickEvent -> {
             if (formulaBinder.isValid()) {
@@ -72,15 +81,16 @@ public class CreateFormula extends VerticalLayout {
                 } catch (ValidationException e) {
                     Notification.show("Невозможно сохранить объект в БД");
                 }
-                //this.close();
+                close();
             }
         });
         var cancelButton = new Button("Cancel", buttonClickEvent -> {
             formulaBinder.removeBean();
-           // this.close();
+            close();
         });
-
-        this.add(new HorizontalLayout(JustifyContentMode.END,cancelButton, saveButton));
+        var hl = new HorizontalLayout(JustifyContentMode.END, cancelButton, saveButton);
+        hl.setWidthFull();
+        this.add(hl);
     }
 
     private Div addVariablesButton() {
@@ -104,5 +114,12 @@ public class CreateFormula extends VerticalLayout {
         formulaBinder.refreshFields();
     }
 
+    private void close(){
+        if (this.getParent().isPresent()) {
+            if (this.getParent().get() instanceof Dialog dialog) {
+                dialog.close();
+            }
+        }
+    }
 
 }

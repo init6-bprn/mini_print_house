@@ -189,7 +189,7 @@ public class ChainEditor extends VerticalLayout {
         SubMenu oneSheetSubMenu = oneSheet.getSubMenu();
         oneSheetSubMenu.addItem("Однолистовая печать", menuItemClickEvent -> {
                     var oneSheetPrintingLayout = new OneSheetPrintingVerticalLayout(formulasService,
-                            standartSizeService, gapService, variablesForMainWorksService, materialService);
+                            standartSizeService, gapService, variablesForMainWorksService, materialService, typeOfWorksService);
                     
                     var oneSheetPrinting = new OneSheetPrinting();
                     oneSheetPrinting.setVariables(populateVariables(oneSheetPrinting.getClass().getSimpleName()));
@@ -301,7 +301,7 @@ public class ChainEditor extends VerticalLayout {
             switch (obj) {
                 case OneSheetPrinting dp -> {
                     var tabComp = new OneSheetPrintingVerticalLayout(formulasService,
-                            standartSizeService, gapService, variablesForMainWorksService, materialService);
+                            standartSizeService, gapService, variablesForMainWorksService, materialService, typeOfWorksService);
                     tabComp.getTemplateBinder().setBean(dp);
                     tabSheet.add(createTab("Однолистовая печать"), tabComp);
                 }

@@ -30,7 +30,7 @@ public class OneSheetPrintingVerticalLayout extends VerticalLayout
     private final GapService gapService;
     private final MaterialService materialService;
 
-    private final CreateFormula dialogFormula;
+    private final CreateFormulaDialog dialogFormula;
     private final Select<Formulas> formulaCombo = new Select<>();
     private final Select<Material> materialSelect = new Select<>();
     private SelectMaterailsDialog dialog;
@@ -43,14 +43,15 @@ public class OneSheetPrintingVerticalLayout extends VerticalLayout
             StandartSizeService standartSizeService,
             GapService gapService,
             VariablesForMainWorksService variables,
-            MaterialService materialService)
+            MaterialService materialService,
+            TypeOfWorksService worksService)
     {
         this.formulasService = formulasService;
         this.standartSizeService = standartSizeService;
         this.gapService = gapService;
         this.materialService = materialService;
         templateBinder = new BeanValidationBinder<>(OneSheetPrinting.class);
-        dialogFormula = new CreateFormula(formulasService, variables);
+        dialogFormula = new CreateFormulaDialog(formulasService, variables, worksService);
 
         add(addSizeOfProductSection());
         addMaterialSection();

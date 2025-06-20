@@ -22,6 +22,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.FormulasService;
+import ru.bprn.printhouse.data.service.TypeOfWorksService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.templates.CreateFormula;
@@ -45,11 +46,11 @@ public class FormulasDictionary extends VerticalLayout {
     @Getter
     private Formulas formulaBean = new Formulas();
     
-    public FormulasDictionary(FormulasService formulasService, VariablesForMainWorksService variables){
+    public FormulasDictionary(FormulasService formulasService, VariablesForMainWorksService variables, TypeOfWorksService worksService){
         this.formulasService = formulasService;
         this.variables = variables;
 
-        formLayout = new CreateFormula(formulasService, variables);
+        formLayout = new CreateFormula(formulasService, variables, worksService);
         var split = new SplitLayout(addGrid(), formLayout, SplitLayout.Orientation.HORIZONTAL);
         split.setSizeFull();
         split.setSplitterPosition(40.0);
