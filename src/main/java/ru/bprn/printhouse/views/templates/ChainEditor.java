@@ -78,7 +78,7 @@ public class ChainEditor extends VerticalLayout {
         this.chainsBinder.bind(name, Chains::getName, Chains::setName);
 
         var saveButton = new Button("Save", o -> saveBean());
-        var cancelButton = new Button("Cancel", o ->cancelBean());
+        var cancelButton = new Button("Cancel", o -> cancelBean());
         var hl = new HorizontalLayout(FlexComponent.Alignment.END, saveButton, cancelButton);
 
         addTabSheetSection();

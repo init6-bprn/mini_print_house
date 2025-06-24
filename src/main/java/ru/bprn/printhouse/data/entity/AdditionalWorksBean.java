@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -54,6 +55,7 @@ public class AdditionalWorksBean implements HasAction, HasMaterials{
     }
 
     @Override
+    @JsonIgnore
     public String getActionName() {
         return name;
     }

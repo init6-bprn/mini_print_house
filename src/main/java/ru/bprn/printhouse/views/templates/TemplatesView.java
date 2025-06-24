@@ -239,7 +239,7 @@ public class TemplatesView extends SplitLayout {
                         templateEditor.setVisible(true);
                         break;
                     case Chains chain:
-                        if (beanForTempl==null) beanForTempl= (Templates) chainGrid.getDataCommunicator().getParentItem(chain);
+                        if (beanForTempl==null) beanForTempl = (Templates) chainGrid.getDataCommunicator().getParentItem(chain);
                         chainEditor.removeTabs();
                         chainEditor.setChains(chain);
                         chainEditor.setTemplate(beanForTempl);

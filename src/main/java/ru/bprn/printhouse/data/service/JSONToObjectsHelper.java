@@ -15,7 +15,7 @@ public class JSONToObjectsHelper {
         var list = new ArrayList<String[]>();
         if (str!= null) {
             if (!str.isBlank()) {
-                String[] arrayStr = str.split("-=+=-");
+                String[] arrayStr = str.split("-=#=-");
                 for (String s : arrayStr) {
                     list.add(s.split("-=@=-"));
                 }
@@ -30,7 +30,7 @@ public class JSONToObjectsHelper {
 
         for (String[] str: list) {
             if (flag) flag = false;
-            else builder.append("-=+=-");
+            else builder.append("-=#=-");
             builder.append(str[0]).append("-=@=-").append(str[1]);
         }
         return builder.toString();
