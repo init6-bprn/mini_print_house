@@ -28,6 +28,10 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.additionalWorks.entity.AdditionalWorksBean;
+import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.additionalWorks.service.AdditionalWorksBeanService;
+import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
 
 import java.io.IOException;
 import java.util.*;

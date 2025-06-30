@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.data.products;
+package ru.bprn.printhouse.views.products;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;

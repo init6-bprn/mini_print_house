@@ -2,7 +2,7 @@ package ru.bprn.printhouse.data;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ru.bprn.printhouse.data.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
 
 @NoArgsConstructor
 @AllArgsConstructor

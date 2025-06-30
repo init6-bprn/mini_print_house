@@ -19,14 +19,16 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import ru.bprn.printhouse.data.entity.User;
-import ru.bprn.printhouse.data.products.ProductsView;
 import ru.bprn.printhouse.security.AuthenticatedUser;
-import ru.bprn.printhouse.views.about.AboutView;
+import ru.bprn.printhouse.views.additionalWorks.AdditionalWorksBeanDictionary;
+import ru.bprn.printhouse.views.additionalWorks.TypeOfWorksDictionary;
 import ru.bprn.printhouse.views.dictionary.*;
 import ru.bprn.printhouse.views.machine.cutters.PaperCuttersView;
 import ru.bprn.printhouse.views.machine.printers.PrintSpeedMaterialDensityView;
 import ru.bprn.printhouse.views.machine.printers.PrintersView;
 import ru.bprn.printhouse.views.material.MaterialView;
+import ru.bprn.printhouse.views.material.PrintingMaterialView;
+import ru.bprn.printhouse.views.products.ProductsView;
 import ru.bprn.printhouse.views.templates.TemplatesView;
 import ru.bprn.printhouse.views.templates.WorkFlowView;
 
@@ -89,9 +91,6 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(TypeOfMaterialDictionary.class))
             dick.addItem(new SideNavItem("Тип материала", TypeOfMaterialDictionary.class, VaadinIcon.RECORDS.create()));
 
-        if (accessChecker.hasAccess(TypeOfWorksDictionary.class))
-            dick.addItem(new SideNavItem("Типы работ", TypeOfWorksDictionary.class, VaadinIcon.RECORDS.create()));
-
         if (accessChecker.hasAccess(ThicknessDictionary.class))
             dick.addItem(new SideNavItem("Плотность материала", ThicknessDictionary.class, VaadinIcon.RECORDS.create()));
 
@@ -138,18 +137,21 @@ public class MainLayout extends AppLayout {
 
         if (accessChecker.hasAccess(MaterialView.class))
             dick.addItem(new SideNavItem("Стоимость отпечатка", CostOfPrintSizeLeafAndColorDictionary.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+
+        if (accessChecker.hasAccess(MaterialView.class))
+            dick.addItem(new SideNavItem("Печатные материалы", PrintingMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+
         nav.addItem(dick);
 
         dick = new SideNavItem("Шаблоны");
-        //if (accessChecker.hasAccess(TemplateView.class))
-        //    dick.addItem(new SideNavItem("Шаблоны работ", TemplateView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+
+        if (accessChecker.hasAccess(TemplatesView.class))
+            dick.addItem(new SideNavItem("Новый редактор шаблонов", TemplatesView.class, LineAwesomeIcon.FILE.create()));
 
         if (accessChecker.hasAccess(WorkFlowView.class))
             dick.addItem(new SideNavItem("WorkFlows", WorkFlowView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-        nav.addItem(dick);
 
-        if (accessChecker.hasAccess(TemplatesView.class))
-            nav.addItem(new SideNavItem("Новый редактор шаблонов", TemplatesView.class, LineAwesomeIcon.FILE.create()));
+        nav.addItem(dick);
 
         dick = new SideNavItem("Продукты");
         //if (accessChecker.hasAccess(TemplateView.class))
@@ -160,6 +162,9 @@ public class MainLayout extends AppLayout {
         nav.addItem(dick);
 
         dick = new SideNavItem("Работы");
+
+        if (accessChecker.hasAccess(TypeOfWorksDictionary.class))
+            dick.addItem(new SideNavItem("Типы работ", TypeOfWorksDictionary.class, VaadinIcon.RECORDS.create()));
 
         if (accessChecker.hasAccess(AdditionalWorksBeanDictionary.class))
             dick.addItem(new SideNavItem("Дополнительные работы", AdditionalWorksBeanDictionary.class, LineAwesomeIcon.GLOBE_SOLID.create()));

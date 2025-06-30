@@ -5,9 +5,9 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import lombok.Getter;
-import ru.bprn.printhouse.data.entity.AdditionalWorksBean;
+import ru.bprn.printhouse.views.additionalWorks.entity.AdditionalWorksBean;
 import ru.bprn.printhouse.views.material.entity.Material;
-import ru.bprn.printhouse.data.service.AdditionalWorksBeanService;
+import ru.bprn.printhouse.views.additionalWorks.service.AdditionalWorksBeanService;
 import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
 
 public class AdditionalWorksLayout extends VerticalLayout implements HasBinder{

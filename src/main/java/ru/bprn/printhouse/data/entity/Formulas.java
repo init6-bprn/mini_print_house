@@ -3,6 +3,7 @@ package ru.bprn.printhouse.data.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
 
 @Entity
 @Table (name = "formulas")

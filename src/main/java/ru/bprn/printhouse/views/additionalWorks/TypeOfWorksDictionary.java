@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.dictionary;
+package ru.bprn.printhouse.views.additionalWorks;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValueAndElement;
@@ -10,8 +10,8 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
-import ru.bprn.printhouse.data.entity.TypeOfWorks;
-import ru.bprn.printhouse.data.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
 import ru.bprn.printhouse.views.MainLayout;
 
 import java.util.List;

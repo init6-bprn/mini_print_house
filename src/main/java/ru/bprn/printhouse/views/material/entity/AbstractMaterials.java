@@ -2,13 +2,14 @@ package ru.bprn.printhouse.views.material.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-@MappedSuperclass
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "material_type")
 @Getter
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -22,11 +23,12 @@ public abstract class AbstractMaterials {
     @NotBlank
     protected String name = "Название материала";
 
-    @NotNull
-    protected String clazz;
+    protected String article;
 
     protected String unitsOfMeasurement;
 
     @PositiveOrZero
     protected int price;
+
+    protected String searchStr;
 }

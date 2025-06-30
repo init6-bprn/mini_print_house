@@ -14,7 +14,7 @@ import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.material.service.MaterialService;
 
-@PageTitle("Материал для печати")
+@PageTitle("Листовые печатные материалы")
 @Route(value = "materials", layout = MainLayout.class)
 @AnonymousAllowed
 

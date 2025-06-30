@@ -1,9 +1,12 @@
-package ru.bprn.printhouse.data.entity;
+package ru.bprn.printhouse.views.additionalWorks.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import ru.bprn.printhouse.data.entity.Formulas;
+import ru.bprn.printhouse.data.entity.HasAction;
+import ru.bprn.printhouse.data.entity.HasMaterials;
 import ru.bprn.printhouse.views.material.entity.Material;
 
 import java.util.Set;
@@ -16,7 +19,7 @@ import java.util.Set;
 @Entity
 @Table(name = "additional_works_beans")
 @EqualsAndHashCode
-public class AdditionalWorksBean implements HasAction, HasMaterials{
+public class AdditionalWorksBean implements HasAction, HasMaterials {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

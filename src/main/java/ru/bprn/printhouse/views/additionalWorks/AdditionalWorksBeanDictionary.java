@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.dictionary;
+package ru.bprn.printhouse.views.additionalWorks;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -21,15 +21,18 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.data.entity.AdditionalWorksBean;
+import ru.bprn.printhouse.views.additionalWorks.entity.AdditionalWorksBean;
 import ru.bprn.printhouse.data.entity.Formulas;
+import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.Material;
-import ru.bprn.printhouse.data.entity.TypeOfWorks;
-import ru.bprn.printhouse.data.service.AdditionalWorksBeanService;
+import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.additionalWorks.service.AdditionalWorksBeanService;
 import ru.bprn.printhouse.data.service.FormulasService;
+import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.material.service.MaterialService;
-import ru.bprn.printhouse.data.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.templates.SelectAbstractMaterialsDialog;
 import ru.bprn.printhouse.views.templates.SelectMaterailsDialog;
 
 @PageTitle("Создание дополнительных работ")
@@ -41,19 +44,20 @@ public class AdditionalWorksBeanDictionary extends VerticalLayout {
     private final AdditionalWorksBeanService service;
     private final FormulasService formulasService;
     private final TypeOfWorksService typeOfWorksService;
-    private final MaterialService materialService;
+    private final AbstractMaterialService materialService;
     private final BeanValidationBinder<AdditionalWorksBean> bean = new BeanValidationBinder<>(AdditionalWorksBean.class);
-    private final SelectMaterailsDialog materialDialog = new SelectMaterailsDialog("Выберите материалы");
-    private final Select<Material> materialSelect = new Select<>();
+    private final SelectAbstractMaterialsDialog materialDialog;
+    private final Select<AbstractMaterials> materialSelect = new Select<>();
 
     public AdditionalWorksBeanDictionary(AdditionalWorksBeanService service,
                                          FormulasService formulasService,
                                          TypeOfWorksService typeOfWorksService,
-                                         MaterialService materialService) {
+                                         AbstractMaterialService materialService) {
         this.service = service;
         this.formulasService = formulasService;
         this.typeOfWorksService = typeOfWorksService;
         this.materialService = materialService;
+        materialDialog = new SelectAbstractMaterialsDialog("Выберите материалы", materialService);
         this.setSizeFull();
         var splitLayout = new SplitLayout(addGrid(), addForm(), SplitLayout.Orientation.HORIZONTAL);
         splitLayout.setSizeFull();

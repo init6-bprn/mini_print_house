@@ -15,10 +15,10 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.Formulas;
-import ru.bprn.printhouse.data.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
 import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.data.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 
 import javax.script.ScriptEngine;

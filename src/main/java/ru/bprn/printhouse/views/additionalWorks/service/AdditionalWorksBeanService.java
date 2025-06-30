@@ -1,9 +1,9 @@
-package ru.bprn.printhouse.data.service;
+package ru.bprn.printhouse.views.additionalWorks.service;
 
 import org.springframework.stereotype.Service;
-import ru.bprn.printhouse.data.entity.AdditionalWorksBean;
-import ru.bprn.printhouse.data.entity.TypeOfWorks;
-import ru.bprn.printhouse.data.repository.AdditionalWorksBeanRepository;
+import ru.bprn.printhouse.views.additionalWorks.entity.AdditionalWorksBean;
+import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.additionalWorks.repository.AdditionalWorksBeanRepository;
 
 import java.util.List;
 import java.util.Optional;

@@ -22,7 +22,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.data.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.material.entity.Material;
