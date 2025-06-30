@@ -26,6 +26,7 @@ import ru.bprn.printhouse.data.entity.AdditionalWorksBean;
 import ru.bprn.printhouse.data.entity.TypeOfWorks;
 import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.*;
+import ru.bprn.printhouse.views.material.service.MaterialService;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.OneSheetPrinting;

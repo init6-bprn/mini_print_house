@@ -3,6 +3,7 @@ package ru.bprn.printhouse.data.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
+import ru.bprn.printhouse.views.material.entity.Material;
 
 @Entity
 @Table(name = "price_of_material")

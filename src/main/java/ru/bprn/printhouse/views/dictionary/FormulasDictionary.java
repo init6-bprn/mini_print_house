@@ -25,6 +25,7 @@ import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.TypeOfWorksService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.views.templates.CreateFormula;
 
 import java.util.List;

@@ -1,7 +1,7 @@
-package ru.bprn.printhouse.data.repository;
+package ru.bprn.printhouse.views.material.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import ru.bprn.printhouse.data.entity.Material;
+import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
 import ru.bprn.printhouse.data.entity.Thickness;
 import ru.bprn.printhouse.data.entity.TypeOfMaterial;

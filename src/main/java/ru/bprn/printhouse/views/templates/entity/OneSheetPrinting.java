@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.*;
 import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.data.entity.Gap;
-import ru.bprn.printhouse.data.entity.Material;
+import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.data.entity.StandartSize;
 
 import java.util.Map;

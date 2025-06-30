@@ -1,13 +1,13 @@
-package ru.bprn.printhouse.data.service;
+package ru.bprn.printhouse.views.material.service;
 
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import org.springframework.stereotype.Service;
-import ru.bprn.printhouse.data.entity.Material;
+import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
 import ru.bprn.printhouse.data.entity.Thickness;
 import ru.bprn.printhouse.data.entity.TypeOfMaterial;
-import ru.bprn.printhouse.data.repository.MaterialRepository;
+import ru.bprn.printhouse.views.material.repository.MaterialRepository;
 
 import java.util.HashSet;
 import java.util.List;

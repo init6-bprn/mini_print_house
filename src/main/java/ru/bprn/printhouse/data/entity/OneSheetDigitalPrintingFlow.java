@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
+import ru.bprn.printhouse.views.material.entity.Material;
 
 import java.util.Objects;
 import java.util.Set;

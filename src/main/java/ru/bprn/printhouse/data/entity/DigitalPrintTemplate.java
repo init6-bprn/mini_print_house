@@ -2,13 +2,10 @@ package ru.bprn.printhouse.data.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
-
-import java.util.HashSet;
-import java.util.Set;
+import ru.bprn.printhouse.views.material.entity.Material;
 
 @Data
 @NoArgsConstructor

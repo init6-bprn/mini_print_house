@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
+import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.views.templates.HasFormula;
 import ru.bprn.printhouse.views.templates.HasMaterial;
 import ru.bprn.printhouse.views.templates.WorkChain;

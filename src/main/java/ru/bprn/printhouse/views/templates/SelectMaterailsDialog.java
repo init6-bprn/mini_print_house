@@ -7,7 +7,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import lombok.Getter;
 import lombok.Setter;
-import ru.bprn.printhouse.data.entity.Material;
+import ru.bprn.printhouse.views.material.entity.Material;
 
 import java.util.Set;
 

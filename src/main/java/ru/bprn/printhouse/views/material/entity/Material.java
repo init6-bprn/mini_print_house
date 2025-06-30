@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.data.entity;
+package ru.bprn.printhouse.views.material.entity;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -6,6 +6,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import ru.bprn.printhouse.data.entity.PrintMashine;
+import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
+import ru.bprn.printhouse.data.entity.Thickness;
+import ru.bprn.printhouse.data.entity.TypeOfMaterial;
 
 import java.util.HashSet;
 import java.util.Set;

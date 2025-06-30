@@ -6,7 +6,7 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.AdditionalWorksBean;
-import ru.bprn.printhouse.data.entity.Material;
+import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.data.service.AdditionalWorksBeanService;
 import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
 

@@ -8,12 +8,13 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
-import ru.bprn.printhouse.data.entity.Material;
+import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.material.service.MaterialService;
 
 @PageTitle("Цифровые печатные машины")
 @Route(value = "digital_print", layout = MainLayout.class)
@@ -22,7 +23,7 @@ import ru.bprn.printhouse.views.MainLayout;
 public class PrintersView extends VerticalLayout {
 
     @Autowired
-    public PrintersView(MaterialService maService, PrintMashineService pmService,TypeOfPrinterService topService,
+    public PrintersView(MaterialService maService, PrintMashineService pmService, TypeOfPrinterService topService,
                         QuantityColorsService qcService, SizeOfPrintLeafService soplService, GapService gapService) {
         GridCrud<PrintMashine> crud = new GridCrud<>(PrintMashine.class);
 

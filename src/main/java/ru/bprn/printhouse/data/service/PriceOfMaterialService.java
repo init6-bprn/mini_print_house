@@ -1,13 +1,11 @@
 package ru.bprn.printhouse.data.service;
 
-import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
-import ru.bprn.printhouse.data.entity.Material;
+import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.data.entity.PriceOfMaterial;
 import ru.bprn.printhouse.data.repository.PriceOfMaterialRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PriceOfMaterialService {

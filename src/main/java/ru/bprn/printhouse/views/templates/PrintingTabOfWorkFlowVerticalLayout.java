@@ -19,6 +19,7 @@ import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
+import ru.bprn.printhouse.views.material.entity.Material;
 
 import java.util.Objects;
 
