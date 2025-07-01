@@ -25,7 +25,9 @@ public class PrintingMaterials extends AbstractMaterials{
     @PrePersist
     @PreUpdate
     private void initSearchStr() {
-        this.searchStr = this.name+", ЦПМ (принтер): "+ printMashine.getName();
+        String s = "";
+        if (printMashine!=null) s = printMashine.getName();
+        this.searchStr = this.name+", ЦПМ (принтер): "+ s;
     }
 
 }

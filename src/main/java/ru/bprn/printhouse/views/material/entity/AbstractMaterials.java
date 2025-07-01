@@ -7,6 +7,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "material_type")
@@ -16,14 +18,12 @@ import lombok.Setter;
 public abstract class AbstractMaterials {
     @Id
     @EqualsAndHashCode.Include
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
-    protected Long id;
+    protected UUID id;
 
     @NotBlank
     protected String name = "Название материала";
-
-    protected String article;
 
     protected String unitsOfMeasurement;
 

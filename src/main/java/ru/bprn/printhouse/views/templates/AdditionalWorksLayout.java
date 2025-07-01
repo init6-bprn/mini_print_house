@@ -6,7 +6,7 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import lombok.Getter;
 import ru.bprn.printhouse.views.additionalWorks.entity.AdditionalWorksBean;
-import ru.bprn.printhouse.views.material.entity.Material;
+import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.additionalWorks.service.AdditionalWorksBeanService;
 import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
 
@@ -40,7 +40,7 @@ public class AdditionalWorksLayout extends VerticalLayout implements HasBinder{
             materialTextArea.setMaxRows(3);
             materialTextArea.setValue(worksBean.getActionFormula().getFormula());
 
-            Select<Material> materialSelect = new Select<>();
+            Select<AbstractMaterials> materialSelect = new Select<>();
             materialSelect.setItems(templateBinder.getBean().getListOfMaterials());
             materialSelect.setValue(templateBinder.getBean().getDefaultMaterial());
             templateBinder.forField(materialSelect).bind(AdditionalWorksBean::getDefaultMaterial, AdditionalWorksBean::setDefaultMaterial);

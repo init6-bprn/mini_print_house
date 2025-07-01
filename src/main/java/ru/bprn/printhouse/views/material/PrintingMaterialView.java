@@ -19,12 +19,12 @@ public class PrintingMaterialView extends VerticalLayout {
     public  PrintingMaterialView(PrintingMaterialService service, PrintMashineService mashineService) {
         GridCrud<PrintingMaterials> crud = new GridCrud<>(PrintingMaterials.class);
 
-        crud.getGrid().setColumns("name", "article", "unitsOfMeasurement", "price");
+        crud.getGrid().setColumns("name", "id", "unitsOfMeasurement", "price");
         crud.getGrid().setColumnReorderingAllowed(true);
         crud.getGrid().setSortableColumns("name");
 
         crud.getCrudFormFactory().setUseBeanValidation(true);
-        crud.getCrudFormFactory().setVisibleProperties("name", "article", "unitsOfMeasurement", "price", "wideOfOneClick", "printMashine");
+        crud.getCrudFormFactory().setVisibleProperties("name", "unitsOfMeasurement", "price", "wideOfOneClick", "printMashine");
 
         crud.getCrudFormFactory().setFieldProvider("printMashine",
                 new ComboBoxProvider<>(mashineService.findAll()));

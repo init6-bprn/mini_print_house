@@ -7,9 +7,11 @@ import lombok.*;
 import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.data.entity.HasAction;
 import ru.bprn.printhouse.data.entity.HasMaterials;
+import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.Material;
 
 import java.util.Set;
+import java.util.UUID;
 
 @ToString
 @NoArgsConstructor
@@ -37,10 +39,10 @@ public class AdditionalWorksBean implements HasAction, HasMaterials {
     private boolean haveAction = true;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    private Set<Material> listOfMaterials;
+    private Set<AbstractMaterials> listOfMaterials;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private Material defaultMaterial;
+    private AbstractMaterials defaultMaterial;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Formulas materialFormula;
@@ -70,12 +72,12 @@ public class AdditionalWorksBean implements HasAction, HasMaterials {
     }
 
     @Override
-    public Set<Material> getListOfMaterials() {
+    public Set<AbstractMaterials> getListOfMaterials() {
         return listOfMaterials;
     }
 
     @Override
-    public Material getDefaultMaterial() {
+    public AbstractMaterials getDefaultMaterial() {
         return defaultMaterial;
     }
 
