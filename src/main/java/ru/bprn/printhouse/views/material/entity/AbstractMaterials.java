@@ -8,7 +8,9 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -40,4 +42,11 @@ public abstract class AbstractMaterials {
     protected int price;
 
     protected String searchStr;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "abstract_material_abstract_printer",
+            inverseJoinColumns = @JoinColumn(name = "abstract_machine_id", referencedColumnName = "id"),
+            joinColumns = @JoinColumn(name = "abstract_material_id", referencedColumnName = "id"))
+    protected Set<AbstractMachine> abstractMachines;
 }

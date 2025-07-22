@@ -10,8 +10,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintingMaterials;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -41,5 +44,8 @@ public abstract class AbstractMachine {
     protected Integer price = 0;
 
     protected String searchStr;
+
+    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "abstractMachines", targetEntity = AbstractMaterials.class)
+    private Set<AbstractMaterials> abstractMaterials = new HashSet<>();
 
 }
