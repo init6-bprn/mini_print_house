@@ -20,7 +20,8 @@ import ru.bprn.printhouse.views.material.service.MaterialService;
 
 public class MaterialView extends VerticalLayout {
 
-    @Autowired PrintMashineService pmService;
+    @Autowired
+    DigitalPrintingMachineService pmService;
 
     public MaterialView(MaterialService maService, TypeOfMaterialService tomService,
                         SizeOfPrintLeafService soplService, ThicknessService thService) {

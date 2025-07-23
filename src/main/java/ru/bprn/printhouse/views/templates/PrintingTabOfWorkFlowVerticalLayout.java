@@ -29,7 +29,7 @@ import java.util.Objects;
 public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
         implements HasBinder, ExtraLeaves {
 
-    private final PrintMashineService printerService;
+    private final DigitalPrintingMachineService printerService;
     private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
 
     private final FormulasService formulasService;
@@ -48,7 +48,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
     private final BeanValidationBinder<DigitalPrinting> templateBinder;
 
     public PrintingTabOfWorkFlowVerticalLayout(
-            PrintMashineService printerService,
+            DigitalPrintingMachineService printerService,
             CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
             FormulasService formulasService,
             StandartSizeService standartSizeService,

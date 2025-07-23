@@ -24,7 +24,7 @@ import java.util.List;
 public class TimeOfDigitalPrintOperationDictionary extends VerticalLayout {
 
     public TimeOfDigitalPrintOperationDictionary(PrintSpeedMaterialDensityService service,
-                                                 PrintMashineService printMashineService,
+                                                 DigitalPrintingMachineService printMashineService,
                                                  ThicknessService thicknessService,
                                                  SizeOfPrintLeafService sizeOfPrintLeafService){
         super();

@@ -28,6 +28,8 @@ public class DigitalPrintingMachine extends AbstractMachine{
     @JoinColumn(name = "gap")
     private Gap gap;
 
+    private int sizeOfClick = 0;
+
     @PrePersist
     @PreUpdate
     private void initSearchStr() {

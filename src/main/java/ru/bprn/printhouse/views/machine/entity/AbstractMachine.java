@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,9 +38,6 @@ public abstract class AbstractMachine {
 
     @NotBlank
     protected String name = "Название устройства";
-
-    @PositiveOrZero
-    protected Integer price = 0;
 
     protected String searchStr;
 

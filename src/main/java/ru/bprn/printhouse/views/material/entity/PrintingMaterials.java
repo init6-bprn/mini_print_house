@@ -1,11 +1,15 @@
 package ru.bprn.printhouse.views.material.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.bprn.printhouse.data.entity.PrintMashine;
+import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
+
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,9 +20,6 @@ public class PrintingMaterials extends AbstractMaterials{
 
     private Double wideOfOneClick = 0d;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    private PrintMashine printMashine;
-
     @Override
     public String toString(){return name;}
 
@@ -26,7 +27,8 @@ public class PrintingMaterials extends AbstractMaterials{
     @PreUpdate
     private void initSearchStr() {
         String s = "";
-        if (printMashine!=null) s = printMashine.getName();
+        if (abstractMachines!=null)
+            s = abstractMachines.stream().map(AbstractMachine::getName).collect(Collectors.joining());
         this.searchStr = this.name+", ЦПМ (принтер): "+ s;
     }
 

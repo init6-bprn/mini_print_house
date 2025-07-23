@@ -14,7 +14,7 @@ import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
 import ru.bprn.printhouse.data.entity.CostOfPrintSizeLeafAndColor;
 import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
-import ru.bprn.printhouse.data.service.PrintMashineService;
+import ru.bprn.printhouse.data.service.DigitalPrintingMachineService;
 import ru.bprn.printhouse.data.service.QuantityColorsService;
 import ru.bprn.printhouse.data.service.SizeOfPrintLeafService;
 import ru.bprn.printhouse.views.MainLayout;
@@ -27,7 +27,7 @@ import java.util.List;
 public class CostOfPrintSizeLeafAndColorDictionary extends VerticalLayout{
 
         public CostOfPrintSizeLeafAndColorDictionary(CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
-                                                     PrintMashineService printMashineService, SizeOfPrintLeafService sizeOfPrintLeafService,
+                                                     DigitalPrintingMachineService printMashineService, SizeOfPrintLeafService sizeOfPrintLeafService,
                                                      QuantityColorsService quantityColorsService) {
 
             DefaultCrudFormFactory<CostOfPrintSizeLeafAndColor> formFactory = new DefaultCrudFormFactory<>(CostOfPrintSizeLeafAndColor.class) {

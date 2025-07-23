@@ -4,12 +4,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.bprn.printhouse.data.entity.SizeOfPrintLeaf;
-import ru.bprn.printhouse.data.entity.Thickness;
 import ru.bprn.printhouse.data.entity.TypeOfMaterial;
 
 @NoArgsConstructor
@@ -23,12 +22,13 @@ public class PrintSheetsMaterial extends AbstractMaterials{
     @JoinColumn(name = "type_of_material", nullable = false )
     private TypeOfMaterial typeOfMaterial;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "size_of_print_leaf", nullable = false)
-    private SizeOfPrintLeaf sizeOfPrintLeaf;
+    @PositiveOrZero
+    private Integer sizeX = 0;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "thickness", nullable = false )
-    private Thickness thickness;
+    @PositiveOrZero
+    private Integer sizeY = 0;
+
+   @PositiveOrZero
+    private Integer thickness;
 
 }
