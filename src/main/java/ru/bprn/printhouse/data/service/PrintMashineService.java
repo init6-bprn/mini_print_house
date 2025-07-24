@@ -11,12 +11,12 @@ import java.util.List;
 
 @Service
 @Transactional
-public class DigitalPrintingMachineService {
+public class PrintMashineService {
     private final PrintMashineRepository printMashineRepository;
     private QuantityColorsRepository quantityColorsRepository;
     private TypeOfPrinterRepository typeOfPrinterRepository;
 
-    public DigitalPrintingMachineService(PrintMashineRepository printMashineRepository, QuantityColorsRepository quantityColorsRepository, TypeOfPrinterRepository typeOfPrinterRepository) {
+    public PrintMashineService(PrintMashineRepository printMashineRepository, QuantityColorsRepository quantityColorsRepository, TypeOfPrinterRepository typeOfPrinterRepository) {
         this.printMashineRepository = printMashineRepository;
         this.quantityColorsRepository = quantityColorsRepository;
         this.typeOfPrinterRepository = typeOfPrinterRepository;

@@ -41,7 +41,7 @@ import java.util.*;
 @AnonymousAllowed
 public class WorkFlowView extends SplitLayout {
 
-    private final DigitalPrintingMachineService printMashineService;
+    private final PrintMashineService printMashineService;
     private final StandartSizeService standartSizeService;
     private final GapService gapService;
     private final WorkFlowService workFlowService;
@@ -57,7 +57,7 @@ public class WorkFlowView extends SplitLayout {
 
     private final Grid<WorkFlow> templateGrid = new Grid<>(WorkFlow.class, false);
 
-    public WorkFlowView(DigitalPrintingMachineService printMashineService,
+    public WorkFlowView(PrintMashineService printMashineService,
                         StandartSizeService standartSizeService,
                         GapService gapService,
                         WorkFlowService workFlowService,

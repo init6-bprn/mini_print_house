@@ -28,7 +28,7 @@ import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.machine.entity.DigitalPrintingMachine;
 import ru.bprn.printhouse.views.machine.service.DigitalPrintingMachineService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
-import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
+import ru.bprn.printhouse.views.material.service.PrintingMaterialService;
 
 @PageTitle("Цифровые печатные машины")
 @Route(value = "digital_print_machine", layout = MainLayout.class)
@@ -38,12 +38,13 @@ public class DigitalPrintingMachineDictionary extends VerticalLayout {
     private final Grid<DigitalPrintingMachine> grid = new Grid<>(DigitalPrintingMachine.class, false);
     private final DigitalPrintingMachineService service;
     private final GapService gapService;
-    private final AbstractMaterialService materialService;
+    private final PrintingMaterialService materialService;
     private final BeanValidationBinder<DigitalPrintingMachine> bean = new BeanValidationBinder<>(DigitalPrintingMachine.class);
+    private final MultiSelectComboBox<AbstractMaterials> materials = new MultiSelectComboBox<>("Материалы для использования в устройстве");
 
     public DigitalPrintingMachineDictionary(DigitalPrintingMachineService service,
                                             GapService gapService,
-                                            AbstractMaterialService materialService) {
+                                            PrintingMaterialService materialService) {
         this.service = service;
         this.gapService = gapService;
         this.materialService = materialService;
@@ -69,6 +70,7 @@ public class DigitalPrintingMachineDictionary extends VerticalLayout {
 
         grid.addItemClickListener(e->{
            bean.setBean(e.getItem());
+           materials.setValue(bean.getBean().getAbstractMaterials());
            bean.refreshFields();
         });
 
@@ -94,9 +96,8 @@ public class DigitalPrintingMachineDictionary extends VerticalLayout {
         gapSelect1.setItems(gapService.findAll());
         bean.forField(gapSelect1).asRequired().bind(DigitalPrintingMachine::getGap, DigitalPrintingMachine::setGap);
 
-        var materials = new MultiSelectComboBox<AbstractMaterials>("Материалы для использования в устройстве");
         materials.setSelectedItemsOnTop(true);
-        materials.setItems(materialService.findAll());
+        materials.setItems(materialService.findAllAsAbstract());
         bean.forField(materials).bind(DigitalPrintingMachine::getAbstractMaterials, DigitalPrintingMachine::setAbstractMaterials);
 
         var formLayout = new FormLayout();
@@ -112,7 +113,6 @@ public class DigitalPrintingMachineDictionary extends VerticalLayout {
 
     public void populate(String str) {
         grid.setItems(service.populate(str));
-
     }
 
     private void save(){

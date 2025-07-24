@@ -6,7 +6,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
-import ru.bprn.printhouse.data.service.DigitalPrintingMachineService;
+import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.material.entity.PrintingMaterials;
 import ru.bprn.printhouse.views.material.service.PrintingMaterialService;
@@ -16,7 +16,7 @@ import ru.bprn.printhouse.views.material.service.PrintingMaterialService;
 @AnonymousAllowed
 public class PrintingMaterialView extends VerticalLayout {
 
-    public  PrintingMaterialView(PrintingMaterialService service, DigitalPrintingMachineService mashineService) {
+    public  PrintingMaterialView(PrintingMaterialService service, PrintMashineService mashineService) {
         GridCrud<PrintingMaterials> crud = new GridCrud<>(PrintingMaterials.class);
 
         crud.getGrid().setColumns("name", "id", "unitsOfMeasurement", "price");

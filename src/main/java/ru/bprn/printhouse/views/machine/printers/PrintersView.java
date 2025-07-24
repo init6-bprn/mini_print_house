@@ -23,7 +23,7 @@ import ru.bprn.printhouse.views.material.service.MaterialService;
 public class PrintersView extends VerticalLayout {
 
     @Autowired
-    public PrintersView(MaterialService maService, DigitalPrintingMachineService pmService, TypeOfPrinterService topService,
+    public PrintersView(MaterialService maService, PrintMashineService pmService, TypeOfPrinterService topService,
                         QuantityColorsService qcService, SizeOfPrintLeafService soplService, GapService gapService) {
         GridCrud<PrintMashine> crud = new GridCrud<>(PrintMashine.class);
 

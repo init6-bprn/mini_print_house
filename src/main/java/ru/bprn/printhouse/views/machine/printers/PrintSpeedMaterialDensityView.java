@@ -10,7 +10,7 @@ import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 import ru.bprn.printhouse.data.entity.PrintMashine;
 import ru.bprn.printhouse.data.entity.PrintSpeedMaterialDensity;
-import ru.bprn.printhouse.data.service.DigitalPrintingMachineService;
+import ru.bprn.printhouse.data.service.PrintMashineService;
 import ru.bprn.printhouse.data.service.PrintSpeedMaterialDensityService;
 import ru.bprn.printhouse.data.service.ThicknessService;
 import ru.bprn.printhouse.data.service.TypeOfMaterialService;
@@ -22,7 +22,7 @@ import ru.bprn.printhouse.views.MainLayout;
 
 public class PrintSpeedMaterialDensityView extends VerticalLayout {
 
-    public PrintSpeedMaterialDensityView(PrintSpeedMaterialDensityService psmdService, DigitalPrintingMachineService pmService,
+    public PrintSpeedMaterialDensityView(PrintSpeedMaterialDensityService psmdService, PrintMashineService pmService,
                                          TypeOfMaterialService tomService, ThicknessService thService){
         var filter = new ComboBox<PrintMashine>();
         filter.setItems(pmService.findAll());
