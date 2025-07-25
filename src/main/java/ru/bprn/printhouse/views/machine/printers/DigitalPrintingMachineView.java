@@ -33,23 +33,26 @@ import ru.bprn.printhouse.views.material.service.PrintingMaterialService;
 @PageTitle("Цифровые печатные машины")
 @Route(value = "digital_print_machine", layout = MainLayout.class)
 @AnonymousAllowed
-public class DigitalPrintingMachineDictionary extends VerticalLayout {
+public class DigitalPrintingMachineView extends VerticalLayout {
     private final TextField filterField = new TextField();
     private final Grid<DigitalPrintingMachine> grid = new Grid<>(DigitalPrintingMachine.class, false);
     private final DigitalPrintingMachineService service;
     private final GapService gapService;
     private final PrintingMaterialService materialService;
     private final BeanValidationBinder<DigitalPrintingMachine> bean = new BeanValidationBinder<>(DigitalPrintingMachine.class);
-    private final MultiSelectComboBox<AbstractMaterials> materials = new MultiSelectComboBox<>("Материалы для использования в устройстве");
+    private final MultiSelectComboBox<AbstractMaterials> materials = new MultiSelectComboBox<>("Материалы для печати");
+    private final VerticalLayout form;
 
-    public DigitalPrintingMachineDictionary(DigitalPrintingMachineService service,
-                                            GapService gapService,
-                                            PrintingMaterialService materialService) {
+    public DigitalPrintingMachineView(DigitalPrintingMachineService service,
+                                      GapService gapService,
+                                      PrintingMaterialService materialService) {
         this.service = service;
         this.gapService = gapService;
         this.materialService = materialService;
         this.setSizeFull();
-        var splitLayout = new SplitLayout(addGrid(), addForm(), SplitLayout.Orientation.HORIZONTAL);
+        form = addForm();
+        form.setEnabled(false);
+        var splitLayout = new SplitLayout(addGrid(), form, SplitLayout.Orientation.HORIZONTAL);
         splitLayout.setSizeFull();
         splitLayout.setSplitterPosition(60.0);
         this.add(splitLayout);
@@ -69,15 +72,22 @@ public class DigitalPrintingMachineDictionary extends VerticalLayout {
         populate(null);
 
         grid.addItemClickListener(e->{
-           bean.setBean(e.getItem());
-           materials.setValue(bean.getBean().getAbstractMaterials());
-           bean.refreshFields();
+            if (!grid.asSingleSelect().isEmpty()) {
+                form.setEnabled(true);
+                bean.setBean(e.getItem());
+                materials.setValue(bean.getBean().getAbstractMaterials());
+                bean.refreshFields();
+            } else cancel();
+        });
+
+        grid.addSelectionListener(e->{
+           if (e.getFirstSelectedItem().isEmpty()) form.setEnabled(false);
         });
 
         return  new VerticalLayout(buttons(), filterField, grid);
     }
 
-    private Component addForm() {
+    private VerticalLayout addForm() {
 
         var name = new TextField("Название");
         bean.forField(name).asRequired().bind(DigitalPrintingMachine::getName, DigitalPrintingMachine::setName);
@@ -128,6 +138,7 @@ public class DigitalPrintingMachineDictionary extends VerticalLayout {
     private void cancel(){
         bean.removeBean();
         bean.refreshFields();
+        form.setEnabled(false);
     }
 
     private HorizontalLayout buttons() {
@@ -141,6 +152,7 @@ public class DigitalPrintingMachineDictionary extends VerticalLayout {
         var hl = new HorizontalLayout();
 
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
+            form.setEnabled(true);
             bean.setBean(new DigitalPrintingMachine());
             bean.refreshFields();
         });
@@ -148,8 +160,12 @@ public class DigitalPrintingMachineDictionary extends VerticalLayout {
         createTemplateButton.setTooltipText("Создать новый принтер");
 
         var duplicateButton = new Button(VaadinIcon.COPY_O.create(), event -> {
+            boolean notSelect = grid.getSelectedItems().isEmpty();
+            if (!notSelect) {
                 service.duplicate(grid.asSingleSelect().getValue());
                 populate(filterField.getValue().trim());
+                cancel();
+            } else Notification.show("Сперва выберите элемент из списка!");
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         duplicateButton.setTooltipText("Дублировать принтер");

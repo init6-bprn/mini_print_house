@@ -24,7 +24,7 @@ import ru.bprn.printhouse.views.additionalWorks.AdditionalWorksBeanDictionary;
 import ru.bprn.printhouse.views.additionalWorks.TypeOfWorksDictionary;
 import ru.bprn.printhouse.views.dictionary.*;
 import ru.bprn.printhouse.views.machine.cutters.PaperCuttersView;
-import ru.bprn.printhouse.views.machine.printers.DigitalPrintingMachineDictionary;
+import ru.bprn.printhouse.views.machine.printers.DigitalPrintingMachineView;
 import ru.bprn.printhouse.views.machine.printers.PrintSpeedMaterialDensityView;
 import ru.bprn.printhouse.views.machine.printers.PrintersView;
 import ru.bprn.printhouse.views.material.MaterialView;
@@ -125,8 +125,8 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(PrintersView.class))
             dick.addItem(new SideNavItem("ЦПМ", PrintersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
-        if (accessChecker.hasAccess(DigitalPrintingMachineDictionary.class))
-            dick.addItem(new SideNavItem("Листовые принтеры", DigitalPrintingMachineDictionary.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        if (accessChecker.hasAccess(DigitalPrintingMachineView.class))
+            dick.addItem(new SideNavItem("Листовые принтеры", DigitalPrintingMachineView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         if (accessChecker.hasAccess(PaperCuttersView.class))
             dick.addItem(new SideNavItem("Резаки", PaperCuttersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
