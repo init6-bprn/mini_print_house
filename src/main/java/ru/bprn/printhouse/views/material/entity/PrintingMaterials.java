@@ -3,6 +3,7 @@ package ru.bprn.printhouse.views.material.entity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,7 +19,8 @@ import java.util.stream.Collectors;
 @Entity
 public class PrintingMaterials extends AbstractMaterials{
 
-    private Double wideOfOneClick = 0d;
+    @Positive
+    private Integer sizeOfClick = 1;
 
     @Override
     public String toString(){return name;}

@@ -39,9 +39,6 @@ public abstract class AbstractMaterials {
 
     protected String unitsOfMeasurement;
 
-    @PositiveOrZero
-    protected int price;
-
     protected String searchStr;
 
     @ManyToMany(fetch = FetchType.EAGER)

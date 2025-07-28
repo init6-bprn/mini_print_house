@@ -2,6 +2,7 @@ package ru.bprn.printhouse.views.machine.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.machine.entity.DigitalPrintingMachine;
 import ru.bprn.printhouse.views.machine.repository.DigitalPrintingMachineRepository;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
@@ -51,6 +52,8 @@ public class DigitalPrintingMachineService {
     }
 
     public List<DigitalPrintingMachine> findAll(){return this.repository.findAll();}
+
+    public List<AbstractMachine> findAllAsAbstract() {return new ArrayList<>(this.repository.findAll());}
 
     @Transactional
     public void delete(DigitalPrintingMachine machine) {
