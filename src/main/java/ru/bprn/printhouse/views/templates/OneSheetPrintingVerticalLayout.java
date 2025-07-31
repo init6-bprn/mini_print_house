@@ -16,7 +16,7 @@ import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
-import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.views.material.service.MaterialService;
 import ru.bprn.printhouse.views.templates.entity.OneSheetPrinting;
@@ -47,7 +47,7 @@ public class OneSheetPrintingVerticalLayout extends VerticalLayout
             GapService gapService,
             VariablesForMainWorksService variables,
             MaterialService materialService,
-            TypeOfWorksService worksService)
+            TypeOfOperationService worksService)
     {
         this.formulasService = formulasService;
         this.standartSizeService = standartSizeService;

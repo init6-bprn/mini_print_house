@@ -5,20 +5,20 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import lombok.Getter;
-import ru.bprn.printhouse.views.additionalWorks.entity.AdditionalWorksBean;
+import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
-import ru.bprn.printhouse.views.additionalWorks.service.AdditionalWorksBeanService;
+import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
 
 public class AdditionalWorksLayout extends VerticalLayout implements HasBinder{
 
     @Getter
-    private final BeanValidationBinder<AdditionalWorksBean> templateBinder;
+    private final BeanValidationBinder<Operation> templateBinder;
 
-    public AdditionalWorksLayout(AdditionalWorksBean worksBean, AdditionalWorksBeanService service){
+    public AdditionalWorksLayout(Operation worksBean, OperationService service){
         super();
         this.setSizeFull();
-        templateBinder = new BeanValidationBinder<>(AdditionalWorksBean.class);
+        templateBinder = new BeanValidationBinder<>(Operation.class);
         templateBinder.setBean(worksBean);
 
         if (worksBean.isHaveAction()) {
@@ -29,7 +29,7 @@ public class AdditionalWorksLayout extends VerticalLayout implements HasBinder{
             actionTextArea.setMaxRows(3);
             actionTextArea.setValue(worksBean.getActionFormula().getFormula());
             this.add(actionTextArea);
-            //templateBinder.forField(actionTextArea).asRequired().bind(AdditionalWorksBean::getActionFormula, AdditionalWorksBean::setActionFormula);
+            //templateBinder.forField(actionTextArea).asRequired().bind(Operation::getActionFormula, Operation::setActionFormula);
         }
 
         if (worksBean.isHaveMaterial()) {
@@ -43,7 +43,7 @@ public class AdditionalWorksLayout extends VerticalLayout implements HasBinder{
             Select<AbstractMaterials> materialSelect = new Select<>();
             materialSelect.setItems(templateBinder.getBean().getListOfMaterials());
             materialSelect.setValue(templateBinder.getBean().getDefaultMaterial());
-            templateBinder.forField(materialSelect).bind(AdditionalWorksBean::getDefaultMaterial, AdditionalWorksBean::setDefaultMaterial);
+            templateBinder.forField(materialSelect).bind(Operation::getDefaultMaterial, Operation::setDefaultMaterial);
             this.add(materialTextArea, materialSelect);
         }
 

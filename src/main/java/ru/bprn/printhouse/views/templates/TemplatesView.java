@@ -21,8 +21,8 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
-import ru.bprn.printhouse.views.additionalWorks.service.AdditionalWorksBeanService;
-import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.operation.service.OperationService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.material.service.MaterialService;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
@@ -37,8 +37,8 @@ public class TemplatesView extends SplitLayout {
 
     private final TemplatesService templatesService;
     private final ChainsService chainsService;
-    private final TypeOfWorksService typeOfWorksService;
-    private final AdditionalWorksBeanService worksBeanService;
+    private final TypeOfOperationService typeOfOperationService;
+    private final OperationService worksBeanService;
     private final VariablesForMainWorksService variablesForMainWorksService;
     private final FormulasService formulasService;
     private final StandartSizeService standartSizeService;
@@ -57,13 +57,13 @@ public class TemplatesView extends SplitLayout {
     private AddChainDialog addChainDialog;
 
     public TemplatesView(TemplatesService templatesService, ChainsService chainsService,
-                         TypeOfWorksService typeOfWorksService, AdditionalWorksBeanService worksBeanService,
+                         TypeOfOperationService typeOfOperationService, OperationService worksBeanService,
                          VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
                          StandartSizeService standartSizeService, GapService gapService,
                          MaterialService materialService){
         this.templatesService = templatesService;
         this.chainsService = chainsService;
-        this.typeOfWorksService = typeOfWorksService;
+        this.typeOfOperationService = typeOfOperationService;
         this.worksBeanService = worksBeanService;
         this.variablesForMainWorksService = variablesForMainWorksService;
         this.formulasService = formulasService;
@@ -80,7 +80,7 @@ public class TemplatesView extends SplitLayout {
         templateEditor.setEnabled(false);
 
         chainEditor = new ChainEditor(this, chainGrid, chainsService, templatesService,
-                typeOfWorksService, worksBeanService,
+                typeOfOperationService, worksBeanService,
                 variablesForMainWorksService, formulasService,
                 standartSizeService, gapService, materialService);
         chainEditor.setVisible(false);

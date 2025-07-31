@@ -19,7 +19,7 @@ import com.vaadin.flow.spring.annotation.UIScope;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
-import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.material.entity.Material;
 
 import java.util.Objects;
@@ -54,7 +54,7 @@ public class PrintingTabOfWorkFlowVerticalLayout extends VerticalLayout
             StandartSizeService standartSizeService,
             GapService gapService,
             VariablesForMainWorksService variables,
-            TypeOfWorksService worksService)
+            TypeOfOperationService worksService)
     {
         this.printerService = printerService;
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;

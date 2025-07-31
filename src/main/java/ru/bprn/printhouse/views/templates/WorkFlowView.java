@@ -28,10 +28,10 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
-import ru.bprn.printhouse.views.additionalWorks.entity.AdditionalWorksBean;
-import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
-import ru.bprn.printhouse.views.additionalWorks.service.AdditionalWorksBeanService;
-import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.operation.entity.Operation;
+import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
+import ru.bprn.printhouse.views.operation.service.OperationService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 
 import java.io.IOException;
 import java.util.*;
@@ -48,8 +48,8 @@ public class WorkFlowView extends SplitLayout {
     private final CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService;
     private final FormulasService formulasService;
     private final VariablesForMainWorksService variablesForMainWorksService;
-    private final TypeOfWorksService typeOfWorksService;
-    private final AdditionalWorksBeanService worksBeanService;
+    private final TypeOfOperationService typeOfOperationService;
+    private final OperationService worksBeanService;
 
     private final TabSheet tabSheet = new TabSheet();
     private StartTabOfWorkFlowVerticalLayout startTab;
@@ -64,8 +64,8 @@ public class WorkFlowView extends SplitLayout {
                         CostOfPrintSizeLeafAndColorService costOfPrintSizeLeafAndColorService,
                         FormulasService formulasService,
                         VariablesForMainWorksService variablesForMainWorksService,
-                        TypeOfWorksService typeOfWorksService,
-                        AdditionalWorksBeanService worksBeanService){
+                        TypeOfOperationService typeOfOperationService,
+                        OperationService worksBeanService){
 
         this.printMashineService = printMashineService;
         this.standartSizeService = standartSizeService;
@@ -74,7 +74,7 @@ public class WorkFlowView extends SplitLayout {
         this.costOfPrintSizeLeafAndColorService = costOfPrintSizeLeafAndColorService;
         this.formulasService = formulasService;
         this.variablesForMainWorksService = variablesForMainWorksService;
-        this.typeOfWorksService = typeOfWorksService;
+        this.typeOfOperationService = typeOfOperationService;
         this.worksBeanService = worksBeanService;
 
         startTab = new StartTabOfWorkFlowVerticalLayout();
@@ -254,7 +254,7 @@ public class WorkFlowView extends SplitLayout {
         SubMenu oneSheetSubMenu = oneSheet.getSubMenu();
         oneSheetSubMenu.addItem("Однолистовая цифровая печать", menuItemClickEvent -> {
                 var digitalPrinting = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
-                        costOfPrintSizeLeafAndColorService, formulasService, standartSizeService,gapService, variablesForMainWorksService, typeOfWorksService);
+                        costOfPrintSizeLeafAndColorService, formulasService, standartSizeService,gapService, variablesForMainWorksService, typeOfOperationService);
                 var dp = new DigitalPrinting();
                 dp.setVariables(populateVariables(dp.getClass().getSimpleName()));
                 digitalPrinting.getTemplateBinder().setBean(dp);
@@ -264,12 +264,12 @@ public class WorkFlowView extends SplitLayout {
             }
         );
 
-        for (TypeOfWorks tow : typeOfWorksService.findAll()) {
+        for (TypeOfOperation tow : typeOfOperationService.findAll()) {
             // Узел меню доп.работ
             MenuItem item1 = subMenu.addItem(tow.getName());
             SubMenu subMenu1 = item1.getSubMenu();
 
-            for (AdditionalWorksBean work : worksBeanService.findAllByType(tow)) {
+            for (Operation work : worksBeanService.findAllByType(tow)) {
                 // Пункты доп.работ
                 subMenu1.addItem(work.getName(), menuItemClickEvent -> {
                     tabSheet.add(createTab(work.getName()), new AdditionalWorksLayout(work, worksBeanService));
@@ -395,12 +395,12 @@ public class WorkFlowView extends SplitLayout {
             switch (obj) {
                 case DigitalPrinting dp -> {
                     var tabComp = new PrintingTabOfWorkFlowVerticalLayout(printMashineService,
-                            costOfPrintSizeLeafAndColorService, formulasService, standartSizeService, gapService, variablesForMainWorksService, typeOfWorksService);
+                            costOfPrintSizeLeafAndColorService, formulasService, standartSizeService, gapService, variablesForMainWorksService, typeOfOperationService);
                     //dp.setVariables(populateVariables(dp.getClass().getSimpleName()));
                     tabComp.getTemplateBinder().setBean(dp);
                     tabSheet.add(createTab("Цифровая печать"), tabComp);
                 }
-                case AdditionalWorksBean wb ->  tabSheet.add(createTab(wb.getName()), new AdditionalWorksLayout(wb, worksBeanService));
+                case Operation wb ->  tabSheet.add(createTab(wb.getName()), new AdditionalWorksLayout(wb, worksBeanService));
                 default -> throw new IllegalStateException("Unexpected value: " + obj);
             }
         }

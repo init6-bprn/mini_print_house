@@ -20,8 +20,8 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import ru.bprn.printhouse.data.entity.User;
 import ru.bprn.printhouse.security.AuthenticatedUser;
-import ru.bprn.printhouse.views.additionalWorks.AdditionalWorksBeanDictionary;
-import ru.bprn.printhouse.views.additionalWorks.TypeOfWorksDictionary;
+import ru.bprn.printhouse.views.operation.OperationView;
+import ru.bprn.printhouse.views.operation.TypeOfOperationView;
 import ru.bprn.printhouse.views.dictionary.*;
 import ru.bprn.printhouse.views.machine.cutters.PaperCuttersView;
 import ru.bprn.printhouse.views.machine.printers.DigitalPrintingMachineView;
@@ -167,11 +167,11 @@ public class MainLayout extends AppLayout {
 
         dick = new SideNavItem("Работы");
 
-        if (accessChecker.hasAccess(TypeOfWorksDictionary.class))
-            dick.addItem(new SideNavItem("Типы работ", TypeOfWorksDictionary.class, VaadinIcon.RECORDS.create()));
+        if (accessChecker.hasAccess(TypeOfOperationView.class))
+            dick.addItem(new SideNavItem("Типы работ", TypeOfOperationView.class, VaadinIcon.RECORDS.create()));
 
-        if (accessChecker.hasAccess(AdditionalWorksBeanDictionary.class))
-            dick.addItem(new SideNavItem("Дополнительные работы", AdditionalWorksBeanDictionary.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        if (accessChecker.hasAccess(OperationView.class))
+            dick.addItem(new SideNavItem("Дополнительные работы", OperationView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
         nav.addItem(dick);
 
         return nav;

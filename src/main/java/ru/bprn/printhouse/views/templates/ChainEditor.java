@@ -22,12 +22,12 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import lombok.Setter;
-import ru.bprn.printhouse.views.additionalWorks.entity.AdditionalWorksBean;
-import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.operation.entity.Operation;
+import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.*;
-import ru.bprn.printhouse.views.additionalWorks.service.AdditionalWorksBeanService;
-import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.operation.service.OperationService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.material.service.MaterialService;
 import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
@@ -50,8 +50,8 @@ public class ChainEditor extends VerticalLayout {
     private final TemplatesService templatesService;
     private final TreeGrid<AbstractTemplate> treeGrid;
     private final SplitLayout splitLayout;
-    private final TypeOfWorksService typeOfWorksService;
-    private final AdditionalWorksBeanService worksBeanService;
+    private final TypeOfOperationService typeOfOperationService;
+    private final OperationService worksBeanService;
     private final VariablesForMainWorksService variablesForMainWorksService;
     private final FormulasService formulasService;
     private final StandartSizeService standartSizeService;
@@ -59,7 +59,7 @@ public class ChainEditor extends VerticalLayout {
     private final MaterialService materialService;
 
     public ChainEditor(SplitLayout splitLayout, TreeGrid<AbstractTemplate> treeGrid, ChainsService service, TemplatesService templatesService,
-                       TypeOfWorksService typeOfWorksService, AdditionalWorksBeanService worksBeanService,
+                       TypeOfOperationService typeOfOperationService, OperationService worksBeanService,
                        VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
                        StandartSizeService standartSizeService, GapService gapService,
                        MaterialService materialService){
@@ -67,7 +67,7 @@ public class ChainEditor extends VerticalLayout {
         this.service = service;
         this.treeGrid = treeGrid;
         this.splitLayout = splitLayout;
-        this.typeOfWorksService = typeOfWorksService;
+        this.typeOfOperationService = typeOfOperationService;
         this.worksBeanService = worksBeanService;
         this.variablesForMainWorksService = variablesForMainWorksService;
         this.formulasService = formulasService;
@@ -192,7 +192,7 @@ public class ChainEditor extends VerticalLayout {
         SubMenu oneSheetSubMenu = oneSheet.getSubMenu();
         oneSheetSubMenu.addItem("Однолистовая печать", menuItemClickEvent -> {
                     var oneSheetPrintingLayout = new OneSheetPrintingVerticalLayout(formulasService,
-                            standartSizeService, gapService, variablesForMainWorksService, materialService, typeOfWorksService);
+                            standartSizeService, gapService, variablesForMainWorksService, materialService, typeOfOperationService);
                     
                     var oneSheetPrinting = new OneSheetPrinting();
                     oneSheetPrinting.setVariables(populateVariables(oneSheetPrinting.getClass().getSimpleName()));
@@ -204,12 +204,12 @@ public class ChainEditor extends VerticalLayout {
             }
         );
 
-        for (TypeOfWorks tow : typeOfWorksService.findAll()) {
+        for (TypeOfOperation tow : typeOfOperationService.findAll()) {
             // Узел меню доп.работ
             MenuItem item1 = subMenu.addItem(tow.getName());
             SubMenu subMenu1 = item1.getSubMenu();
 
-            for (AdditionalWorksBean work : worksBeanService.findAllByType(tow)) {
+            for (Operation work : worksBeanService.findAllByType(tow)) {
                 // Пункты доп.работ
                 subMenu1.addItem(work.getName(), menuItemClickEvent -> {
                     tabSheet.add(createTab(work.getName()), new AdditionalWorksLayout(work, worksBeanService));
@@ -304,11 +304,11 @@ public class ChainEditor extends VerticalLayout {
             switch (obj) {
                 case OneSheetPrinting dp -> {
                     var tabComp = new OneSheetPrintingVerticalLayout(formulasService,
-                            standartSizeService, gapService, variablesForMainWorksService, materialService, typeOfWorksService);
+                            standartSizeService, gapService, variablesForMainWorksService, materialService, typeOfOperationService);
                     tabComp.getTemplateBinder().setBean(dp);
                     tabSheet.add(createTab("Однолистовая печать"), tabComp);
                 }
-                case AdditionalWorksBean wb ->  tabSheet.add(createTab(wb.getName()), new AdditionalWorksLayout(wb, worksBeanService));
+                case Operation wb ->  tabSheet.add(createTab(wb.getName()), new AdditionalWorksLayout(wb, worksBeanService));
                 default -> throw new IllegalStateException("Unexpected value: " + obj);
             }
         }

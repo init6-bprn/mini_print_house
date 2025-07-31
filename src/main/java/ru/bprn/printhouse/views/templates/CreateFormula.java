@@ -15,10 +15,10 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.Formulas;
-import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 
 import javax.script.ScriptEngine;
@@ -31,12 +31,12 @@ public class CreateFormula extends VerticalLayout {
     private final BeanValidationBinder<Formulas> formulaBinder;
     private final StringBuilder strVariables = new StringBuilder();
     private final VariablesForMainWorksService list;
-    private final TypeOfWorksService worksService;
+    private final TypeOfOperationService worksService;
 
     @Getter
     private Formulas formulaBean = new Formulas();
 
-    public CreateFormula(FormulasService formulasService, VariablesForMainWorksService variables, TypeOfWorksService worksService) {
+    public CreateFormula(FormulasService formulasService, VariablesForMainWorksService variables, TypeOfOperationService worksService) {
         this.worksService = worksService;
         formulaBinder = new BeanValidationBinder<>(Formulas.class);
         formulaBinder.setBean(formulaBean);
@@ -46,10 +46,10 @@ public class CreateFormula extends VerticalLayout {
             strVariables.append(rec.getName()).append(" = 1;");
         }
 
-        var selectType = new Select<TypeOfWorks>();
+        var selectType = new Select<TypeOfOperation>();
         selectType.setItems(worksService.findAll());
         selectType.setLabel("Тип работы");
-        formulaBinder.forField(selectType).asRequired().bind(Formulas::getTypeOfWorks, Formulas::setTypeOfWorks);
+        formulaBinder.forField(selectType).asRequired().bind(Formulas::getTypeOfOperation, Formulas::setTypeOfOperation);
 
         var name = new TextField("Название формулы");
         formulaBinder.forField(name).withValidator(s -> !s.isEmpty(), "Не может быть пустым!")

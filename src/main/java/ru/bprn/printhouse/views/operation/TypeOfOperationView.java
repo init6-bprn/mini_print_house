@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.additionalWorks;
+package ru.bprn.printhouse.views.operation;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasValueAndElement;
@@ -10,8 +10,8 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
-import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
-import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.MainLayout;
 
 import java.util.List;
@@ -19,11 +19,11 @@ import java.util.List;
 @PageTitle("Словарь типов дополнительных работ")
 @Route(value = "type_of_works_dictionary", layout = MainLayout.class)
 @AnonymousAllowed
-public class TypeOfWorksDictionary extends VerticalLayout {
+public class TypeOfOperationView extends VerticalLayout {
 
-    public TypeOfWorksDictionary(TypeOfWorksService service) {
+    public TypeOfOperationView(TypeOfOperationService service) {
 
-        DefaultCrudFormFactory<TypeOfWorks> formFactory = new DefaultCrudFormFactory<>(TypeOfWorks.class) {
+        DefaultCrudFormFactory<TypeOfOperation> formFactory = new DefaultCrudFormFactory<>(TypeOfOperation.class) {
             @Override
             protected void configureForm(FormLayout formLayout, List<HasValueAndElement> fields) {
                 Component nameField = (Component) fields.get(0);
@@ -33,7 +33,7 @@ public class TypeOfWorksDictionary extends VerticalLayout {
         formFactory.setUseBeanValidation(true);
         formFactory.setVisibleProperties("name");
 
-        GridCrud<TypeOfWorks> crud = new GridCrud<>(TypeOfWorks.class, new HorizontalSplitCrudLayout(), formFactory);
+        GridCrud<TypeOfOperation> crud = new GridCrud<>(TypeOfOperation.class, new HorizontalSplitCrudLayout(), formFactory);
         crud.setClickRowToUpdate(true);
         crud.setUpdateOperationVisible(false);
         crud.getGrid().setColumns("name");

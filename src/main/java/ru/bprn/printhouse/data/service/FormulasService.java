@@ -34,7 +34,7 @@ public class FormulasService {
             newFormula.setName(formula.getName());
             newFormula.setDescription(formula.getDescription());
             newFormula.setFormula(formula.getFormula());
-            newFormula.setTypeOfWorks(formula.getTypeOfWorks());
+            newFormula.setTypeOfOperation(formula.getTypeOfOperation());
             return Optional.of(save(newFormula));
         }
         else return Optional.empty();

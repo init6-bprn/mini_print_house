@@ -22,7 +22,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.*;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.material.entity.Material;
@@ -47,7 +47,7 @@ public class FormulasDictionary extends VerticalLayout {
     @Getter
     private Formulas formulaBean = new Formulas();
     
-    public FormulasDictionary(FormulasService formulasService, VariablesForMainWorksService variables, TypeOfWorksService worksService){
+    public FormulasDictionary(FormulasService formulasService, VariablesForMainWorksService variables, TypeOfOperationService worksService){
         this.formulasService = formulasService;
         this.variables = variables;
 
@@ -76,7 +76,7 @@ public class FormulasDictionary extends VerticalLayout {
         filterField.setClearButtonVisible(true);
 
         grid.addColumn(Formulas::getName).setHeader("Название");
-        grid.addColumn(Formulas::getTypeOfWorks).setHeader("Тип работы");
+        grid.addColumn(Formulas::getTypeOfOperation).setHeader("Тип работы");
         grid.setItems(formulasService.findAll());
         grid.setHeight("50%");
         grid.addItemClickListener(formulasEvent -> {

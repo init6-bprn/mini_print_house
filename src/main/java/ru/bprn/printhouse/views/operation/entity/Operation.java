@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.additionalWorks.entity;
+package ru.bprn.printhouse.views.operation.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -8,10 +8,8 @@ import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.data.entity.HasAction;
 import ru.bprn.printhouse.data.entity.HasMaterials;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
-import ru.bprn.printhouse.views.material.entity.Material;
 
 import java.util.Set;
-import java.util.UUID;
 
 @ToString
 @NoArgsConstructor
@@ -21,7 +19,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "additional_works_beans")
 @EqualsAndHashCode
-public class AdditionalWorksBean implements HasAction, HasMaterials {
+public class Operation implements HasAction, HasMaterials {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -31,7 +29,7 @@ public class AdditionalWorksBean implements HasAction, HasMaterials {
     private String name = "Additional Work";
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private TypeOfWorks typeOfWorks;
+    private TypeOfOperation typeOfOperation;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Formulas actionFormula;

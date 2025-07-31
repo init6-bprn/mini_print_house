@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.additionalWorks;
+package ru.bprn.printhouse.views.operation;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -21,41 +21,38 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.views.additionalWorks.entity.AdditionalWorksBean;
+import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
-import ru.bprn.printhouse.views.material.entity.Material;
-import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
-import ru.bprn.printhouse.views.additionalWorks.service.AdditionalWorksBeanService;
+import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
+import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
-import ru.bprn.printhouse.views.material.service.MaterialService;
-import ru.bprn.printhouse.views.additionalWorks.service.TypeOfWorksService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.templates.SelectAbstractMaterialsDialog;
-import ru.bprn.printhouse.views.templates.SelectMaterailsDialog;
 
 @PageTitle("Создание дополнительных работ")
 @Route(value = "additional_works", layout = MainLayout.class)
 @AnonymousAllowed
-public class AdditionalWorksBeanDictionary extends VerticalLayout {
+public class OperationView extends VerticalLayout {
     private final TextField filterField = new TextField();
-    private final Grid<AdditionalWorksBean> grid = new Grid<>(AdditionalWorksBean.class, false);
-    private final AdditionalWorksBeanService service;
+    private final Grid<Operation> grid = new Grid<>(Operation.class, false);
+    private final OperationService service;
     private final FormulasService formulasService;
-    private final TypeOfWorksService typeOfWorksService;
+    private final TypeOfOperationService typeOfOperationService;
     private final AbstractMaterialService materialService;
-    private final BeanValidationBinder<AdditionalWorksBean> bean = new BeanValidationBinder<>(AdditionalWorksBean.class);
+    private final BeanValidationBinder<Operation> bean = new BeanValidationBinder<>(Operation.class);
     private final SelectAbstractMaterialsDialog materialDialog;
     private final Select<AbstractMaterials> materialSelect = new Select<>();
 
-    public AdditionalWorksBeanDictionary(AdditionalWorksBeanService service,
-                                         FormulasService formulasService,
-                                         TypeOfWorksService typeOfWorksService,
-                                         AbstractMaterialService materialService) {
+    public OperationView(OperationService service,
+                         FormulasService formulasService,
+                         TypeOfOperationService typeOfOperationService,
+                         AbstractMaterialService materialService) {
         this.service = service;
         this.formulasService = formulasService;
-        this.typeOfWorksService = typeOfWorksService;
+        this.typeOfOperationService = typeOfOperationService;
         this.materialService = materialService;
         materialDialog = new SelectAbstractMaterialsDialog("Выберите материалы", materialService);
         this.setSizeFull();
@@ -73,7 +70,7 @@ public class AdditionalWorksBeanDictionary extends VerticalLayout {
         filterField.addValueChangeListener(e -> populate(e.getValue().trim()));
         filterField.setClearButtonVisible(true);
 
-        grid.addColumn(AdditionalWorksBean::getName,"Название" );
+        grid.addColumn(Operation::getName,"Название" );
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         populate(null);
@@ -100,30 +97,30 @@ public class AdditionalWorksBeanDictionary extends VerticalLayout {
                 oldValue.ifPresent(materialSelect::setValue);
             }
         });
-        bean.forField(materialDialog.getGrid().asMultiSelect()).bind(AdditionalWorksBean::getListOfMaterials, AdditionalWorksBean::setListOfMaterials);
-        bean.forField(materialSelect).asRequired().bind(AdditionalWorksBean::getDefaultMaterial, AdditionalWorksBean::setDefaultMaterial);
+        bean.forField(materialDialog.getGrid().asMultiSelect()).bind(Operation::getListOfMaterials, Operation::setListOfMaterials);
+        bean.forField(materialSelect).asRequired().bind(Operation::getDefaultMaterial, Operation::setDefaultMaterial);
 
         var mButton = new Button("Материал", e->materialDialog.open());
 
         var name = new TextField("Название");
-        bean.forField(name).asRequired().bind(AdditionalWorksBean::getName, AdditionalWorksBean::setName);
-        Select<TypeOfWorks> typeOfWork = new Select<>();
+        bean.forField(name).asRequired().bind(Operation::getName, Operation::setName);
+        Select<TypeOfOperation> typeOfWork = new Select<>();
         typeOfWork.setLabel("Тип работы");
-        typeOfWork.setItems(typeOfWorksService.findAll());
-        bean.forField(typeOfWork).asRequired().bind(AdditionalWorksBean::getTypeOfWorks, AdditionalWorksBean::setTypeOfWorks);
+        typeOfWork.setItems(typeOfOperationService.findAll());
+        bean.forField(typeOfWork).asRequired().bind(Operation::getTypeOfOperation, Operation::setTypeOfOperation);
 
         var actionCheck = new Checkbox("Есть работа?");
-        bean.forField(actionCheck).bind(AdditionalWorksBean::haveAction, AdditionalWorksBean::setHaveAction);
+        bean.forField(actionCheck).bind(Operation::haveAction, Operation::setHaveAction);
         Select<Formulas> actFormula = new Select<>();
         actFormula.setLabel("Формула");
         actFormula.setItems(formulasService.findAll());
-        bean.forField(actFormula).asRequired().bind(AdditionalWorksBean::getActionFormula, AdditionalWorksBean::setActionFormula);
+        bean.forField(actFormula).asRequired().bind(Operation::getActionFormula, Operation::setActionFormula);
         var materialCheck = new Checkbox("Есть материал?");
-        bean.forField(materialCheck).bind(AdditionalWorksBean::haveMaterials, AdditionalWorksBean::setHaveMaterial);
+        bean.forField(materialCheck).bind(Operation::haveMaterials, Operation::setHaveMaterial);
         Select<Formulas> mFormula = new Select<>();
         mFormula.setLabel("Формула");
         mFormula.setItems(formulasService.findAll());
-        bean.forField(mFormula).asRequired().bind(AdditionalWorksBean::getMaterialFormula, AdditionalWorksBean::setMaterialFormula);
+        bean.forField(mFormula).asRequired().bind(Operation::getMaterialFormula, Operation::setMaterialFormula);
 
         var formLayout = new FormLayout();
         formLayout.add(name, typeOfWork, actionCheck, actFormula, materialCheck, mFormula, mButton, materialSelect);
@@ -167,7 +164,7 @@ public class AdditionalWorksBeanDictionary extends VerticalLayout {
         var hl = new HorizontalLayout();
 
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
-            bean.setBean(new AdditionalWorksBean());
+            bean.setBean(new Operation());
             bean.refreshFields();
         });
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);

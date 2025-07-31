@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.additionalWorks.entity;
+package ru.bprn.printhouse.views.operation.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +10,7 @@ import lombok.*;
 @EqualsAndHashCode
 @Entity
 @Table(name = "type_of_work")
-public class TypeOfWorks {
+public class TypeOfOperation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)

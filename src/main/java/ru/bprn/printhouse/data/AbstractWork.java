@@ -2,7 +2,7 @@ package ru.bprn.printhouse.data;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,7 +23,7 @@ public abstract class AbstractWork implements CalculateCostAndTime {
 
     @ManyToOne
     @JoinColumn(name = "type_of_work_id")
-    private TypeOfWorks typeOfWorks;
+    private TypeOfOperation typeOfOperation;
 
     private Integer time = 0;
     private Double Cost = 0d;

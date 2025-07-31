@@ -3,7 +3,7 @@ package ru.bprn.printhouse.data.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import ru.bprn.printhouse.views.additionalWorks.entity.TypeOfWorks;
+import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 
 @Entity
 @Table (name = "formulas")
@@ -24,7 +24,7 @@ public class Formulas {
     private String name = "";
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private TypeOfWorks typeOfWorks;
+    private TypeOfOperation typeOfOperation;
 
     private String formula = "";
 
