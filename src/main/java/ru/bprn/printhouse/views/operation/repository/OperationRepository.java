@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface OperationRepository extends JpaRepository<Operation, Long> {
-    List<Operation> findAllByTypeOfWorks(TypeOfOperation type);
+    List<Operation> findAllByTypeOfOperation(TypeOfOperation type);
 
     @Query("select c from Operation c where lower(c.name) like lower(concat('%', :searchTerm, '%'))")
     List<Operation> search(@Param("searchTerm") String searchTerm);

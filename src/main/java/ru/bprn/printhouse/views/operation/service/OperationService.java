@@ -17,7 +17,7 @@ public class OperationService {
     }
 
     public List<Operation> findAll() {return this.repository.findAll();}
-    public List<Operation> findAllByType(TypeOfOperation type) {return this.repository.findAllByTypeOfWorks(type);}
+    public List<Operation> findAllByType(TypeOfOperation type) {return this.repository.findAllByTypeOfOperation(type);}
     public Operation save(Operation bean) {return this.repository.save(bean);}
     public void delete(Operation bean) {this.repository.delete(bean);}
     public List<Operation> populate (String str){

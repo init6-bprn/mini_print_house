@@ -29,7 +29,6 @@ import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.material.service.MaterialService;
-import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.OneSheetPrinting;
 import ru.bprn.printhouse.views.templates.entity.Templates;

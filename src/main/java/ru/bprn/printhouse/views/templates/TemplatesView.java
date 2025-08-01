@@ -15,6 +15,7 @@ import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -24,7 +25,6 @@ import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.material.service.MaterialService;
-import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.ChainsService;
@@ -47,7 +47,8 @@ public class TemplatesView extends SplitLayout {
     private final BeanValidationBinder<Templates> templatesBinder;
     private final BeanValidationBinder<Chains> chainBinder;
 
-    private final TreeGrid<AbstractTemplate> chainGrid = new TreeGrid<>(AbstractTemplate.class, false);
+    private final TreeGrid<Object> chainGrid = new TreeGrid<>();
+    private TreeData<Object> treeGridData = new TreeData<>();
     private final TextField filterField = new TextField();
 
     private Templates beanForTempl;

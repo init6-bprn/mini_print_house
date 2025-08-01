@@ -17,7 +17,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "additional_works_beans")
+@Table(name = "operation")
 @EqualsAndHashCode
 public class Operation implements HasAction, HasMaterials {
     @Id

@@ -1,6 +1,7 @@
 package ru.bprn.printhouse.views.templates.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -13,7 +14,16 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-public class Templates extends AbstractTemplate {
+public class Templates{
+
+    @Id
+    @EqualsAndHashCode.Include
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    protected Long id;
+
+    @NotBlank
+    protected String name = "Введите название";
 
     private String description = "Описание изделия";
 
@@ -21,10 +31,10 @@ public class Templates extends AbstractTemplate {
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinTable(
-            name = "templates_chains",
+            name = "templates_product",
             joinColumns = @JoinColumn(name = "templates_id"),
-            inverseJoinColumns = @JoinColumn(name = "chains_id"))
-    private Set<Chains> chains;
+            inverseJoinColumns = @JoinColumn(name = "product_id"))
+    private Set<AbstractProductType> productTypes;
 
     @Override
     public final boolean equals(Object o) {

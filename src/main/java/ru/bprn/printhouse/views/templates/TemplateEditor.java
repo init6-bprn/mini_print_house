@@ -10,7 +10,6 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
-import ru.bprn.printhouse.views.templates.entity.AbstractTemplate;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
@@ -20,10 +19,10 @@ public class TemplateEditor extends VerticalLayout {
 
     private final BeanValidationBinder<Templates> templatesBinder = new BeanValidationBinder<>(Templates.class);
     private final TemplatesService service;
-    private final TreeGrid<AbstractTemplate> treeGrid;
+    private final TreeGrid<Object> treeGrid;
     private final SplitLayout splitLayout;
 
-    public TemplateEditor(SplitLayout splitLayout, TreeGrid<AbstractTemplate> treeGrid, TemplatesService service){
+    public TemplateEditor(SplitLayout splitLayout, TreeGrid<Object> treeGrid, TemplatesService service){
         this.service = service;
         this.treeGrid = treeGrid;
         this.splitLayout = splitLayout;
