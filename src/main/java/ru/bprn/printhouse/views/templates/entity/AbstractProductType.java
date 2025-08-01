@@ -20,7 +20,7 @@ public class AbstractProductType {
     protected UUID id;
 
     @NotBlank
-    protected String name = "Название материала";
+    protected String name = "Название изделия";
 
 
 }

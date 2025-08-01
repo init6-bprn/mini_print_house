@@ -1,8 +1,6 @@
 package ru.bprn.printhouse.views.templates.entity;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -10,11 +8,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
-import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "one_sheet_digital_printing_product_type")
@@ -37,11 +35,9 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
 
     private String materialFormula;
 
-    @ManyToOne
-    @JoinColumn(name = "materials_id")
-    private AbstractMaterials materials;
+    private UUID id;
 
-    private Set<AbstractMaterials> materialsSet;
+    private Set<UUID> materialsIDSet;
 
     @Override
     public final boolean equals(Object o) {
@@ -60,23 +56,23 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
     }
 
     @Override
-    public AbstractMaterials getDefaultMaterial() {
-        return materials;
+    public UUID getDefaultMaterial() {
+        return this.id;
     }
 
     @Override
-    public void setDefaultMaterial(AbstractMaterials material) {
-        this.materials = material;
+    public void setDefaultMaterial(UUID id) {
+        this.id = id;
     }
 
     @Override
-    public Set<AbstractMaterials> getSelectedMaterials() {
-        return materialsSet;
+    public Set<UUID> getSelectedMaterials() {
+        return this.materialsIDSet;
     }
 
     @Override
-    public void setSelectedMaterials(Set<AbstractMaterials> materialSet) {
-        this.materialsSet = materialSet;
+    public void setSelectedMaterials(Set<UUID> materialSet) {
+        this.materialsIDSet = materialSet;
     }
 
     @Override
