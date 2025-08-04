@@ -24,6 +24,7 @@ public class OperationService {
         if (str == null) return findAll();
         else return this.repository.search(str);
     }
+
     public Optional<Operation> duplicate(Operation bean) {
         if (bean!= null){
             var work = new Operation();

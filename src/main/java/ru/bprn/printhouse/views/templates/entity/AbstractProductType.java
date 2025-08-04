@@ -7,11 +7,9 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
+import ru.bprn.printhouse.views.operation.entity.Operation;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -30,6 +28,8 @@ public class AbstractProductType {
 
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> variables = new HashMap<>();
+
+    private Set<Operation> operationsSet = new HashSet<>();
 
     @Override
     public final boolean equals(Object o) {

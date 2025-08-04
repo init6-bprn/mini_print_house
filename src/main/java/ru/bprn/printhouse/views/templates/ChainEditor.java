@@ -47,7 +47,7 @@ public class ChainEditor extends VerticalLayout {
     private final BeanValidationBinder<Chains> chainsBinder = new BeanValidationBinder<>(Chains.class);
     private final ChainsService service;
     private final TemplatesService templatesService;
-    private final TreeGrid<AbstractTemplate> treeGrid;
+    private final TreeGrid<Object> treeGrid;
     private final SplitLayout splitLayout;
     private final TypeOfOperationService typeOfOperationService;
     private final OperationService worksBeanService;
@@ -57,7 +57,7 @@ public class ChainEditor extends VerticalLayout {
     private final GapService gapService;
     private final MaterialService materialService;
 
-    public ChainEditor(SplitLayout splitLayout, TreeGrid<AbstractTemplate> treeGrid, ChainsService service, TemplatesService templatesService,
+    public ChainEditor(SplitLayout splitLayout, TreeGrid<Object> treeGrid, ChainsService service, TemplatesService templatesService,
                        TypeOfOperationService typeOfOperationService, OperationService worksBeanService,
                        VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
                        StandartSizeService standartSizeService, GapService gapService,

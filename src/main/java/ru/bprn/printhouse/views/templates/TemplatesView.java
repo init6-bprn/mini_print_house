@@ -22,10 +22,13 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.material.service.MaterialService;
+import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Chains;
+import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.ChainsService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
@@ -47,7 +50,7 @@ public class TemplatesView extends SplitLayout {
     private final BeanValidationBinder<Templates> templatesBinder;
     private final BeanValidationBinder<Chains> chainBinder;
 
-    private final TreeGrid<Object> chainGrid = new TreeGrid<>();
+    private final TreeGrid<Object> treeGrid = new TreeGrid<>();
     private TreeData<Object> treeGridData = new TreeData<>();
     private final TextField filterField = new TextField();
 
@@ -76,29 +79,29 @@ public class TemplatesView extends SplitLayout {
 
         chainBinder = new BeanValidationBinder<>(Chains.class);
 
-        templateEditor = new TemplateEditor(this, chainGrid, templatesService);
+        templateEditor = new TemplateEditor(this, treeGrid, templatesService);
         templateEditor.setVisible(false);
         templateEditor.setEnabled(false);
 
-        chainEditor = new ChainEditor(this, chainGrid, chainsService, templatesService,
+        chainEditor = new ChainEditor(this, treeGrid, chainsService, templatesService,
                 typeOfOperationService, worksBeanService,
                 variablesForMainWorksService, formulasService,
                 standartSizeService, gapService, materialService);
         chainEditor.setVisible(false);
         chainEditor.setEnabled(false);
 
-        this.setOrientation(Orientation.VERTICAL);
-        this.setSplitterPosition(50.0);
+        this.setOrientation(Orientation.HORIZONTAL);
+        this.setSplitterPosition(60.0);
         this.setSizeFull();
-        this.addToPrimary(chainGrid());
+        this.addToPrimary((treeGrid()));
         this.addToSecondary(templateEditor, chainEditor);
 
     }
 
-    private Component chainGrid() {
+    private Component treeGrid() {
         var hlay = new HorizontalLayout();
         hlay.setWidthFull();
-        chainGrid.setWidthFull();
+        treeGrid.setWidthFull();
 
         var vl = new VerticalLayout();
         vl.setWidthFull();
@@ -127,10 +130,10 @@ public class TemplatesView extends SplitLayout {
         createTemplateButton.setTooltipText("Создать новый шаблон");
 
         var createChainButton = new Button(VaadinIcon.PLUS.create(), event -> {
-            var abs = chainGrid.asSingleSelect().getValue();
+            var abs = treeGrid.asSingleSelect().getValue();
             if (abs!=null) {
                 if (abs instanceof Templates) beanForTempl = (Templates) abs;
-                else beanForTempl = (Templates) chainGrid.getDataCommunicator().getParentItem(abs);
+                else beanForTempl = (Templates) treeGrid.getDataCommunicator().getParentItem(abs);
                 chainEditor.setTemplate(beanForTempl);
                 chainEditor.setChains(new Chains());
                 hideTemplateAndShowChain(true);
@@ -141,15 +144,15 @@ public class TemplatesView extends SplitLayout {
         createChainButton.setTooltipText("Создать новую рабочую цепочку");
 
         var updateButton  = new Button(VaadinIcon.EDIT.create(), event -> {
-            if (!chainGrid.asSingleSelect().isEmpty()) {
-                switch (chainGrid.asSingleSelect().getValue()) {
+            if (!treeGrid.asSingleSelect().isEmpty()) {
+                switch (treeGrid.asSingleSelect().getValue()) {
                     case Templates template:
                         beanForTempl = template;
                         templateEditor.setTemplate(template);
                         hideTemplateAndShowChain(false);
                         break;
                     case Chains chain:
-                        beanForTempl=(Templates) chainGrid.getDataCommunicator().getParentItem(chain);
+                        beanForTempl=(Templates) treeGrid.getDataCommunicator().getParentItem(chain);
                         chainEditor.setTemplate(beanForTempl);
                         chainEditor.removeTabs();
                         chainEditor.setChains(chain);
@@ -163,19 +166,23 @@ public class TemplatesView extends SplitLayout {
         updateButton.setTooltipText("Изменить шаблон/цепочку");
 
         var duplicateButton = new Button(VaadinIcon.COPY_O.create(), event -> {
-            if (!chainGrid.asSingleSelect().isEmpty()) {
-                switch (chainGrid.asSingleSelect().getValue()) {
+            if (!treeGrid.asSingleSelect().isEmpty()) {
+                switch (treeGrid.asSingleSelect().getValue()) {
                     case Templates template: templatesService.duplicateTemplate(template);
                         break;
-                    case Chains chain:
-                        var newChain = templatesService.duplicateChain(chain);
-                        beanForTempl=(Templates) chainGrid.getDataCommunicator().getParentItem(chain);
-                        var ch = beanForTempl.getChains();
-                        if (ch.add(newChain)) {
-                            beanForTempl.setChains(ch);
+                    case AbstractProductType productType:
+                        var newProduct = templatesService.duplicateProduct(productType);
+                        beanForTempl=(Templates) treeGrid.getDataCommunicator().getParentItem(productType);
+                        var ch = beanForTempl.getProductTypes();
+                        if (ch.add(newProduct)) {
+                            beanForTempl.setProductTypes(ch);
                             templatesService.save(beanForTempl);
                         }
                         break;
+                    case Operation operation:
+                        var newOperarion = ;
+                        AbstractProductType currentProductType = (AbstractProductType) treeGrid.getDataCommunicator().getParentItem(operation);
+
                     default:
                 }
                 populate(filterField.getValue().trim());
@@ -186,13 +193,13 @@ public class TemplatesView extends SplitLayout {
 
         var addChainButton = new Button(VaadinIcon.ADD_DOCK.create(), event -> {
 
-            if (!chainGrid.asSingleSelect().isEmpty()) {
-                switch (chainGrid.asSingleSelect().getValue()) {
+            if (!treeGrid.asSingleSelect().isEmpty()) {
+                switch (treeGrid.asSingleSelect().getValue()) {
                     case Templates template:
                         beanForTempl = template;
                         break;
                     case Chains chain:
-                        beanForTempl=(Templates) chainGrid.getDataCommunicator().getParentItem(chain);
+                        beanForTempl=(Templates) treeGrid.getDataCommunicator().getParentItem(chain);
                         break;
                     default:
                 }
@@ -217,8 +224,8 @@ public class TemplatesView extends SplitLayout {
         addChainButton.setTooltipText("Добавить существующую цепочку");
 
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), event -> {
-            if (!chainGrid.asSingleSelect().isEmpty()) {
-                dialogChain.setText("Вы уверены, что хотите удалить " + chainGrid.asSingleSelect().getValue().getName() + " ?");
+            if (!treeGrid.asSingleSelect().isEmpty()) {
+                dialogChain.setText("Вы уверены, что хотите удалить " + treeGrid.asSingleSelect().getValue().getName() + " ?");
                 dialogChain.open();
             }
         });
@@ -226,14 +233,14 @@ public class TemplatesView extends SplitLayout {
         deleteButton.setTooltipText("Удалить элемент");
 
         hl.add(createTemplateButton, createChainButton, updateButton, duplicateButton, addChainButton, deleteButton);
-        vl.add(filterField, hl, chainGrid);
+        vl.add(filterField, hl, treeGrid);
 
-        chainGrid.addHierarchyColumn(AbstractTemplate::getName);
-        chainGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
-        chainGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        treeGrid.addHierarchyColumn(AbstractTemplate::getName);
+        treeGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        treeGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         populate(filterField.getValue().trim());
 
-        chainGrid.asSingleSelect().addValueChangeListener(e->{
+        treeGrid.asSingleSelect().addValueChangeListener(e->{
             if (e.getValue()!= null) {
                 switch (e.getValue()) {
                     case Templates template:
@@ -243,7 +250,7 @@ public class TemplatesView extends SplitLayout {
                         templateEditor.setVisible(true);
                         break;
                     case Chains chain:
-                        if (beanForTempl==null) beanForTempl = (Templates) chainGrid.getDataCommunicator().getParentItem(chain);
+                        if (beanForTempl==null) beanForTempl = (Templates) treeGrid.getDataCommunicator().getParentItem(chain);
                         chainEditor.removeTabs();
                         chainEditor.setChains(chain);
                         chainEditor.setTemplate(beanForTempl);
@@ -276,13 +283,13 @@ public class TemplatesView extends SplitLayout {
     }
 
     private void deleteElement(){
-        var abstractTemplate = chainGrid.asSingleSelect().getValue();
+        var abstractTemplate = treeGrid.asSingleSelect().getValue();
         switch (abstractTemplate) {
             case Templates template:
                 templatesService.delete(template);
                 break;
             case Chains chain:
-                beanForTempl= (Templates) chainGrid.getDataCommunicator().getParentItem(chain);
+                beanForTempl= (Templates) treeGrid.getDataCommunicator().getParentItem(chain);
                 beanForTempl.getChains().remove(chain);
                 templatesService.save(beanForTempl);
                 break;
@@ -292,6 +299,6 @@ public class TemplatesView extends SplitLayout {
     }
 
     private void populate(String filter) {
-        chainGrid.setDataProvider(templatesService.populateGrid(filter));
+        treeGrid.setDataProvider(templatesService.populateGrid(filter));
     }
 }
