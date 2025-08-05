@@ -29,6 +29,7 @@ public class AbstractProductType {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> variables = new HashMap<>();
 
+    @OneToMany
     private Set<Operation> operationsSet = new HashSet<>();
 
     @Override
