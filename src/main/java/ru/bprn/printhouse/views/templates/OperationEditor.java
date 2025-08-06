@@ -1,10 +1,20 @@
 package ru.bprn.printhouse.views.templates;
 
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import ru.bprn.printhouse.views.operation.entity.Operation;
 
-public class OperationEditor extends VerticalLayout {
+import java.util.function.Consumer;
 
-    public OperationEditor() {
+public class OperationEditor extends AbstractEditor<Operation> {
 
+    public OperationEditor(Consumer<Operation> onSave) {
+        super(onSave);
+
+    }
+
+    @Override
+    protected Component buildForm() {
+        return new FormLayout();
     }
 }

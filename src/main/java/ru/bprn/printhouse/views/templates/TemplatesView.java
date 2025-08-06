@@ -60,13 +60,13 @@ public class TemplatesView extends SplitLayout {
     private AddChainDialog addChainDialog;
 
     public TemplatesView(TemplatesService templatesService,
-                         TypeOfOperationService typeOfOperationService, OperationService worksBeanService,
+                         TypeOfOperationService typeOfOperationService, OperationService operationService,
                          VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
                          StandartSizeService standartSizeService, GapService gapService,
                          MaterialService materialService){
         this.templatesService = templatesService;
         this.typeOfOperationService = typeOfOperationService;
-        this.worksBeanService = worksBeanService;
+        this.worksBeanService = operationService;
         this.variablesForMainWorksService = variablesForMainWorksService;
         this.formulasService = formulasService;
         this.standartSizeService = standartSizeService;
@@ -81,7 +81,7 @@ public class TemplatesView extends SplitLayout {
         templateEditor.setEnabled(false);
 
         productEditor = new ProductEditor();
-        operationEditor = new OperationEditor();
+        operationEditor = new OperationEditor(operationService::save);
 
 
         this.setOrientation(Orientation.HORIZONTAL);
@@ -124,7 +124,16 @@ public class TemplatesView extends SplitLayout {
         createTemplateButton.setTooltipText("Создать новый шаблон");
 
         var createChainButton = new Button(VaadinIcon.PLUS.create(), event -> {
-            var abs = treeGrid.asSingleSelect().getValue();
+            switch (treeGrid.asSingleSelect().getValue()){
+                case Templates templates:
+                    break;
+                case AbstractProductType productType:
+                    break;
+                case Operation operation:
+                    break;
+                default: Notification.show("Сначала выделите шаблон");
+            }
+
             if (abs!=null) {
                 if (abs instanceof Templates) currentTemplate = (Templates) abs;
                 else currentTemplate = (Templates) treeGrid.getDataCommunicator().getParentItem(abs);
@@ -132,7 +141,7 @@ public class TemplatesView extends SplitLayout {
                 //chainEditor.setChains(new Chains());
                 hideTemplateAndShowChain(true);
             }
-            else Notification.show("Сначала выделите шаблон");
+            else
         });
         createChainButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createChainButton.setTooltipText("Создать новую рабочую цепочку");
@@ -171,6 +180,7 @@ public class TemplatesView extends SplitLayout {
                 }
                 populate(filterField.getValue().trim());
             }
+            else Notification.show("Сначала выделите какой-либо элемент таблицы");
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         duplicateButton.setTooltipText("Создать дубликат шаблона/цепочки");
