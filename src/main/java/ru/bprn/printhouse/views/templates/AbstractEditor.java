@@ -22,9 +22,10 @@ public abstract class AbstractEditor<T> extends VerticalLayout {
         this.onSave = onSave;
         setSpacing(true);
         setPadding(true);
+        setWidthFull();
 
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
-        add(buildForm(), buttons);
+        add(buttons);
 
         saveButton.addClickListener(e -> save());
         cancelButton.addClickListener(e -> clear());

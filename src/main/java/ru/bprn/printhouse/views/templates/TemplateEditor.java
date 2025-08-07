@@ -1,75 +1,38 @@
 package ru.bprn.printhouse.views.templates;
 
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.treegrid.TreeGrid;
-import com.vaadin.flow.data.binder.BeanValidationBinder;
 import ru.bprn.printhouse.views.templates.entity.Templates;
-import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
-public class TemplateEditor extends VerticalLayout {
+import java.util.function.Consumer;
 
-    private Templates template;
+public class TemplateEditor extends AbstractEditor<Templates> {
 
-    private final BeanValidationBinder<Templates> templatesBinder = new BeanValidationBinder<>(Templates.class);
-    private final TemplatesService service;
-    private final TreeGrid<Object> treeGrid;
-    private final SplitLayout splitLayout;
+    private final TextField name = new TextField("Название шаблона:");
+    private final TextArea description = new TextArea("Краткое описание:");
 
-    public TemplateEditor(SplitLayout splitLayout, TreeGrid<Object> treeGrid, TemplatesService service){
-        this.service = service;
-        this.treeGrid = treeGrid;
-        this.splitLayout = splitLayout;
-        this.setSizeFull();
+    public TemplateEditor(Templates templates, Consumer<Templates> onSave){
+        super(onSave);
+        this.edit(templates);
 
-        var name = new TextField("Название шаблона:");
-        name.setWidthFull();
-        this.templatesBinder.bind(name, Templates::getName, Templates::setName);
+        this.binder.forField(name).bind(Templates::getName, Templates::setName);
 
-        var description = new TextArea("Краткое описание:");
         description.setWidthFull();
         description.setMaxRows(5);
-        this.templatesBinder.bind(description, Templates::getDescription, Templates::setDescription);
+        this.binder.bind(description, Templates::getDescription, Templates::setDescription);
 
-        var saveButton = new Button("Save", o -> saveBean());
-        var cancelButton = new Button("Cancel", o ->cancelBean());
-        var hl = new HorizontalLayout(FlexComponent.Alignment.END, saveButton, cancelButton);
-
-        this.add(name, description, hl);
-
-        templatesBinder.readBean(this.template);
-        this.templatesBinder.refreshFields();
+        add(buildForm());
     }
 
-    private void saveBean() {
-        if (templatesBinder.writeBeanIfValid(template)) {
-            service.save(template);
-            Notification.show("Сохранено!");
-            showPrimary();
-            treeGrid.setDataProvider(service.populateGrid(null));        }
-    }
 
-    private void cancelBean(){
-        showPrimary();
-    }
+    @Override
+    protected Component buildForm() {
+        var form = new FormLayout(name, description);
+        form.setAutoResponsive(true);
+        form.setWidthFull();
 
-    private void showPrimary(){
-        splitLayout.getPrimaryComponent().setVisible(true);
-        splitLayout.getSecondaryComponent().getElement().setEnabled(false);
-        splitLayout.setSplitterPosition(50);
-    }
-
-    public void setTemplate(Templates template) {
-        templatesBinder.removeBean();
-        templatesBinder.refreshFields();
-        this.template = template;
-        templatesBinder.readBean(this.template);
-
+        return form;
     }
 }

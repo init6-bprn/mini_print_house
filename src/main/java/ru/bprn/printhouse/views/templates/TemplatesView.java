@@ -4,30 +4,35 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.data.service.*;
+import ru.bprn.printhouse.data.service.FormulasService;
+import ru.bprn.printhouse.data.service.GapService;
+import ru.bprn.printhouse.data.service.StandartSizeService;
+import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.material.service.MaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
-import ru.bprn.printhouse.views.material.service.MaterialService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
-import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.AbstractProductService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
@@ -37,7 +42,7 @@ import ru.bprn.printhouse.views.templates.service.TemplatesService;
 @AnonymousAllowed
 public class TemplatesView extends SplitLayout {
 
-    private final ProductTypeEditorFactory productTypeEditorFactory;
+    private final UniversalEditorFactory universalEditorFactory;
     private final TemplatesService templatesService;
     private final AbstractProductService abstractProductService;
     private final TypeOfOperationService typeOfOperationService;
@@ -50,17 +55,10 @@ public class TemplatesView extends SplitLayout {
     private final BeanValidationBinder<Templates> templatesBinder;
 
     private final TreeGrid<Object> treeGrid = new TreeGrid<>();
-    private TreeData<Object> treeGridData = new TreeData<>();
     private final TextField filterField = new TextField();
 
     private Templates currentTemplate = null;
     private AbstractProductType currentProduct = null;
-    private Operation currentOperation = null;
-
-    private final TemplateEditor templateEditor;
-    private final ProductEditor productEditor;
-    private final OperationEditor operationEditor;
-    private AddChainDialog addChainDialog;
 
     public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
                          TypeOfOperationService typeOfOperationService, OperationService operationService,
@@ -77,25 +75,16 @@ public class TemplatesView extends SplitLayout {
         this.standartSizeService = standartSizeService;
         this.gapService = gapService;
         this.materialService = materialService;
-        this.productTypeEditorFactory = new ProductTypeEditorFactory(
+        this.universalEditorFactory = new UniversalEditorFactory(
                 variablesForMainWorksService, formulasService, standartSizeService, gapService, materialService);
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);
-
-
-        templateEditor = new TemplateEditor(this, treeGrid, templatesService);
-        templateEditor.setVisible(false);
-        templateEditor.setEnabled(false);
-
-        productEditor = new ProductEditor();
-        operationEditor = new OperationEditor(operationService::save);
-
 
         this.setOrientation(Orientation.HORIZONTAL);
         this.setSplitterPosition(60.0);
         this.setSizeFull();
         this.addToPrimary((treeGrid()));
-        this.addToSecondary(templateEditor);
+        this.addToSecondary(new VerticalLayout());
 
     }
 
@@ -122,103 +111,54 @@ public class TemplatesView extends SplitLayout {
                 "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         var hl = new HorizontalLayout();
-        var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
-            currentTemplate = new Templates();
-            templateEditor.setTemplate(currentTemplate);
-            hideTemplateAndShowChain(false);
+        var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event ->{
+                AbstractEditor<?> comp = universalEditorFactory.createEditor( new Templates(), entity ->
+                    templatesService.save( (Templates) entity ));
+                    addEditor(comp);
         });
+
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createTemplateButton.setTooltipText("Создать новый шаблон");
 
-        var createChainButton = new Button(VaadinIcon.PLUS.create(), event -> {
-            this.getSecondaryComponent().removeFromParent();
+        var createButton = new Button(VaadinIcon.PLUS.create(), event -> {
             switch (treeGrid.asSingleSelect().getValue()){
                 case Templates templates:
                     break;
                 case AbstractProductType productType:
-                    this.addToSecondary(
-                            productTypeEditorFactory.createEditor(productType, abstractProductService::save));
+                    addEditor(universalEditorFactory.createEditor(productType, entity->
+                                abstractProductService.save((AbstractProductType) entity)));
                     break;
                 case Operation operation:
-                    this.addToSecondary(new OperationEditor(operationService::save));
+                    addEditor(universalEditorFactory.createEditor(operation, entity->
+                            operationService.save((Operation) entity)));
                     break;
-                default: Notification.show("Сначала выделите шаблон");
+                default: Notification.show("Неизвестный тип !!!");
             }
         });
-        createChainButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createChainButton.setTooltipText("Создать новую рабочую цепочку");
-
-        var updateButton  = new Button(VaadinIcon.EDIT.create(), event -> {
-            if (!treeGrid.asSingleSelect().isEmpty()) {
-                switch (treeGrid.asSingleSelect().getValue()) {
-                    case Templates template:
-                        currentTemplate = template;
-                        templateEditor.setTemplate(template);
-                        hideTemplateAndShowChain(false);
-                        break;
-                    case Chains chain:
-                        currentTemplate =(Templates) treeGrid.getDataCommunicator().getParentItem(chain);
-                        //chainEditor.setTemplate(currentTemplate);
-                        //chainEditor.removeTabs();
-                        //chainEditor.setChains(chain);
-                        hideTemplateAndShowChain(true);
-                        break;
-                    default:
-                }
-            }
-        });
-        updateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-        updateButton.setTooltipText("Изменить шаблон/цепочку");
+        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        createButton.setTooltipText("Создать новую рабочую цепочку");
 
         var duplicateButton = new Button(VaadinIcon.COPY_O.create(), event -> {
-            if (!treeGrid.asSingleSelect().isEmpty()) {
-                switch (treeGrid.asSingleSelect().getValue()) {
+            var obj = treeGrid.asSingleSelect().getValue();
+            Object parent = this.treeGrid.getTreeData().getParent(obj);
+            if (obj!=null){
+                switch (obj) {
                     case Templates template: templatesService.duplicateTemplate(template);
                         break;
-                    case AbstractProductType productType: templatesService.addProductToTemplate(currentTemplate, templatesService.duplicateProduct(productType));
+                    case AbstractProductType productType:
+                        templatesService.addProductToTemplate((Templates) parent, templatesService.duplicateProduct(productType));
                         break;
-                    case Operation operation: templatesService.duplicateOperation(currentProduct, operation);
+                    case Operation operation: templatesService.duplicateOperation((AbstractProductType) parent, operation);
                     default:
                 }
                 populate(filterField.getValue().trim());
+                treeGrid.asSingleSelect().setValue(obj);
             }
             else Notification.show("Сначала выделите какой-либо элемент таблицы");
         });
         duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
         duplicateButton.setTooltipText("Создать дубликат шаблона/цепочки");
 
-        var addChainButton = new Button(VaadinIcon.ADD_DOCK.create(), event -> {
-            if (!treeGrid.asSingleSelect().isEmpty()) {
-                switch (treeGrid.asSingleSelect().getValue()) {
-                    case Templates template:
-                        this.addToSecondary(templateEditor);
-                        currentTemplate = template;
-                        break;
-                    case Chains chain:
-                        currentTemplate =(Templates) treeGrid.getDataCommunicator().getParentItem(chain);
-                        break;
-                    default:
-                }
-
-                if (addChainDialog == null) {
-                    addChainDialog = new AddChainDialog(currentTemplate, templatesService);
-                    addChainDialog.addOpenedChangeListener(closeEvent -> {
-                        if (closeEvent.isOpened()) {
-                            addChainDialog.populate();
-                        }
-                        else populate(filterField.getValue().trim());
-                    });
-                    addChainDialog.open();
-                }
-                else {
-                    addChainDialog.setTemplate(currentTemplate);
-                    addChainDialog.open();
-                }
-            }
-            else Notification.show("Сначала выделите шаблон");
-        });
-        addChainButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-        addChainButton.setTooltipText("Добавить существующую цепочку");
 
         var deleteButton = new Button(VaadinIcon.CLOSE.create(), event -> {
             if (!treeGrid.asSingleSelect().isEmpty()) {
@@ -229,29 +169,105 @@ public class TemplatesView extends SplitLayout {
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
         deleteButton.setTooltipText("Удалить элемент");
 
-        hl.add(createTemplateButton, createChainButton, updateButton, duplicateButton, addChainButton, deleteButton);
+        hl.add(createTemplateButton, createButton, duplicateButton, deleteButton);
         vl.add(filterField, hl, treeGrid);
 
-        treeGrid.addHierarchyColumn(Templates::getName);
+        treeGrid.addComponentHierarchyColumn(item -> {
+            HorizontalLayout layout = new HorizontalLayout();
+            layout.setAlignItems(FlexComponent.Alignment.CENTER);
+
+            Component content = switch (item) {
+                case Templates t -> {
+                    Icon icon = VaadinIcon.FOLDER_OPEN.create();
+                    Span label = new Span(t.getName());
+                    label.getStyle().set("color", "darkblue");
+                    yield new HorizontalLayout(icon, label);
+                }
+                case AbstractProductType pt -> {
+                    Icon icon = VaadinIcon.CUBE.create();
+                    Span label = new Span(pt.getName());
+                    label.getStyle().set("color", "green");
+                    yield new HorizontalLayout(icon, label);
+                }
+                case Operation op -> {
+                    Icon icon = VaadinIcon.COG.create();
+                    Span label = new Span(op.getName());
+                    label.getStyle().set("color", "darkred");
+                    yield new HorizontalLayout(icon, label);
+                }
+                default -> {
+                    Icon icon = VaadinIcon.QUESTION.create();
+                    Span label = new Span(item.toString());
+                    label.getStyle().set("color", "gray");
+                    yield new HorizontalLayout(icon, label);
+                }
+            };
+            layout.add(content);
+
+            ContextMenu menu = new ContextMenu();
+            menu.setTarget(layout);
+            menu.setOpenOnClick(false); // открытие по правому клику
+
+            menu.addItem("🆕 Новый", e -> {
+                Dialog dialog = new Dialog();
+                dialog.add(new Span("Создать новый элемент?"));
+                Button confirm = new Button("Создать", click -> {
+                    Notification.show("Создан новый элемент");
+                    dialog.close();
+                });
+                Button cancel = new Button("Отмена", click -> dialog.close());
+                dialog.add(new HorizontalLayout(confirm, cancel));
+                dialog.open();
+            });
+
+            menu.addItem("📄 Дублировать", e -> {
+                Dialog dialog = new Dialog();
+                dialog.add(new Span("Дублировать: " + item));
+                Button confirm = new Button("Дублировать", click -> {
+                    Notification.show("Дублирован: " + item);
+                    dialog.close();
+                });
+                Button cancel = new Button("Отмена", click -> dialog.close());
+                dialog.add(new HorizontalLayout(confirm, cancel));
+                dialog.open();
+            });
+
+            menu.addItem("🗑️ Удалить", e -> {
+                Dialog dialog = new Dialog();
+                dialog.add(new Span("Удалить: " + item + "?"));
+                Button confirm = new Button("Удалить", click -> {
+                    Notification.show("Удалён: " + item);
+                    dialog.close();
+                });
+                Button cancel = new Button("Отмена", click -> dialog.close());
+                dialog.add(new HorizontalLayout(confirm, cancel));
+                dialog.open();
+            });
+            return layout;
+        }).setHeader("Элемент");
+
+
         treeGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         treeGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         populate(filterField.getValue().trim());
 
         treeGrid.asSingleSelect().addValueChangeListener(e->{
-            setCurrentEditor(e.getValue());
             if (e.getValue()!= null) {
                 switch (e.getValue()) {
-                    case Templates template:
-                        currentTemplate = template;
-                        templateEditor.setTemplate(template);
-                        chainEditor.setVisible(false);
-                        templateEditor.setVisible(true);
+                    case Templates templates:
+                        addEditor(universalEditorFactory.createEditor(templates, entity ->
+                                templatesService.save((Templates) entity)));
                         break;
-                    case AbstractProductType product:
-                        if (currentTemplate ==null) currentTemplate = (Templates) treeGrid.getDataCommunicator().getParentItem(product);
+                    case AbstractProductType productType:
+                        addEditor(universalEditorFactory.createEditor(productType, entity ->
+                                abstractProductService.save((AbstractProductType) entity)));
+                        break;
+                    case Operation operation:
+                        addEditor(universalEditorFactory.createEditor(operation, entity ->
+                                operationService.save((Operation) entity)));
                         break;
                     default:
-                        throw new IllegalStateException("Unexpected value: " + e.getValue());
+                        Notification.show("Неизвестный тип !!!");
                 }
             }
         });
@@ -261,56 +277,20 @@ public class TemplatesView extends SplitLayout {
         return hlay;
     }
 
-    private void setCurrentEditor(Object value) {
-        switch (value) {
-            case Templates template:
-                currentTemplate = template;
-                currentProduct = null;
-                currentOperation = null;
-                break;
-            case AbstractProductType product:
-                currentTemplate = (Templates) treeGrid.getDataCommunicator().getParentItem(product);
-                currentProduct = product;
-                currentOperation = null;
-                break;
-            case Operation operation:
-                currentProduct = (AbstractProductType) treeGrid.getDataCommunicator().getParentItem(operation);
-                currentTemplate = (Templates) treeGrid.getDataCommunicator().getParentItem(currentProduct);
-                currentOperation = operation;
-                break;
-            default:
-                currentTemplate = null;
-                currentProduct = null;
-                currentOperation = null;
-        }
+    private void addEditor(AbstractEditor<?> editor) {
+        var obj = this.getSecondaryComponent();
+        if (obj != null) this.getSecondaryComponent().removeFromParent();
+        this.addToSecondary(editor);
     }
 
-    private void hideSecondary(){
-        this.getPrimaryComponent().setVisible(false);
-        this.getSecondaryComponent().getElement().setEnabled(true);
-        this.setSplitterPosition(0);
-    }
-
-    private void hideTemplateAndShowChain(boolean aBoolean) {
-            chainEditor.setVisible(aBoolean);
-            templateEditor.setVisible(!aBoolean);
-            chainEditor.setEnabled(aBoolean);
-            templateEditor.setEnabled(!aBoolean);
-            hideSecondary();
-    }
 
     private void deleteElement(){
         var abstractTemplate = treeGrid.asSingleSelect().getValue();
         switch (abstractTemplate) {
-            case Templates template:
-                templatesService.delete(template);
-                break;
-            case Chains chain:
-                currentTemplate = (Templates) treeGrid.getDataCommunicator().getParentItem(chain);
-                currentTemplate.getChains().remove(chain);
-                templatesService.save(currentTemplate);
-                break;
-            default:
+            case Templates template -> templatesService.delete(template);
+            case AbstractProductType entity -> abstractProductService.delete(entity);
+            case Operation operation -> operationService.delete(operation);
+            default -> Notification.show("Не знаю, что удалить!");
         }
         populate(filterField.getValue().trim());
     }

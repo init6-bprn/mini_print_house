@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 
 public class OperationEditor extends AbstractEditor<Operation> {
 
-    public OperationEditor(Consumer<Operation> onSave) {
+    public OperationEditor(Operation operation, Consumer<Operation> onSave) {
         super(onSave);
 
     }
