@@ -32,7 +32,7 @@ public class ProductTypeEditorFactory {
             Consumer<AbstractProductType> onSave) {
         return switch (productType) {
             case OneSheetDigitalPrintingProductType product -> new OneSheetDigitalPrintingProductTypeEditor(product, onSave, variablesForMainWorksService, formulasService, standartSizeService, gapService, materialService);
-
+            default -> null;
         };
     }
 }

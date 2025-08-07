@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.views.templates;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
@@ -12,7 +13,7 @@ import ru.bprn.printhouse.views.templates.entity.Templates;
 
 import java.util.function.Consumer;
 
-public class OneSheetDigitalPrintingProductTypeEditor extends VerticalLayout {
+public class OneSheetDigitalPrintingProductTypeEditor extends AbstractEditor<AbstractProductType> {
 
     @Setter
     private Templates template;
@@ -25,7 +26,7 @@ public class OneSheetDigitalPrintingProductTypeEditor extends VerticalLayout {
 
     public OneSheetDigitalPrintingProductTypeEditor(OneSheetDigitalPrintingProductType product, Consumer<AbstractProductType> onSave, VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
                                                     StandartSizeService standartSizeService, GapService gapService, MaterialService materialService){
-
+        super(onSave);
         this.variablesForMainWorksService = variablesForMainWorksService;
         this.formulasService = formulasService;
         this.standartSizeService = standartSizeService;
@@ -43,4 +44,8 @@ public class OneSheetDigitalPrintingProductTypeEditor extends VerticalLayout {
 
     }
 
+    @Override
+    protected Component buildForm() {
+        return null;
+    }
 }

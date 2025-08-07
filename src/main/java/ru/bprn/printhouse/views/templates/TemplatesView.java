@@ -29,6 +29,7 @@ import ru.bprn.printhouse.views.material.service.MaterialService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Chains;
 import ru.bprn.printhouse.views.templates.entity.Templates;
+import ru.bprn.printhouse.views.templates.service.AbstractProductService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
 @PageTitle("Редактирование шаблонов")
@@ -36,9 +37,11 @@ import ru.bprn.printhouse.views.templates.service.TemplatesService;
 @AnonymousAllowed
 public class TemplatesView extends SplitLayout {
 
+    private final ProductTypeEditorFactory productTypeEditorFactory;
     private final TemplatesService templatesService;
+    private final AbstractProductService abstractProductService;
     private final TypeOfOperationService typeOfOperationService;
-    private final OperationService worksBeanService;
+    private final OperationService operationService;
     private final VariablesForMainWorksService variablesForMainWorksService;
     private final FormulasService formulasService;
     private final StandartSizeService standartSizeService;
@@ -59,19 +62,23 @@ public class TemplatesView extends SplitLayout {
     private final OperationEditor operationEditor;
     private AddChainDialog addChainDialog;
 
-    public TemplatesView(TemplatesService templatesService,
+    public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
                          TypeOfOperationService typeOfOperationService, OperationService operationService,
                          VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
                          StandartSizeService standartSizeService, GapService gapService,
                          MaterialService materialService){
+
         this.templatesService = templatesService;
+        this.abstractProductService = abstractProductService;
         this.typeOfOperationService = typeOfOperationService;
-        this.worksBeanService = operationService;
+        this.operationService = operationService;
         this.variablesForMainWorksService = variablesForMainWorksService;
         this.formulasService = formulasService;
         this.standartSizeService = standartSizeService;
         this.gapService = gapService;
         this.materialService = materialService;
+        this.productTypeEditorFactory = new ProductTypeEditorFactory(
+                variablesForMainWorksService, formulasService, standartSizeService, gapService, materialService);
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);
 
@@ -124,24 +131,19 @@ public class TemplatesView extends SplitLayout {
         createTemplateButton.setTooltipText("Создать новый шаблон");
 
         var createChainButton = new Button(VaadinIcon.PLUS.create(), event -> {
+            this.getSecondaryComponent().removeFromParent();
             switch (treeGrid.asSingleSelect().getValue()){
                 case Templates templates:
                     break;
                 case AbstractProductType productType:
+                    this.addToSecondary(
+                            productTypeEditorFactory.createEditor(productType, abstractProductService::save));
                     break;
                 case Operation operation:
+                    this.addToSecondary(new OperationEditor(operationService::save));
                     break;
                 default: Notification.show("Сначала выделите шаблон");
             }
-
-            if (abs!=null) {
-                if (abs instanceof Templates) currentTemplate = (Templates) abs;
-                else currentTemplate = (Templates) treeGrid.getDataCommunicator().getParentItem(abs);
-                //chainEditor.setTemplate(currentTemplate);
-                //chainEditor.setChains(new Chains());
-                hideTemplateAndShowChain(true);
-            }
-            else
         });
         createChainButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createChainButton.setTooltipText("Создать новую рабочую цепочку");
