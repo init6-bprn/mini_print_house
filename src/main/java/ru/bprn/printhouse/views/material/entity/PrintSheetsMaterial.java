@@ -11,11 +11,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.bprn.printhouse.data.entity.TypeOfMaterial;
 
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity
 public class PrintSheetsMaterial extends AbstractMaterials{
 
     @ManyToOne(fetch = FetchType.EAGER)

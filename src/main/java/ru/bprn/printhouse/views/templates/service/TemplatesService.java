@@ -36,6 +36,14 @@ public class TemplatesService {
         return temp.map(Templates::getProductTypes).orElse(null);
     }
 
+    public void addProductToTemplateAndSaveAll(Templates template, AbstractProductType product) {
+        Templates temp = this.findById(template.getId()).orElse(null);
+        if (temp!=null) {
+            temp.getProductTypes().add(abstractProductService.save(product));
+            this.save(temp);
+        }
+    }
+
     public void duplicateTemplate(Templates template){
         var newTemplate = new Templates();
         newTemplate.setDescription(template.getDescription());

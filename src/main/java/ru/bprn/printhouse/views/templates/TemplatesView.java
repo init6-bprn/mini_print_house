@@ -24,15 +24,13 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.data.service.GapService;
-import ru.bprn.printhouse.data.service.StandartSizeService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
-import ru.bprn.printhouse.views.material.service.MaterialService;
+import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
-import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
+import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.AbstractProductService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
@@ -45,38 +43,31 @@ public class TemplatesView extends SplitLayout {
     private final UniversalEditorFactory universalEditorFactory;
     private final TemplatesService templatesService;
     private final AbstractProductService abstractProductService;
-    private final TypeOfOperationService typeOfOperationService;
     private final OperationService operationService;
-    private final VariablesForMainWorksService variablesForMainWorksService;
-    private final FormulasService formulasService;
-    private final StandartSizeService standartSizeService;
-    private final GapService gapService;
-    private final MaterialService materialService;
+    private final PrintSheetsMaterialService printSheetsMaterialService;
+
     private final BeanValidationBinder<Templates> templatesBinder;
 
     private final TreeGrid<Object> treeGrid = new TreeGrid<>();
     private final TextField filterField = new TextField();
 
     private Templates currentTemplate = null;
-    private AbstractProductType currentProduct = null;
+    private AbstractProductType currentProductType = null;
+
+    private Object selectedRow = null;
 
     public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
-                         TypeOfOperationService typeOfOperationService, OperationService operationService,
-                         VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
-                         StandartSizeService standartSizeService, GapService gapService,
-                         MaterialService materialService){
+                         OperationService operationService, PrintSheetsMaterialService printSheetsMaterialService,
+                         FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService){
 
         this.templatesService = templatesService;
         this.abstractProductService = abstractProductService;
-        this.typeOfOperationService = typeOfOperationService;
         this.operationService = operationService;
-        this.variablesForMainWorksService = variablesForMainWorksService;
-        this.formulasService = formulasService;
-        this.standartSizeService = standartSizeService;
-        this.gapService = gapService;
-        this.materialService = materialService;
+        this.printSheetsMaterialService = printSheetsMaterialService;
+
         this.universalEditorFactory = new UniversalEditorFactory(
-                variablesForMainWorksService, formulasService, standartSizeService, gapService, materialService);
+                printSheetsMaterialService, formulasService, variablesForMainWorksService);
+
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);
 
@@ -112,8 +103,7 @@ public class TemplatesView extends SplitLayout {
 
         var hl = new HorizontalLayout();
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event ->{
-                AbstractEditor<?> comp = universalEditorFactory.createEditor(new Templates(), this::save);
-                    addEditor(comp);
+            addEditor(universalEditorFactory.createEditor(new Templates(), this::save));
         });
 
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -121,7 +111,7 @@ public class TemplatesView extends SplitLayout {
 
         var createButton = new Button(VaadinIcon.PLUS.create(), event -> {
             switch (treeGrid.asSingleSelect().getValue()){
-                case Templates templates:
+                case Templates templates: addEditor(universalEditorFactory.createEditor(new OneSheetDigitalPrintingProductType(), this::save));
                     break;
                 case AbstractProductType productType:
                     addEditor(universalEditorFactory.createEditor(productType, this::save));
@@ -249,12 +239,33 @@ public class TemplatesView extends SplitLayout {
         populate(filterField.getValue().trim());
 
         treeGrid.asSingleSelect().addValueChangeListener(e->{
-            if (e.getValue()!= null) addEditor(universalEditorFactory.createEditor(e.getValue(), this::save));
+            selectedRow = e.getValue();
+            setCurrent(selectedRow);
+            if (selectedRow!= null) addEditor(universalEditorFactory.createEditor(selectedRow, this::save));
             else if (this.getSecondaryComponent()!=null) this.remove(this.getSecondaryComponent());
         });
 
         hlay.add(vl);
         return hlay;
+    }
+
+    private void setCurrent(Object select) {
+        if (select!=null) {
+            var temp = treeGrid.getTreeData().getParent(select);
+            if (temp == null) {
+                currentTemplate = (Templates) select;
+                currentProductType = null;
+            } else {
+                var other = treeGrid.getTreeData().getParent(temp);
+                if (other == null) {
+                    currentTemplate = (Templates) temp;
+                    currentProductType = (AbstractProductType) select;
+                } else {
+                    currentTemplate = (Templates) other;
+                    currentProductType = (AbstractProductType) temp;
+                }
+            }
+        }
     }
 
     private void addEditor(AbstractEditor<?> editor) {
@@ -266,11 +277,12 @@ public class TemplatesView extends SplitLayout {
     private void save(Object object) {
         switch (object) {
             case Templates templates-> templatesService.save(templates);
-            case AbstractProductType productType -> abstractProductService.save(productType);
+            case AbstractProductType productType -> templatesService.addProductToTemplateAndSaveAll(currentTemplate, productType);
             case Operation operation -> operationService.save(operation);
             default -> Notification.show("Не сохранено");
         }
         populate(filterField.getValue().trim());
+        treeGrid.asSingleSelect().setValue(selectedRow);
     }
 
 

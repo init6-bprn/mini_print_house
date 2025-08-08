@@ -13,7 +13,7 @@ import java.util.*;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "product_type")
+@DiscriminatorColumn(name = "product_type", length = 100)
 @Getter
 @Setter
 public class AbstractProductType {
