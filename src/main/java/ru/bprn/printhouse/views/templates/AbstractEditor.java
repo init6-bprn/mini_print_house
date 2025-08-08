@@ -13,19 +13,16 @@ public abstract class AbstractEditor<T> extends VerticalLayout {
 
     protected final Binder<T> binder = new Binder<>();
     protected T currentEntity;
-    protected final Consumer<T> onSave;
+    protected final Consumer<Object> onSave;
 
     private final Button saveButton = new Button("Сохранить");
     private final Button cancelButton = new Button("Отмена");
 
-    public AbstractEditor(Consumer<T> onSave) {
+    public AbstractEditor(Consumer<Object> onSave) {
         this.onSave = onSave;
         setSpacing(true);
         setPadding(true);
-        setWidthFull();
-
-        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
-        add(buttons);
+        setSizeFull();
 
         saveButton.addClickListener(e -> save());
         cancelButton.addClickListener(e -> clear());
@@ -37,6 +34,12 @@ public abstract class AbstractEditor<T> extends VerticalLayout {
         this.currentEntity = entity;
         binder.setBean(entity);
     }
+
+    public void addButtons(){
+        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
+        add(buttons);
+    }
+
 
     private void save() {
         if (binder.validate().isOk()) {

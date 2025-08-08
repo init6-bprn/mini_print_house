@@ -105,15 +105,14 @@ public class TemplatesView extends SplitLayout {
 
         var confirmDeleteDialog = new ConfirmDialog("Внимание!" , "", "Да",
                 confirmEvent -> {
-                    deleteElement();
+                    deleteElement(treeGrid.asSingleSelect().getValue());
                     Notification.show("Элемент удален!");
                 },
                 "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         var hl = new HorizontalLayout();
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event ->{
-                AbstractEditor<?> comp = universalEditorFactory.createEditor( new Templates(), entity ->
-                    templatesService.save( (Templates) entity ));
+                AbstractEditor<?> comp = universalEditorFactory.createEditor(new Templates(), this::save);
                     addEditor(comp);
         });
 
@@ -125,12 +124,10 @@ public class TemplatesView extends SplitLayout {
                 case Templates templates:
                     break;
                 case AbstractProductType productType:
-                    addEditor(universalEditorFactory.createEditor(productType, entity->
-                                abstractProductService.save((AbstractProductType) entity)));
+                    addEditor(universalEditorFactory.createEditor(productType, this::save));
                     break;
                 case Operation operation:
-                    addEditor(universalEditorFactory.createEditor(operation, entity->
-                            operationService.save((Operation) entity)));
+                    addEditor(universalEditorFactory.createEditor(operation, this::save));
                     break;
                 default: Notification.show("Неизвестный тип !!!");
             }
@@ -236,6 +233,7 @@ public class TemplatesView extends SplitLayout {
                 Dialog dialog = new Dialog();
                 dialog.add(new Span("Удалить: " + item + "?"));
                 Button confirm = new Button("Удалить", click -> {
+                    deleteElement(item);
                     Notification.show("Удалён: " + item);
                     dialog.close();
                 });
@@ -244,34 +242,16 @@ public class TemplatesView extends SplitLayout {
                 dialog.open();
             });
             return layout;
-        }).setHeader("Элемент");
-
+        }).setHeader("Элементы шаблонов");
 
         treeGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         treeGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         populate(filterField.getValue().trim());
 
         treeGrid.asSingleSelect().addValueChangeListener(e->{
-            if (e.getValue()!= null) {
-                switch (e.getValue()) {
-                    case Templates templates:
-                        addEditor(universalEditorFactory.createEditor(templates, entity ->
-                                templatesService.save((Templates) entity)));
-                        break;
-                    case AbstractProductType productType:
-                        addEditor(universalEditorFactory.createEditor(productType, entity ->
-                                abstractProductService.save((AbstractProductType) entity)));
-                        break;
-                    case Operation operation:
-                        addEditor(universalEditorFactory.createEditor(operation, entity ->
-                                operationService.save((Operation) entity)));
-                        break;
-                    default:
-                        Notification.show("Неизвестный тип !!!");
-                }
-            }
+            if (e.getValue()!= null) addEditor(universalEditorFactory.createEditor(e.getValue(), this::save));
+            else if (this.getSecondaryComponent()!=null) this.remove(this.getSecondaryComponent());
         });
-
 
         hlay.add(vl);
         return hlay;
@@ -279,13 +259,22 @@ public class TemplatesView extends SplitLayout {
 
     private void addEditor(AbstractEditor<?> editor) {
         var obj = this.getSecondaryComponent();
-        if (obj != null) this.getSecondaryComponent().removeFromParent();
+        if (obj != null) this.remove(obj);
         this.addToSecondary(editor);
     }
 
+    private void save(Object object) {
+        switch (object) {
+            case Templates templates-> templatesService.save(templates);
+            case AbstractProductType productType -> abstractProductService.save(productType);
+            case Operation operation -> operationService.save(operation);
+            default -> Notification.show("Не сохранено");
+        }
+        populate(filterField.getValue().trim());
+    }
 
-    private void deleteElement(){
-        var abstractTemplate = treeGrid.asSingleSelect().getValue();
+
+    private void deleteElement(Object abstractTemplate){
         switch (abstractTemplate) {
             case Templates template -> templatesService.delete(template);
             case AbstractProductType entity -> abstractProductService.delete(entity);

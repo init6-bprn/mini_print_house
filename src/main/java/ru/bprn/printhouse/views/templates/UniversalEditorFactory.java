@@ -6,7 +6,6 @@ import ru.bprn.printhouse.data.service.StandartSizeService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.material.service.MaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
-import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 
@@ -31,14 +30,12 @@ public class UniversalEditorFactory {
 
     public AbstractEditor<?> createEditor(
             Object productType,
-            Consumer<?> onSave) {
+            Consumer<Object> onSave) {
         return switch (productType) {
-            case OneSheetDigitalPrintingProductType product ->
-                    new OneSheetDigitalPrintingProductTypeEditor(product, (Consumer<AbstractProductType>) onSave, variablesForMainWorksService, formulasService, standartSizeService, gapService, materialService);
-            case Operation operation ->
-                    new OperationEditor(operation, (Consumer<Operation>) onSave);
-            case Templates template ->
-                new TemplateEditor(template, (Consumer<Templates>) onSave);
+            case OneSheetDigitalPrintingProductType product -> new OneSheetDigitalPrintingProductTypeEditor(
+                            product, onSave, variablesForMainWorksService, formulasService, standartSizeService, gapService, materialService);
+            case Operation operation -> new OperationEditor(operation, onSave);
+            case Templates template ->  new TemplateEditor(template, onSave);
             default -> null;
         };
     }

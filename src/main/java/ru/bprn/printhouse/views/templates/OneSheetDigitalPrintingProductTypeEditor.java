@@ -24,9 +24,10 @@ public class OneSheetDigitalPrintingProductTypeEditor extends AbstractEditor<Abs
     private final GapService gapService;
     private final MaterialService materialService;
 
-    public OneSheetDigitalPrintingProductTypeEditor(OneSheetDigitalPrintingProductType product, Consumer<AbstractProductType> onSave, VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
+    public OneSheetDigitalPrintingProductTypeEditor(OneSheetDigitalPrintingProductType product, Consumer<Object> onSave, VariablesForMainWorksService variablesForMainWorksService, FormulasService formulasService,
                                                     StandartSizeService standartSizeService, GapService gapService, MaterialService materialService){
         super(onSave);
+
         this.variablesForMainWorksService = variablesForMainWorksService;
         this.formulasService = formulasService;
         this.standartSizeService = standartSizeService;
