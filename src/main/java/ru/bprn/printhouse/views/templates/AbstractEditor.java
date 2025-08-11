@@ -37,6 +37,7 @@ public abstract class AbstractEditor<T> extends VerticalLayout {
 
     public void addButtons(){
         HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
+        buttons.setWidthFull();
         add(buttons);
     }
 

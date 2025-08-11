@@ -42,9 +42,15 @@ public class OneSheetDigitalPrintingProductTypeService {
         newProduct.setBleed(productType.getBleed());
         newProduct.setMaterialFormula(productType.getMaterialFormula());
         newProduct.setVariables(productType.getVariables());
-        Set<Operation> operationSet = new HashSet<>();
-        for (Operation operation: productType.getOperationsSet()) this.operationService.duplicate(operation).ifPresent(operationSet::add);
-        newProduct.setOperationsSet(operationSet);
+        /*
+        if (!productType.getOperationsSet().isEmpty()) {
+            Set<Operation> operationSet = new HashSet<>();
+            for (Operation operation : productType.getOperationsSet())
+                this.operationService.duplicate(operation).ifPresent(operationSet::add);  //  <--- косяк здесь
+            newProduct.setOperationsSet(operationSet);   //  <--- косяк здесь и выше
+        }
+
+         */
         return save(newProduct);
     }
 }

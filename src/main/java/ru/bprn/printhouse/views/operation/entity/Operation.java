@@ -31,8 +31,9 @@ public class Operation implements HasAction, HasMaterials {
     @ManyToOne(fetch = FetchType.EAGER)
     private TypeOfOperation typeOfOperation;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    private Formulas actionFormula;
+    private String actionFormula;
+
+    private String descriptionActionFormula;
 
     private boolean haveAction = true;
 
@@ -42,21 +43,19 @@ public class Operation implements HasAction, HasMaterials {
     @ManyToOne(fetch = FetchType.EAGER)
     private AbstractMaterials defaultMaterial;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    private Formulas materialFormula;
+    private String materialFormula;
 
     private boolean haveMaterial = true;
 
 
     @Override
-    public Formulas getActionFormula() {
+    public String getActionFormula() {
         return actionFormula;
     }
 
     @Override
-    public void setActionFormula(Formulas formula) {
-        this.actionFormula = formula;
-    }
+    @Transient
+    public String getDescription() {return descriptionActionFormula; }
 
     @Override
     @JsonIgnore
@@ -80,7 +79,7 @@ public class Operation implements HasAction, HasMaterials {
     }
 
     @Override
-    public Formulas getMaterialFormula() {
+    public String getMaterialFormula() {
         return materialFormula;
     }
 

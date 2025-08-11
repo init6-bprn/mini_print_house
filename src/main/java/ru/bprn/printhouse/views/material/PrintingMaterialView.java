@@ -27,6 +27,8 @@ import ru.bprn.printhouse.views.machine.service.DigitalPrintingMachineService;
 import ru.bprn.printhouse.views.material.entity.PrintingMaterials;
 import ru.bprn.printhouse.views.material.service.PrintingMaterialService;
 
+import java.util.Objects;
+
 @PageTitle("Материал для печати")
 @Route(value = "printing_materials", layout = MainLayout.class)
 @AnonymousAllowed
@@ -48,6 +50,8 @@ public class PrintingMaterialView extends VerticalLayout {
         this.setSizeFull();
         form = addForm();
         form.setEnabled(false);
+        machines.setItemLabelGenerator(AbstractMachine::getName);
+
         var splitLayout = new SplitLayout(addGrid(), form, SplitLayout.Orientation.HORIZONTAL);
         splitLayout.setSizeFull();
         splitLayout.setSplitterPosition(60.0);
@@ -63,7 +67,9 @@ public class PrintingMaterialView extends VerticalLayout {
         filterField.setClearButtonVisible(true);
 
         grid.addColumn(PrintingMaterials::getName,"Название" );
-        grid.addColumn(PrintingMaterials::getAbstractMachines);
+        grid.addColumn(machines -> {
+            return Objects.requireNonNull(machines.getAbstractMachines().stream().findFirst().orElse(null)).getName();
+        });
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         populate(null);

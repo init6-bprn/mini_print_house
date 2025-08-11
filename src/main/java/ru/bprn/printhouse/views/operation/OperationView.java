@@ -114,13 +114,39 @@ public class OperationView extends VerticalLayout {
         Select<Formulas> actFormula = new Select<>();
         actFormula.setLabel("Формула");
         actFormula.setItems(formulasService.findAll());
-        bean.forField(actFormula).asRequired().bind(Operation::getActionFormula, Operation::setActionFormula);
+        bean.forField(actFormula).asRequired().bind(productType -> {
+                    return actFormula.getListDataView().getItems()
+                            .filter(f -> f.getFormula().equals(productType.getMaterialFormula()))
+                            .findFirst()
+                            .orElse(null);
+                },
+                (productType, formula) -> {
+                    if (formula != null) {
+                        productType.setMaterialFormula(formula.getFormula());
+                    } else {
+                        productType.setMaterialFormula(null);
+                    }
+                });
         var materialCheck = new Checkbox("Есть материал?");
         bean.forField(materialCheck).bind(Operation::haveMaterials, Operation::setHaveMaterial);
         Select<Formulas> mFormula = new Select<>();
         mFormula.setLabel("Формула");
         mFormula.setItems(formulasService.findAll());
-        bean.forField(mFormula).asRequired().bind(Operation::getMaterialFormula, Operation::setMaterialFormula);
+        bean.forField(mFormula).asRequired().bind(operationType -> {
+                    return mFormula.getListDataView().getItems()
+                            .filter(f -> f.getFormula().equals(operationType.getMaterialFormula()))
+                            .findFirst()
+                            .orElse(null);
+                },
+                (operationType, formula) -> {
+                    if (formula != null) {
+                        operationType.setMaterialFormula(formula.getFormula());
+                        operationType.setDescriptionActionFormula(formula.getDescription());
+                    } else {
+                        operationType.setMaterialFormula(null);
+                        operationType.setDescriptionActionFormula(null);
+                    }
+                });
 
         var formLayout = new FormLayout();
         formLayout.add(name, typeOfWork, actionCheck, actFormula, materialCheck, mFormula, mButton, materialSelect);

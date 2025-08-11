@@ -8,6 +8,6 @@ import java.util.Set;
 public interface HasMaterials {
     Set<AbstractMaterials> getListOfMaterials();
     AbstractMaterials getDefaultMaterial();
-    Formulas getMaterialFormula();
+    String getMaterialFormula();
     boolean haveMaterials();
 }

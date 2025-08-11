@@ -24,6 +24,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.service.FormulasService;
+import ru.bprn.printhouse.data.service.StandartSizeService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
@@ -58,7 +59,8 @@ public class TemplatesView extends SplitLayout {
 
     public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
                          OperationService operationService, PrintSheetsMaterialService printSheetsMaterialService,
-                         FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService){
+                         FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService,
+                         StandartSizeService standartSizeService){
 
         this.templatesService = templatesService;
         this.abstractProductService = abstractProductService;
@@ -66,7 +68,7 @@ public class TemplatesView extends SplitLayout {
         this.printSheetsMaterialService = printSheetsMaterialService;
 
         this.universalEditorFactory = new UniversalEditorFactory(
-                printSheetsMaterialService, formulasService, variablesForMainWorksService);
+                printSheetsMaterialService, formulasService, variablesForMainWorksService, standartSizeService);
 
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);

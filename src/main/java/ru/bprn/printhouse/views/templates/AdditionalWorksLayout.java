@@ -25,9 +25,9 @@ public class AdditionalWorksLayout extends VerticalLayout implements HasBinder{
             TextArea actionTextArea = new TextArea();
             actionTextArea.setEnabled(false);
             actionTextArea.setWidthFull();
-            actionTextArea.setLabel(worksBean.getActionFormula().getDescription());
+            actionTextArea.setLabel(worksBean.getDescription());
             actionTextArea.setMaxRows(3);
-            actionTextArea.setValue(worksBean.getActionFormula().getFormula());
+            actionTextArea.setValue(worksBean.getActionFormula());
             this.add(actionTextArea);
             //templateBinder.forField(actionTextArea).asRequired().bind(Operation::getActionFormula, Operation::setActionFormula);
         }
@@ -36,9 +36,9 @@ public class AdditionalWorksLayout extends VerticalLayout implements HasBinder{
             TextArea materialTextArea = new TextArea();
             materialTextArea.setEnabled(false);
             materialTextArea.setWidthFull();
-            materialTextArea.setLabel(worksBean.getActionFormula().getDescription());
+            materialTextArea.setLabel(worksBean.getDescription());
             materialTextArea.setMaxRows(3);
-            materialTextArea.setValue(worksBean.getActionFormula().getFormula());
+            materialTextArea.setValue(worksBean.getActionFormula());
 
             Select<AbstractMaterials> materialSelect = new Select<>();
             materialSelect.setItems(templateBinder.getBean().getListOfMaterials());
