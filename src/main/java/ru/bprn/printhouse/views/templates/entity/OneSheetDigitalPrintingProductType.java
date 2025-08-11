@@ -39,6 +39,8 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
             inverseJoinColumns = @JoinColumn(name = "material_id"))
     private Set<AbstractMaterials> selectedMaterials;
 
+    private boolean multiplay;
+
     @Override
     public AbstractMaterials getDefaultMaterial() {
         return this.defaultMaterial;

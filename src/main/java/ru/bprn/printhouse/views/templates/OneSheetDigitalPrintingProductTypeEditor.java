@@ -1,6 +1,7 @@
 package ru.bprn.printhouse.views.templates;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -36,6 +37,7 @@ import java.util.function.Consumer;
         private final ComboBox<Formulas> formulasComboBox = new ComboBox<>("Формула расчета материала");
         private final ComboBox<StandartSize> standartSize = new ComboBox<>("Выберите размер изделия");
         private final OneSheetDigitalPrintingProductType entity;
+        private final Checkbox checkbox = new Checkbox("Замостить оптимально (uncheck - одно изделие на печатном листе)", true);
 
         public OneSheetDigitalPrintingProductTypeEditor(OneSheetDigitalPrintingProductType entity, Consumer<Object> onSave,
                                                         PrintSheetsMaterialService materialService, FormulasService formulasService,
@@ -48,10 +50,13 @@ import java.util.function.Consumer;
             sizeY.setMin(0.1);
             bleed.setMin(0.0);
 
-            defaultMaterial.setItemLabelGenerator(AbstractMaterials::getName);
             List<PrintSheetsMaterial> list = materialService.findAll();
             selectedMaterials.setItems(list.stream().map(m -> (AbstractMaterials) m).toList());
             selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
+
+            defaultMaterial.setItemLabelGenerator(AbstractMaterials::getName);
+            defaultMaterial.setItems(entity.getSelectedMaterials());
+            defaultMaterial.setAllowCustomValue(false);
 
             formulasComboBox.setItemLabelGenerator(Formulas::getName);
             formulasComboBox.setItems(formulasService.findAll());
@@ -103,6 +108,7 @@ import java.util.function.Consumer;
                             productType.setProductSizeY(null);
                         }
                     });
+            binder.forField(checkbox).bind(OneSheetDigitalPrintingProductType::isMultiplay, OneSheetDigitalPrintingProductType::setMultiplay);
 
             selectedMaterials.addValueChangeListener(event -> {
                 Set<AbstractMaterials> selected = event.getValue();
@@ -112,11 +118,17 @@ import java.util.function.Consumer;
                 }
             });
 
-            formulasComboBox.addValueChangeListener(e-> materialFormula.setValue(e.getValue().getFormula()));
+            formulasComboBox.addValueChangeListener(e->{
+                var value = e.getValue();
+                if (value != null) materialFormula.setValue(value.getFormula());
+            });
 
             standartSize.addValueChangeListener(e->{
-                sizeX.setValue(e.getValue().getLength());
-                sizeY.setValue(e.getValue().getWidth());
+                var value = e.getValue();
+                if (value != null) {
+                    sizeX.setValue(e.getValue().getLength());
+                    sizeY.setValue(e.getValue().getWidth());
+                }
             });
 
             add(buildForm());
@@ -128,7 +140,7 @@ import java.util.function.Consumer;
         @Override
         protected Component buildForm() {
             FormLayout form = new FormLayout();
-            form.setColumnWidth("7em");
+            form.setColumnWidth("6em");
             form.setResponsiveSteps(List.of(
                     new FormLayout.ResponsiveStep("0", 1),
                     new FormLayout.ResponsiveStep("120px", 2),
@@ -152,8 +164,10 @@ import java.util.function.Consumer;
             var row4 = new FormLayout.FormRow();
             row4.add(selectedMaterials,3);
             row4.add(defaultMaterial,3);
+            var row5 = new FormLayout.FormRow();
+            row5.add(checkbox,6);
 
-            form.add(row1, row2, row3, row4);
+            form.add(row1, row2, row3, row4, row5);
             form.setExpandColumns(true);
             form.setWidthFull();
 

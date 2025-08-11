@@ -3,6 +3,7 @@ package ru.bprn.printhouse.views.material;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -11,6 +12,7 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
@@ -21,32 +23,34 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import ru.bprn.printhouse.data.entity.TypeOfMaterial;
+import ru.bprn.printhouse.data.service.TypeOfMaterialService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.machine.service.DigitalPrintingMachineService;
-import ru.bprn.printhouse.views.material.entity.PrintingMaterials;
-import ru.bprn.printhouse.views.material.service.PrintingMaterialService;
+import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
+import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
 
-import java.util.Objects;
-
-@PageTitle("Краска для принтеров")
-@Route(value = "printing_materials", layout = MainLayout.class)
+@PageTitle("Бумага листовая")
+@Route(value = "paper_sheet_materials", layout = MainLayout.class)
 @AnonymousAllowed
-public class PrintingMaterialView extends VerticalLayout {
 
+public class PrintSheetMaterialView extends VerticalLayout {
+
+    private final PrintSheetsMaterialService materialService;
     private final TextField filterField = new TextField();
-    private final Grid<PrintingMaterials> grid = new Grid<>(PrintingMaterials.class, false);
+    private final Grid<PrintSheetsMaterial> grid = new Grid<>(PrintSheetsMaterial.class, false);
     private final DigitalPrintingMachineService service;
-    private final PrintingMaterialService materialService;
-    private final BeanValidationBinder<PrintingMaterials> bean = new BeanValidationBinder<>(PrintingMaterials.class);
+    private final TypeOfMaterialService typeOfMaterialService;
+    private final BeanValidationBinder<PrintSheetsMaterial> bean = new BeanValidationBinder<>(PrintSheetsMaterial.class);
     private final MultiSelectComboBox<AbstractMachine> machines = new MultiSelectComboBox<>("Принтеры");
     private final VerticalLayout form;
 
-
-    public PrintingMaterialView(DigitalPrintingMachineService service,
-                                PrintingMaterialService materialService) {
-        this.service = service;
+    public PrintSheetMaterialView(PrintSheetsMaterialService materialService, DigitalPrintingMachineService service, TypeOfMaterialService typeOfMaterialService){
         this.materialService = materialService;
+
+        this.service = service;
+        this.typeOfMaterialService = typeOfMaterialService;
         this.setSizeFull();
         form = addForm();
         form.setEnabled(false);
@@ -57,7 +61,6 @@ public class PrintingMaterialView extends VerticalLayout {
         splitLayout.setSplitterPosition(60.0);
         this.add(splitLayout);
     }
-
     private Component addGrid() {
         filterField.setWidth("50%");
         filterField.setPlaceholder("Поиск");
@@ -66,10 +69,9 @@ public class PrintingMaterialView extends VerticalLayout {
         filterField.addValueChangeListener(e -> populate(e.getValue().trim()));
         filterField.setClearButtonVisible(true);
 
-        grid.addColumn(PrintingMaterials::getName,"Название" );
-        grid.addColumn(machines -> {
-            return Objects.requireNonNull(machines.getAbstractMachines().stream().findFirst().orElse(null)).getName();
-        });
+        grid.addColumn(PrintSheetsMaterial::getName,"Название" );
+        grid.addColumn(PrintSheetsMaterial::getTypeOfMaterial);
+        grid.addColumn(PrintSheetsMaterial::getThickness);
         grid.setSelectionMode(Grid.SelectionMode.SINGLE);
         grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         populate(null);
@@ -93,25 +95,36 @@ public class PrintingMaterialView extends VerticalLayout {
     private VerticalLayout addForm() {
 
         var name = new TextField("Название");
-        bean.forField(name).asRequired().bind(PrintingMaterials::getName, PrintingMaterials::setName);
+        bean.forField(name).asRequired().bind(PrintSheetsMaterial::getName, PrintSheetsMaterial::setName);
 
-        var sizeX = new IntegerField("Длина клика в мм");
-        bean.forField(sizeX).asRequired().bind(PrintingMaterials::getSizeOfClick, PrintingMaterials::setSizeOfClick);
+        var sizeX = new IntegerField("Длина в мм");
+        bean.forField(sizeX).asRequired().bind(PrintSheetsMaterial::getSizeX, PrintSheetsMaterial::setSizeX);
+
+        var sizeY = new IntegerField("Ширина в мм");
+        bean.forField(sizeY).asRequired().bind(PrintSheetsMaterial::getSizeY, PrintSheetsMaterial::setSizeY);
+
+        var density = new IntegerField("Плотность");
+        bean.forField(density).bind(PrintSheetsMaterial::getThickness, PrintSheetsMaterial::setThickness);
 
         var units = new TextField("Единицы измерения");
-        bean.forField(units).bind(PrintingMaterials::getUnitsOfMeasurement, PrintingMaterials::setUnitsOfMeasurement);
+        bean.forField(units).bind(PrintSheetsMaterial::getUnitsOfMeasurement, PrintSheetsMaterial::setUnitsOfMeasurement);
 
         machines.setSelectedItemsOnTop(true);
         machines.setItems(service.findAllAsAbstract());
-        bean.forField(machines).bind(PrintingMaterials::getAbstractMachines, PrintingMaterials::setAbstractMachines);
+        bean.forField(machines).bind(PrintSheetsMaterial::getAbstractMachines, PrintSheetsMaterial::setAbstractMachines);
+
+        ComboBox<TypeOfMaterial> typeOfMaterialCombo = new ComboBox<>("Тип материала");
+        typeOfMaterialCombo.setItems(typeOfMaterialService.findAll());
+        bean.forField(typeOfMaterialCombo).bind(PrintSheetsMaterial::getTypeOfMaterial, PrintSheetsMaterial::setTypeOfMaterial);
+
 
         var formLayout = new FormLayout();
-        formLayout.add(name, sizeX, units, machines);
+        formLayout.add(name, typeOfMaterialCombo, sizeX, sizeY, density, units, machines);
 
         var save = new Button("Сохранить", buttonClickEvent -> save());
         var cancel = new Button("Отменить", buttonClickEvent -> cancel());
         var hl = new HorizontalLayout(save,cancel);
-        hl.setJustifyContentMode(JustifyContentMode.END);
+        hl.setJustifyContentMode(FlexComponent.JustifyContentMode.END);
         formLayout.addFormItem(hl,"");
         return new VerticalLayout(formLayout);
     }
@@ -148,7 +161,7 @@ public class PrintingMaterialView extends VerticalLayout {
 
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
             form.setEnabled(true);
-            bean.setBean(new PrintingMaterials());
+            bean.setBean(new PrintSheetsMaterial());
             bean.refreshFields();
         });
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -184,6 +197,5 @@ public class PrintingMaterialView extends VerticalLayout {
         bean.refreshFields();
         populate(filterField.getValue().trim());
     }
-
 
 }

@@ -20,6 +20,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import ru.bprn.printhouse.data.entity.User;
 import ru.bprn.printhouse.security.AuthenticatedUser;
+import ru.bprn.printhouse.views.material.PrintSheetMaterialView;
 import ru.bprn.printhouse.views.operation.OperationView;
 import ru.bprn.printhouse.views.operation.TypeOfOperationView;
 import ru.bprn.printhouse.views.dictionary.*;
@@ -139,11 +140,14 @@ public class MainLayout extends AppLayout {
         if (accessChecker.hasAccess(MaterialView.class))
             dick.addItem(new SideNavItem("Бумага для цифры", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
-        if (accessChecker.hasAccess(MaterialView.class))
+        if (accessChecker.hasAccess(CostOfPrintSizeLeafAndColorDictionary.class))
             dick.addItem(new SideNavItem("Стоимость отпечатка", CostOfPrintSizeLeafAndColorDictionary.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
-        if (accessChecker.hasAccess(MaterialView.class))
-            dick.addItem(new SideNavItem("Материалы для печати", PrintingMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+        if (accessChecker.hasAccess(PrintingMaterialView.class))
+            dick.addItem(new SideNavItem("Краски для принтеров", PrintingMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
+
+        if (accessChecker.hasAccess(PrintSheetMaterialView.class))
+            dick.addItem(new SideNavItem("Бумага листовая", PrintSheetMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
 
         nav.addItem(dick);
 
