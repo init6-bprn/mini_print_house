@@ -5,6 +5,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import ru.bprn.printhouse.data.entity.Formulas;
@@ -32,8 +33,8 @@ import java.util.function.Consumer;
 
         private final TextField materialFormula = new TextField("Формула материала");
         private final TextField nameField = new TextField("Название цепочки работ");
-        private final ComboBox<AbstractMaterials> defaultMaterial = new ComboBox<>("Материал по умолчанию");
-        private final MultiSelectComboBox<AbstractMaterials> selectedMaterials = new MultiSelectComboBox<>("Выбранные материалы");
+        private final Select<PrintSheetsMaterial> defaultMaterial = new Select<>("Материал по умолчанию", e->{});
+        private final MultiSelectComboBox<PrintSheetsMaterial> selectedMaterials = new MultiSelectComboBox<>("Выбранные материалы");
         private final ComboBox<Formulas> formulasComboBox = new ComboBox<>("Формула расчета материала");
         private final ComboBox<StandartSize> standartSize = new ComboBox<>("Выберите размер изделия");
         private final OneSheetDigitalPrintingProductType entity;
@@ -50,13 +51,11 @@ import java.util.function.Consumer;
             sizeY.setMin(0.1);
             bleed.setMin(0.0);
 
-            List<PrintSheetsMaterial> list = materialService.findAll();
-            selectedMaterials.setItems(list.stream().map(m -> (AbstractMaterials) m).toList());
-            selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
+            selectedMaterials.setItems(materialService.findAll());
+            selectedMaterials.setItemLabelGenerator(PrintSheetsMaterial::getName);
 
-            defaultMaterial.setItemLabelGenerator(AbstractMaterials::getName);
-            defaultMaterial.setItems(entity.getSelectedMaterials());
-            defaultMaterial.setAllowCustomValue(false);
+            defaultMaterial.setItemLabelGenerator(PrintSheetsMaterial::getName);
+            defaultMaterial.setItems(this.entity.getSelectedMaterials());
 
             formulasComboBox.setItemLabelGenerator(Formulas::getName);
             formulasComboBox.setItems(formulasService.findAll());
@@ -111,10 +110,10 @@ import java.util.function.Consumer;
             binder.forField(checkbox).bind(OneSheetDigitalPrintingProductType::isMultiplay, OneSheetDigitalPrintingProductType::setMultiplay);
 
             selectedMaterials.addValueChangeListener(event -> {
-                Set<AbstractMaterials> selected = event.getValue();
+                Set<PrintSheetsMaterial> selected = event.getValue();
                 defaultMaterial.setItems(selected);
-                if (!selected.contains(defaultMaterial.getValue())) {
-                    defaultMaterial.clear();
+                if (selected != null && !selected.isEmpty() && !selected.contains(defaultMaterial.getValue())) {
+                    defaultMaterial.clear(); // Только если новый набор не пустой
                 }
             });
 
@@ -133,8 +132,9 @@ import java.util.function.Consumer;
 
             add(buildForm());
             addButtons();
-            edit(entity);
+            edit(this.entity);
             initializeVariables(variablesForMainWorksService.findAll());
+
         }
 
         @Override

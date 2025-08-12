@@ -7,8 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
+import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "one_sheet_digital_printing_product_type")
@@ -16,7 +18,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-public class OneSheetDigitalPrintingProductType extends AbstractProductType implements HasMateria {
+public class OneSheetDigitalPrintingProductType extends AbstractProductType implements HasMateria{
 
     // --------  Размер изделия, поля и расположение на печатном листе -----------------
     @Positive
@@ -29,46 +31,32 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
 
     private String materialFormula;
 
-    @ManyToOne
-    private AbstractMaterials defaultMaterial;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private PrintSheetsMaterial defaultMaterial;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "one_sheet_digital_printing_product_type___abstract_material",
             joinColumns = @JoinColumn(name = "product_type_id"),
             inverseJoinColumns = @JoinColumn(name = "material_id"))
-    private Set<AbstractMaterials> selectedMaterials;
+    private Set<PrintSheetsMaterial> selectedMaterials;
 
     private boolean multiplay;
 
     @Override
-    public AbstractMaterials getDefaultMaterial() {
+    @Transient
+    public AbstractMaterials getDefaultMat() {
         return this.defaultMaterial;
     }
-
+    @Transient
     @Override
-    public void setDefaultMaterial(AbstractMaterials material) {
-        this.defaultMaterial = material;
+    public Set<AbstractMaterials> getSelectedMat() {
+        return this.selectedMaterials.stream().map(m -> (AbstractMaterials) m).collect(Collectors.toSet());
     }
 
     @Override
-    public Set<AbstractMaterials> getSelectedMaterials() {
-        return this.selectedMaterials;
-    }
-
-    @Override
-    public void setSelectedMaterials(Set<AbstractMaterials> materialSet) {
-        this.selectedMaterials = materialSet;
-    }
-
-    @Override
-    public String getMaterialFormula() {
+    @Transient
+    public String getMatFormula() {
         return materialFormula;
-    }
-
-    @Override
-    public void setMaterialFormula(String formula) {
-        this.materialFormula = formula;
-
     }
 }

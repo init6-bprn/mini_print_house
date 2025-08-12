@@ -6,13 +6,10 @@ import java.util.Set;
 
 public interface HasMateria {
 
-        AbstractMaterials getDefaultMaterial();
-        void setDefaultMaterial(AbstractMaterials material);
+        AbstractMaterials getDefaultMat();
 
-        Set<AbstractMaterials> getSelectedMaterials();
-        void setSelectedMaterials(Set<AbstractMaterials> materialSet);
+        Set<AbstractMaterials> getSelectedMat();
 
-        String getMaterialFormula();
-        void setMaterialFormula(String formula);
+        String getMatFormula();
 
 }

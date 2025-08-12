@@ -28,7 +28,7 @@ public class PrintSheetsMaterial extends AbstractMaterials{
     @PositiveOrZero
     private Integer sizeY = 0;
 
-   @PositiveOrZero
-    private Integer thickness;
+    @PositiveOrZero
+    private Integer thickness = 65;
 
 }
