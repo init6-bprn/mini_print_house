@@ -14,7 +14,6 @@ import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.StandartSizeService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
-import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
@@ -55,7 +54,7 @@ import java.util.function.Consumer;
             selectedMaterials.setItemLabelGenerator(PrintSheetsMaterial::getName);
 
             defaultMaterial.setItemLabelGenerator(PrintSheetsMaterial::getName);
-            defaultMaterial.setItems(this.entity.getSelectedMaterials());
+            if (this.entity.getSelectedMaterials() != null) defaultMaterial.setItems(this.entity.getSelectedMaterials());
 
             formulasComboBox.setItemLabelGenerator(Formulas::getName);
             formulasComboBox.setItems(formulasService.findAll());
@@ -74,8 +73,8 @@ import java.util.function.Consumer;
             binder.forField(sizeY).bind(OneSheetDigitalPrintingProductType::getProductSizeY, OneSheetDigitalPrintingProductType::setProductSizeY);
             binder.forField(bleed).bind(OneSheetDigitalPrintingProductType::getBleed, OneSheetDigitalPrintingProductType::setBleed);
             binder.forField(materialFormula).bind(OneSheetDigitalPrintingProductType::getMaterialFormula, OneSheetDigitalPrintingProductType::setMaterialFormula);
-            binder.forField(defaultMaterial).bind(OneSheetDigitalPrintingProductType::getDefaultMaterial, OneSheetDigitalPrintingProductType::setDefaultMaterial);
             binder.forField(selectedMaterials).bind(OneSheetDigitalPrintingProductType::getSelectedMaterials, OneSheetDigitalPrintingProductType::setSelectedMaterials);
+            binder.forField(defaultMaterial).bind(OneSheetDigitalPrintingProductType::getDefaultMaterial, OneSheetDigitalPrintingProductType::setDefaultMaterial);
             binder.forField(formulasComboBox).bind(productType -> {
                         return  formulasComboBox.getListDataView().getItems()
                                 .filter(f -> f.getFormula().equals(productType.getMaterialFormula()))

@@ -82,7 +82,7 @@ public class TemplatesService {
         for (Templates obj:collection) {
             data.addItem(null, obj);
             for (AbstractProductType product: obj.getProductTypes()) {
-                data.addItem(obj, product);
+                if (product != null) data.addItem(obj, product);
             }
 
         }

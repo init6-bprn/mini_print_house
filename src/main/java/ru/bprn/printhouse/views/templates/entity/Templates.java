@@ -2,13 +2,13 @@ package ru.bprn.printhouse.views.templates.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.util.Objects;
 import java.util.Set;
 
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -28,6 +28,21 @@ public class Templates{
     private String description = "Описание изделия";
 
     // Здесь надо добавить фотку(ки) изделия
+    @Positive
+    private int quantity = 1;
+
+    @Positive
+    private int minQuantity = 1;
+
+    @Positive
+    private int maxQuantity = 100000;
+
+    @Positive
+    private int step = 1;
+
+    private boolean roundForMath = false;
+
+    private String roundAt = "";
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinTable(
