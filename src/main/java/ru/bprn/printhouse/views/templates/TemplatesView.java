@@ -5,6 +5,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -33,8 +34,12 @@ import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
+import ru.bprn.printhouse.views.templates.entity.TemplatesMenuItem;
 import ru.bprn.printhouse.views.templates.service.AbstractProductService;
+import ru.bprn.printhouse.views.templates.service.TemplatesMenuItemService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
+
+import java.util.function.Consumer;
 
 @PageTitle("Редактирование шаблонов")
 @Route(value = "templates", layout = MainLayout.class)
@@ -46,6 +51,7 @@ public class TemplatesView extends SplitLayout {
     private final AbstractProductService abstractProductService;
     private final OperationService operationService;
     private final PrintSheetsMaterialService printSheetsMaterialService;
+    private final TemplatesMenuItemService menuItemService;
 
     private final BeanValidationBinder<Templates> templatesBinder;
 
@@ -60,12 +66,13 @@ public class TemplatesView extends SplitLayout {
     public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
                          OperationService operationService, PrintSheetsMaterialService printSheetsMaterialService,
                          FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService,
-                         StandartSizeService standartSizeService){
+                         StandartSizeService standartSizeService, TemplatesMenuItemService menuItemService){
 
         this.templatesService = templatesService;
         this.abstractProductService = abstractProductService;
         this.operationService = operationService;
         this.printSheetsMaterialService = printSheetsMaterialService;
+        this.menuItemService = menuItemService;
 
         this.universalEditorFactory = new UniversalEditorFactory(
                 printSheetsMaterialService, formulasService, variablesForMainWorksService, standartSizeService);
@@ -300,5 +307,31 @@ public class TemplatesView extends SplitLayout {
 
     private void populate(String filter) {
         treeGrid.setDataProvider(templatesService.populateGrid(filter));
+    }
+
+    public static class ProductTypeFactory {
+
+        public static AbstractProductType createInstance(String className) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                if (!AbstractProductType.class.isAssignableFrom(clazz)) {
+                    throw new IllegalArgumentException("Класс не является наследником AbstractProductType");
+                }
+                return (AbstractProductType) clazz.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException("Ошибка при создании экземпляра: " + className, e);
+            }
+        }
+    }
+
+    public MenuItem addToContextMenu(ContextMenu menu, TemplatesMenuItem item, UniversalEditorFactory factory, Consumer<Object> saveCallback) {
+        return menu.addItem(item.getName(), e -> {
+            try {
+                AbstractProductType product = ProductTypeFactory.createInstance(item.getClassName());
+                factory.createEditor(product, saveCallback);
+            } catch (Exception ex) {
+                Notification.show("Ошибка: " + ex.getMessage());
+            }
+        });
     }
 }

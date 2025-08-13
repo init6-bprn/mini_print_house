@@ -3,14 +3,17 @@ package ru.bprn.printhouse.views.templates;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import ru.bprn.printhouse.annotation.MenuItem;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 
 import java.util.List;
 import java.util.function.Consumer;
 
+@MenuItem(name = "Печать на холсте", icon = VaadinIcon.PRINT, context = "template")
 public class TemplateEditor extends AbstractEditor<Templates> {
 
     private final TextField name = new TextField("Название шаблона:");
