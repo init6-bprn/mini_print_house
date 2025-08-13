@@ -48,6 +48,10 @@ public class TemplatesService {
         var newTemplate = new Templates();
         newTemplate.setDescription(template.getDescription());
         newTemplate.setName(template.getName()+" - Дубликат");
+        newTemplate.setMaxQuantity(template.getMaxQuantity());
+        newTemplate.setMinQuantity(template.getMinQuantity());
+        newTemplate.setQuantity(template.getQuantity());
+        newTemplate.setRoundForMath(template.isRoundForMath());
         Set<AbstractProductType> set = new HashSet<>();
         for (AbstractProductType product:template.getProductTypes()) {
             var dc = duplicateProduct(product);
