@@ -5,9 +5,11 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import ru.bprn.printhouse.annotation.MenuItem;
 import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.data.entity.StandartSize;
 import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
@@ -24,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+    @MenuItem(name = "Однолистовая Печать", icon = VaadinIcon.PRINT, context = "template")
     public class OneSheetDigitalPrintingProductTypeEditor extends AbstractEditor<OneSheetDigitalPrintingProductType> {
 
         private final NumberField sizeX = new NumberField("Ширина изделия (мм)");

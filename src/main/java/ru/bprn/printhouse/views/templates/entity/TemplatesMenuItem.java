@@ -12,7 +12,7 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@NoArgsConstructor
+        //@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class TemplatesMenuItem {

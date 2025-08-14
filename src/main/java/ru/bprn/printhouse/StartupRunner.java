@@ -14,7 +14,7 @@ public class StartupRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        scanner.scanAndUpdateMenuItems("ru/bprn/printhouse/views");
+        scanner.scanAndUpdateMenuItems("ru.bprn.printhouse.views");
     }
 }
 

@@ -4,6 +4,7 @@ import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.views.operation.entity.Operation;
+import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.repository.TemplatesRepository;
@@ -15,10 +16,12 @@ public class TemplatesService {
 
     private final TemplatesRepository repository;
     private final AbstractProductService abstractProductService;
+    private final OperationService operationService;
 
-    public TemplatesService (TemplatesRepository repository, AbstractProductService abstractProductService) {
+    public TemplatesService (TemplatesRepository repository, AbstractProductService abstractProductService, OperationService operationService) {
         this.repository = repository;
         this.abstractProductService = abstractProductService;
+        this.operationService = operationService;
     }
 
     public List<Templates> findAll() {return this.repository.findAll();}
@@ -34,6 +37,28 @@ public class TemplatesService {
     public Set<AbstractProductType> getProductTypeForTemplate(Templates templates) {
         var temp = findById(templates.getId());
         return temp.map(Templates::getProductTypes).orElse(null);
+    }
+
+    public String save(Object object, Templates currentTemplate) {
+        String s ="Сохранено";
+        switch (object) {
+            case Templates templates-> save(templates);
+            case AbstractProductType productType -> addProductToTemplateAndSaveAll(currentTemplate, productType);
+            case Operation operation -> operationService.save(operation);
+            default -> s = "Не сохранено";
+        }
+        return  s;
+    }
+
+    public String delete (Object object){
+        String s ="Сохранено";
+        switch (object) {
+            case Templates template -> delete(template);
+            case AbstractProductType entity -> abstractProductService.delete(entity);
+            case Operation operation -> operationService.delete(operation);
+            default -> s ="Не знаю, что удалить!";
+        }
+        return s;
     }
 
     public void addProductToTemplateAndSaveAll(Templates template, AbstractProductType product) {

@@ -284,24 +284,16 @@ public class TemplatesView extends SplitLayout {
     }
 
     private void save(Object object) {
-        switch (object) {
-            case Templates templates-> templatesService.save(templates);
-            case AbstractProductType productType -> templatesService.addProductToTemplateAndSaveAll(currentTemplate, productType);
-            case Operation operation -> operationService.save(operation);
-            default -> Notification.show("Не сохранено");
-        }
+        var note = templatesService.save(object, currentTemplate);
+        Notification.show(note);
         populate(filterField.getValue().trim());
         treeGrid.asSingleSelect().setValue(selectedRow);
     }
 
 
     private void deleteElement(Object abstractTemplate){
-        switch (abstractTemplate) {
-            case Templates template -> templatesService.delete(template);
-            case AbstractProductType entity -> abstractProductService.delete(entity);
-            case Operation operation -> operationService.delete(operation);
-            default -> Notification.show("Не знаю, что удалить!");
-        }
+        var note = templatesService.delete(abstractTemplate);
+        Notification.show(note);
         populate(filterField.getValue().trim());
     }
 
@@ -314,9 +306,6 @@ public class TemplatesView extends SplitLayout {
         public static AbstractProductType createInstance(String className) {
             try {
                 Class<?> clazz = Class.forName(className);
-                if (!AbstractProductType.class.isAssignableFrom(clazz)) {
-                    throw new IllegalArgumentException("Класс не является наследником AbstractProductType");
-                }
                 return (AbstractProductType) clazz.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 throw new RuntimeException("Ошибка при создании экземпляра: " + className, e);
@@ -324,8 +313,27 @@ public class TemplatesView extends SplitLayout {
         }
     }
 
-    public MenuItem addToContextMenu(ContextMenu menu, TemplatesMenuItem item, UniversalEditorFactory factory, Consumer<Object> saveCallback) {
-        return menu.addItem(item.getName(), e -> {
+    public class EntityFactory {
+        /**
+         * Создает экземпляр Entity по полному имени класса
+         * @param fullClassName Полное имя класса (например, "ru.bprn.printhouse.entity.Product")
+         * @return Новый экземпляр класса
+         * @throws RuntimeException Если класс не найден или не может быть создан
+         */
+        public static Object createEntity(String fullClassName) {
+            try {
+                Class<?> clazz = Class.forName(fullClassName);
+                return clazz.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException("Не удалось создать экземпляр " + fullClassName, e);
+            }
+        }
+    }
+
+    public void addContextMenu(ContextMenu menu, TemplatesMenuItem item, UniversalEditorFactory factory, Consumer<Object> saveCallback) {
+        var className = item.getClassName();
+
+        menu.addItem(item.getName(), e -> {
             try {
                 AbstractProductType product = ProductTypeFactory.createInstance(item.getClassName());
                 factory.createEditor(product, saveCallback);
