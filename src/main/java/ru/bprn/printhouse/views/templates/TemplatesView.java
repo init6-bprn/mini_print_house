@@ -2,16 +2,17 @@ package ru.bprn.printhouse.views.templates;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
-import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -32,14 +33,13 @@ import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
-import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.TemplatesMenuItem;
 import ru.bprn.printhouse.views.templates.service.AbstractProductService;
 import ru.bprn.printhouse.views.templates.service.TemplatesMenuItemService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
-import java.util.function.Consumer;
+import java.util.List;
 
 @PageTitle("Редактирование шаблонов")
 @Route(value = "templates", layout = MainLayout.class)
@@ -62,6 +62,8 @@ public class TemplatesView extends SplitLayout {
     private AbstractProductType currentProductType = null;
 
     private Object selectedRow = null;
+    private final ConfirmDialog confirmDeleteDialog;
+    private Object objToCopy = null;
 
     public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
                          OperationService operationService, PrintSheetsMaterialService printSheetsMaterialService,
@@ -79,6 +81,21 @@ public class TemplatesView extends SplitLayout {
 
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);
+
+        confirmDeleteDialog = new ConfirmDialog("Внимание!" , "", "Да",
+                confirmEvent -> {
+                Object obj = treeGrid.asSingleSelect().getValue();
+                Object parent;
+                switch (obj) {
+                    case Templates templates -> parent = null;
+                    case AbstractProductType product -> parent = treeGrid.getTreeData().getParent(product);
+                    case Operation operation -> parent  = treeGrid.getTreeData().getParent(operation);
+                    default -> parent = null;
+                }
+                    deleteElement(obj, parent);
+                    Notification.show("Элемент удален!");
+                },
+                "Нет", cancelEvent -> cancelEvent.getSource().close());
 
         this.setOrientation(Orientation.HORIZONTAL);
         this.setSplitterPosition(60.0);
@@ -103,70 +120,7 @@ public class TemplatesView extends SplitLayout {
         filterField.addValueChangeListener(e -> populate(e.getValue().trim()));
         filterField.setClearButtonVisible(true);
 
-        var confirmDeleteDialog = new ConfirmDialog("Внимание!" , "", "Да",
-                confirmEvent -> {
-                    deleteElement(treeGrid.asSingleSelect().getValue());
-                    Notification.show("Элемент удален!");
-                },
-                "Нет", cancelEvent -> cancelEvent.getSource().close());
-
-        var hl = new HorizontalLayout();
-        var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event ->{
-            addEditor(universalEditorFactory.createEditor(new Templates(), this::save));
-        });
-
-        createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createTemplateButton.setTooltipText("Создать новый шаблон");
-
-        var createButton = new Button(VaadinIcon.PLUS.create(), event -> {
-            switch (treeGrid.asSingleSelect().getValue()){
-                case Templates templates: addEditor(universalEditorFactory.createEditor(new OneSheetDigitalPrintingProductType(), this::save));
-                    break;
-                case AbstractProductType productType:
-                    addEditor(universalEditorFactory.createEditor(productType, this::save));
-                    break;
-                case Operation operation:
-                    addEditor(universalEditorFactory.createEditor(operation, this::save));
-                    break;
-                default: Notification.show("Неизвестный тип !!!");
-            }
-        });
-        createButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        createButton.setTooltipText("Создать новую рабочую цепочку");
-
-        var duplicateButton = new Button(VaadinIcon.COPY_O.create(), event -> {
-            var obj = treeGrid.asSingleSelect().getValue();
-            Object parent = this.treeGrid.getTreeData().getParent(obj);
-            if (obj!=null){
-                switch (obj) {
-                    case Templates template: templatesService.duplicateTemplate(template);
-                        break;
-                    case AbstractProductType productType:
-                        templatesService.addProductToTemplate((Templates) parent, templatesService.duplicateProduct(productType));
-                        break;
-                    case Operation operation: templatesService.duplicateOperation((AbstractProductType) parent, operation);
-                    default:
-                }
-                populate(filterField.getValue().trim());
-                treeGrid.asSingleSelect().setValue(obj);
-            }
-            else Notification.show("Сначала выделите какой-либо элемент таблицы");
-        });
-        duplicateButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-        duplicateButton.setTooltipText("Создать дубликат шаблона/цепочки");
-
-
-        var deleteButton = new Button(VaadinIcon.CLOSE.create(), event -> {
-            if (!treeGrid.asSingleSelect().isEmpty()) {
-                confirmDeleteDialog.setText("Вы уверены, что хотите удалить " + treeGrid.asSingleSelect().getValue() + " ?");
-                confirmDeleteDialog.open();
-            }
-        });
-        deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
-        deleteButton.setTooltipText("Удалить элемент");
-
-        hl.add(createTemplateButton, createButton, duplicateButton, deleteButton);
-        vl.add(filterField, hl, treeGrid);
+        vl.add(filterField, createMenuBar(), treeGrid);
 
         treeGrid.addComponentHierarchyColumn(item -> {
             HorizontalLayout layout = new HorizontalLayout();
@@ -232,9 +186,7 @@ public class TemplatesView extends SplitLayout {
                 Dialog dialog = new Dialog();
                 dialog.add(new Span("Удалить: " + item + "?"));
                 Button confirm = new Button("Удалить", click -> {
-                    deleteElement(item);
-                    Notification.show("Удалён: " + item);
-                    dialog.close();
+
                 });
                 Button cancel = new Button("Отмена", click -> dialog.close());
                 dialog.add(new HorizontalLayout(confirm, cancel));
@@ -256,6 +208,69 @@ public class TemplatesView extends SplitLayout {
 
         hlay.add(vl);
         return hlay;
+    }
+
+    // Меню в шапке TemplateView, создание компонентов и операций добавляются автоматически на основании @MenuItem(context = "product") у класса-сущности
+    private MenuBar createMenuBar() {
+        MenuBar menuBar = new MenuBar();
+        menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON);
+
+        var create = menuBar.addItem(VaadinIcon.PLUS.create(), "Создать");
+        var createSubMenu = create.getSubMenu();
+        createSubMenu.addItem("Создать новый шаблон", e->addEditor(universalEditorFactory.createEditor(new Templates(), this::save)));
+        var components = createSubMenu.addItem("Создать новый компонент");
+        addComponentsToSubMenu(components.getSubMenu(), "product");
+
+        var operations = createSubMenu.addItem("Создать новую работу");
+        addComponentsToSubMenu(operations.getSubMenu(), "operation");
+
+        menuBar.addItem(VaadinIcon.MENU.create(), "Дублировать", e->{
+            Object obj = treeGrid.asSingleSelect().getValue();
+            Object parent = this.treeGrid.getTreeData().getParent(obj);
+            paste(obj, parent);
+        });
+
+        menuBar.addItem(VaadinIcon.COPY.create(), "Копировать", e->{
+            objToCopy = treeGrid.asSingleSelect().getValue();
+        });
+        menuBar.addItem(VaadinIcon.PASTE.create(), "Вставить", e->{
+            if (objToCopy != null) {
+                Object obj = treeGrid.asSingleSelect().getValue();
+                switch (objToCopy) {
+                    case Templates templates -> {
+                        paste(objToCopy, null);
+                        objToCopy = null;
+                    }
+                    case AbstractProductType abstractProductType when obj instanceof Templates -> {
+                        paste(objToCopy, obj);
+                        objToCopy = null;
+                    }
+                    case Operation operation when obj instanceof AbstractProductType -> {
+                        paste(objToCopy, obj);
+                        objToCopy = null;
+                    }
+                    case null, default -> Notification.show("Выберите правильный элемент для вставки скопированного");
+                }
+            }
+        });
+
+        menuBar.addItem(VaadinIcon.DEL.create(), "Удалить", e->{
+            if (!treeGrid.asSingleSelect().isEmpty()) {
+                confirmDeleteDialog.setText("Вы уверены, что хотите удалить " + treeGrid.asSingleSelect().getValue() + " ?");
+                confirmDeleteDialog.open();
+            }
+        });
+
+        return menuBar;
+    }
+
+    private void addComponentsToSubMenu(SubMenu menu, String context) {
+        List<TemplatesMenuItem> list = menuItemService.getMenuByContext(context);
+        if (list != null && !list.isEmpty())
+            for (TemplatesMenuItem item : list) {
+                Object obj = EntityFactory.createEntity(item.getClassName());
+                menu.addItem(item.getName(), e-> addEditor(universalEditorFactory.createEditor(obj, this::save)));
+            }
     }
 
     private void setCurrent(Object select) {
@@ -291,35 +306,33 @@ public class TemplatesView extends SplitLayout {
     }
 
 
-    private void deleteElement(Object abstractTemplate){
-        var note = templatesService.delete(abstractTemplate);
+    private void deleteElement(Object object, Object parent){
+        var note = templatesService.delete(object, parent);
         Notification.show(note);
         populate(filterField.getValue().trim());
+    }
+
+    private void paste(Object obj, Object parent) {
+        if (obj!=null){
+            switch (obj) {
+                case Templates template-> templatesService.duplicateTemplate(template);
+                case AbstractProductType productType-> templatesService.addProductToTemplate((Templates) parent, templatesService.duplicateProduct(productType));
+                case Operation operation-> templatesService.duplicateOperation((AbstractProductType) parent, operation);
+                default->{}
+            }
+            populate(filterField.getValue().trim());
+            treeGrid.asSingleSelect().setValue(obj);
+            treeGrid.expand(obj);
+        }
+        else Notification.show("Сначала выделите какой-либо элемент таблицы");
     }
 
     private void populate(String filter) {
         treeGrid.setDataProvider(templatesService.populateGrid(filter));
     }
 
-    public static class ProductTypeFactory {
+    public static class EntityFactory {
 
-        public static AbstractProductType createInstance(String className) {
-            try {
-                Class<?> clazz = Class.forName(className);
-                return (AbstractProductType) clazz.getDeclaredConstructor().newInstance();
-            } catch (Exception e) {
-                throw new RuntimeException("Ошибка при создании экземпляра: " + className, e);
-            }
-        }
-    }
-
-    public class EntityFactory {
-        /**
-         * Создает экземпляр Entity по полному имени класса
-         * @param fullClassName Полное имя класса (например, "ru.bprn.printhouse.entity.Product")
-         * @return Новый экземпляр класса
-         * @throws RuntimeException Если класс не найден или не может быть создан
-         */
         public static Object createEntity(String fullClassName) {
             try {
                 Class<?> clazz = Class.forName(fullClassName);
@@ -328,18 +341,5 @@ public class TemplatesView extends SplitLayout {
                 throw new RuntimeException("Не удалось создать экземпляр " + fullClassName, e);
             }
         }
-    }
-
-    public void addContextMenu(ContextMenu menu, TemplatesMenuItem item, UniversalEditorFactory factory, Consumer<Object> saveCallback) {
-        var className = item.getClassName();
-
-        menu.addItem(item.getName(), e -> {
-            try {
-                AbstractProductType product = ProductTypeFactory.createInstance(item.getClassName());
-                factory.createEditor(product, saveCallback);
-            } catch (Exception ex) {
-                Notification.show("Ошибка: " + ex.getMessage());
-            }
-        });
     }
 }

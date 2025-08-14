@@ -50,12 +50,19 @@ public class TemplatesService {
         return  s;
     }
 
-    public String delete (Object object){
+    public String delete (Object object, Object parent){
         String s ="Сохранено";
         switch (object) {
             case Templates template -> delete(template);
-            case AbstractProductType entity -> abstractProductService.delete(entity);
-            case Operation operation -> operationService.delete(operation);
+            case AbstractProductType entity -> {
+                if (parent instanceof Templates) {
+                    ((Templates) parent).getProductTypes().remove(entity);
+                    save((Templates) parent);
+                }
+            }
+            case Operation operation -> {
+                if (parent instanceof AbstractProductType) ((AbstractProductType) parent).getOperationsSet().remove(operation);
+            }
             default -> s ="Не знаю, что удалить!";
         }
         return s;
@@ -94,7 +101,7 @@ public class TemplatesService {
         if (temp.isPresent()&& prod.isPresent()) {
             var t = temp.get();
             var p = prod.get();
-            t.getProductTypes().add(p);
+            t.getProductTypes().add(duplicateProduct(p));
             repository.save(t);
         }
     }

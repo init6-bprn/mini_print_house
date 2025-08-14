@@ -1,14 +1,11 @@
 package ru.bprn.printhouse.views.templates.service;
 
 import org.springframework.stereotype.Service;
-import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.repository.OneSheetDigitalPrintingProductTypeRepository;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 
 @Service
@@ -42,6 +39,7 @@ public class OneSheetDigitalPrintingProductTypeService {
         newProduct.setBleed(productType.getBleed());
         newProduct.setMaterialFormula(productType.getMaterialFormula());
         newProduct.setVariables(productType.getVariables());
+        newProduct.setMultiplay(productType.isMultiplay());
         /*
         if (!productType.getOperationsSet().isEmpty()) {
             Set<Operation> operationSet = new HashSet<>();

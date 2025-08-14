@@ -1,11 +1,13 @@
 package ru.bprn.printhouse.views.templates.entity;
 
+import com.vaadin.flow.component.icon.VaadinIcon;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.bprn.printhouse.annotation.MenuItem;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Getter
 @Setter
+@MenuItem(name = "Однолистовая Печать", icon = VaadinIcon.PRINT, context = "product", description = "Компонент однолистовой печати")
 public class OneSheetDigitalPrintingProductType extends AbstractProductType implements HasMateria{
 
     // --------  Размер изделия, поля и расположение на печатном листе -----------------

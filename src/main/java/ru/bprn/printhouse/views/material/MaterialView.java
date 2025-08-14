@@ -8,16 +8,18 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
-import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.data.entity.PrintMashine;
-import ru.bprn.printhouse.data.service.*;
+import ru.bprn.printhouse.data.service.PrintMashineService;
+import ru.bprn.printhouse.data.service.SizeOfPrintLeafService;
+import ru.bprn.printhouse.data.service.ThicknessService;
+import ru.bprn.printhouse.data.service.TypeOfMaterialService;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.views.material.service.MaterialService;
 
 @PageTitle("Листовые печатные материалы")
 @Route(value = "materials", layout = MainLayout.class)
 @AnonymousAllowed
-
 public class MaterialView extends VerticalLayout {
 
     @Autowired

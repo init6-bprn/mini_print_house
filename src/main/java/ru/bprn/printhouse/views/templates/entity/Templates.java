@@ -1,10 +1,12 @@
 package ru.bprn.printhouse.views.templates.entity;
 
+import com.vaadin.flow.component.icon.VaadinIcon;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
+import ru.bprn.printhouse.annotation.MenuItem;
 
 import java.util.Objects;
 import java.util.Set;
@@ -14,6 +16,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@MenuItem(name = "Печать на холсте", icon = VaadinIcon.PRINT, context = "template", description = "")
 public class Templates{
 
     @Id

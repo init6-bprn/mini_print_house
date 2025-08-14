@@ -13,4 +13,5 @@ public @interface MenuItem {
     String name();
     VaadinIcon icon() default VaadinIcon.QUESTION_CIRCLE;
     String context() default "default";
+    String description() default "Menu Item";
 }

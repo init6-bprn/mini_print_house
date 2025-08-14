@@ -79,8 +79,7 @@ public class MainLayout extends AppLayout {
     }
 
     private SideNav createNavigation() {
-        // AppNav is not yet an official component.
-        // For documentation, visit https://github.com/vaadin/vcf-nav#readme
+
        SideNav nav = new SideNav();
 
         var dick = new SideNavItem("Словари");
