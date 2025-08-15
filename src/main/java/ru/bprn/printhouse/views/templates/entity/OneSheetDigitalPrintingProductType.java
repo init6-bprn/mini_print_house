@@ -52,6 +52,7 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
     public AbstractMaterials getDefaultMat() {
         return this.defaultMaterial;
     }
+
     @Transient
     @Override
     public Set<AbstractMaterials> getSelectedMat() {

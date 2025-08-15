@@ -29,9 +29,11 @@ import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.StandartSizeService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.TemplatesMenuItem;
@@ -68,7 +70,8 @@ public class TemplatesView extends SplitLayout {
     public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
                          OperationService operationService, PrintSheetsMaterialService printSheetsMaterialService,
                          FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService,
-                         StandartSizeService standartSizeService, TemplatesMenuItemService menuItemService){
+                         StandartSizeService standartSizeService, TemplatesMenuItemService menuItemService,
+                         TypeOfOperationService typeOfOperationService, AbstractMaterialService abstractMaterialService){
 
         this.templatesService = templatesService;
         this.abstractProductService = abstractProductService;
@@ -77,7 +80,7 @@ public class TemplatesView extends SplitLayout {
         this.menuItemService = menuItemService;
 
         this.universalEditorFactory = new UniversalEditorFactory(
-                printSheetsMaterialService, formulasService, variablesForMainWorksService, standartSizeService);
+                printSheetsMaterialService, formulasService, variablesForMainWorksService, standartSizeService, typeOfOperationService, abstractMaterialService);
 
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);

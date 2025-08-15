@@ -8,6 +8,7 @@ import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 import ru.bprn.printhouse.annotation.MenuItem;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -52,7 +53,7 @@ public class Templates{
             name = "templates_product",
             joinColumns = @JoinColumn(name = "templates_id"),
             inverseJoinColumns = @JoinColumn(name = "product_id"))
-    private Set<AbstractProductType> productTypes;
+    private Set<AbstractProductType> productTypes = new HashSet<>();
 
     @Override
     public final boolean equals(Object o) {

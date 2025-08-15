@@ -1,29 +1,28 @@
 package ru.bprn.printhouse.views.operation.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import ru.bprn.printhouse.data.entity.Formulas;
-import ru.bprn.printhouse.data.entity.HasAction;
-import ru.bprn.printhouse.data.entity.HasMaterials;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.SqlTypes;
+import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
+import ru.bprn.printhouse.views.templates.entity.HasMateria;
 
-import java.util.Set;
+import java.util.*;
 
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Entity
 @Table(name = "operation")
-@EqualsAndHashCode
-public class Operation implements HasAction, HasMaterials {
+public class Operation implements HasMateria {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
-    private Long id;
+    private UUID id;
 
     @NotBlank
     private String name = "Additional Work";
@@ -31,60 +30,67 @@ public class Operation implements HasAction, HasMaterials {
     @ManyToOne(fetch = FetchType.EAGER)
     private TypeOfOperation typeOfOperation;
 
-    private String actionFormula;
+    // Работа может быть убрана из расчета?
+    private boolean switchOff = false;
 
-    private String descriptionActionFormula;
+    // Используемое оборудование
+    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private AbstractMachine abstractMachine = null;
+    private String machineTimeFormula = "";
+    private boolean haveMachine = true;
 
+    // Работа
+    private String actionFormula = "";
     private boolean haveAction = true;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    private Set<AbstractMaterials> listOfMaterials;
+    // Материал
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    private Set<AbstractMaterials> listOfMaterials = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
     private AbstractMaterials defaultMaterial;
-
-    private String materialFormula;
-
+    private String materialFormula = "";
     private boolean haveMaterial = true;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> variables = new HashMap<>();
 
-    @Override
-    public String getActionFormula() {
-        return actionFormula;
-    }
-
-    @Override
     @Transient
-    public String getDescription() {return descriptionActionFormula; }
-
     @Override
-    @JsonIgnore
-    public String getActionName() {
-        return name;
+    public AbstractMaterials getDefaultMat() {
+        return null;
+    }
+
+    @Transient
+    @Override
+    public Set<AbstractMaterials> getSelectedMat() {
+        return Set.of();
+    }
+
+    @Transient
+    @Override
+    public String getMatFormula() {
+        return "";
     }
 
     @Override
-    public boolean haveAction() {
-        return haveAction;
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
+        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
+        if (thisEffectiveClass != oEffectiveClass) return false;
+        Operation operation = (Operation) o;
+        return getId() != null && Objects.equals(getId(), operation.getId());
     }
 
     @Override
-    public Set<AbstractMaterials> getListOfMaterials() {
-        return listOfMaterials;
+    public final int hashCode() {
+        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 
     @Override
-    public AbstractMaterials getDefaultMaterial() {
-        return defaultMaterial;
-    }
-
-    @Override
-    public String getMaterialFormula() {
-        return materialFormula;
-    }
-
-    @Override
-    public boolean haveMaterials() {
-        return haveMaterial;
+    public String toString() {
+        return this.name;
     }
 }
