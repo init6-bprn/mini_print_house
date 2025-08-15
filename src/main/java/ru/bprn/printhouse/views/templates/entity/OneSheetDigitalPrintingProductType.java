@@ -11,6 +11,7 @@ import ru.bprn.printhouse.annotation.MenuItem;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -37,12 +38,12 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
     @ManyToOne(fetch = FetchType.EAGER)
     private PrintSheetsMaterial defaultMaterial;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.REFRESH, CascadeType.MERGE})
     @JoinTable(
             name = "one_sheet_digital_printing_product_type___abstract_material",
             joinColumns = @JoinColumn(name = "product_type_id"),
             inverseJoinColumns = @JoinColumn(name = "material_id"))
-    private Set<PrintSheetsMaterial> selectedMaterials;
+    private Set<PrintSheetsMaterial> selectedMaterials = new HashSet<>();
 
     private boolean multiplay;
 

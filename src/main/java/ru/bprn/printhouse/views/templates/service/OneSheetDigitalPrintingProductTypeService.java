@@ -1,11 +1,15 @@
 package ru.bprn.printhouse.views.templates.service;
 
 import org.springframework.stereotype.Service;
+import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.operation.service.OperationService;
+import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.repository.OneSheetDigitalPrintingProductTypeRepository;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Service
@@ -34,12 +38,13 @@ public class OneSheetDigitalPrintingProductTypeService {
         newProduct.setName(productType.getName());
         newProduct.setProductSizeX(productType.getProductSizeX());
         newProduct.setProductSizeY(productType.getProductSizeY());
-        newProduct.setSelectedMaterials(productType.getSelectedMaterials());
+        newProduct.getSelectedMaterials().addAll(newProduct.getSelectedMaterials());
         newProduct.setDefaultMaterial(productType.getDefaultMaterial());
         newProduct.setBleed(productType.getBleed());
         newProduct.setMaterialFormula(productType.getMaterialFormula());
         newProduct.setVariables(productType.getVariables());
         newProduct.setMultiplay(productType.isMultiplay());
+
         /*
         if (!productType.getOperationsSet().isEmpty()) {
             Set<Operation> operationSet = new HashSet<>();

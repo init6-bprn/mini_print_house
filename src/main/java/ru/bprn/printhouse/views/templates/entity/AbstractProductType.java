@@ -35,12 +35,6 @@ public class AbstractProductType {
             joinColumns = @JoinColumn(name = "abstract_product_type_id"),
             inverseJoinColumns = @JoinColumn(name = "operation_id"))
     private Set<Operation> operationsSet = new HashSet<>();
-/*
-    @ManyToOne
-    @JoinColumn(name = "template_id")
-    private Templates template;
-
- */
 
     @Override
     public final boolean equals(Object o) {
