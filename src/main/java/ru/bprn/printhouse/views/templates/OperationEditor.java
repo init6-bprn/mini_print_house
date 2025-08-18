@@ -1,11 +1,15 @@
 package ru.bprn.printhouse.views.templates;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
+import ru.bprn.printhouse.data.service.FormulasService;
+import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
@@ -30,11 +34,18 @@ public class OperationEditor extends AbstractEditor<Operation> {
     private final Select<AbstractMaterials> defaultMaterial = new Select<>("Материал по умолчанию", e->{});
     private final MultiSelectComboBox<AbstractMaterials> selectedMaterials = new MultiSelectComboBox<>("Выбранные материалы");
     private final TextField materialFormula = new TextField("Формула расчета количества расходных материалов");
+    private final MapEditorView mapEditorView = new MapEditorView();
+    private FormulaDialog formulaDialog;
+    private final Button getMaterialButton = new Button("Выбрать", e->{
+        formulaDialog.open();
+    });
 
 
     private final TypeOfOperationService typeOfOperationService;
 
-    public OperationEditor(Operation operation, Consumer<Object> onSave, TypeOfOperationService typeOfOperationService, AbstractMaterialService materialService) {
+    public OperationEditor(Operation operation, Consumer<Object> onSave,
+                           TypeOfOperationService typeOfOperationService, AbstractMaterialService materialService,
+                           FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService) {
         super(onSave);
         this.typeOfOperationService = typeOfOperationService;
         typeOfOperationSelect.setItems(typeOfOperationService.findAll());
@@ -43,7 +54,10 @@ public class OperationEditor extends AbstractEditor<Operation> {
         selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
 
         defaultMaterial.setItemLabelGenerator(AbstractMaterials::getName);
-        if (operation.getListOfMaterials() != null) defaultMaterial.setItems(operation.getListOfMaterials());
+        if (operation != null && operation.getListOfMaterials() != null) setElements();
+
+        typeOfOperationSelect.setLabel("Тип работы:");
+        machineSelect.setLabel("Выберите устройство:");
 
         this.binder.forField(name).bind(Operation::getName, Operation::setName);
         this.binder.forField(typeOfOperationSelect).bind(Operation::getTypeOfOperation, Operation::setTypeOfOperation);
@@ -58,8 +72,12 @@ public class OperationEditor extends AbstractEditor<Operation> {
         this.binder.forField(workerFormula).bind(Operation::getActionFormula, Operation::setActionFormula);
         this.binder.forField(materialFormula).bind(Operation::getMatFormula, Operation::setMaterialFormula);
 
+        formulaDialog = new FormulaDialog(formulasService, variablesForMainWorksService,
+                typeOfOperationService, selectedFormula -> {
+            Notification.show("Вы выбрали: " + selectedFormula);
+        });
 
-        this.edit(operation);
+        if (operation != null) this.edit(operation);
         add(buildForm());
         addButtons();
 
@@ -81,28 +99,44 @@ public class OperationEditor extends AbstractEditor<Operation> {
         form.setExpandFields(true);
         var row1 = new FormLayout.FormRow();
         row1.add(name, 6);
+        var row1_1 = new FormLayout.FormRow();
+        row1_1.add(switchOn, 6);
         var row2 = new FormLayout.FormRow();
-        row2.add(typeOfOperationSelect, switchOn);
+        row2.add(typeOfOperationSelect,6);
         var row3 = new FormLayout.FormRow();
-        row3.add(haveMachine, 1);
-        row3.add(machineSelect, 5);
+        row3.add(haveMachine, 6);
+        row3.add(machineSelect, 6);
         var row4 = new FormLayout.FormRow();
-        row4.add(machineFormula, 6);
+        row4.add(getMaterialButton,1);
+        row4.add(machineFormula, 5);
         var row5 = new FormLayout.FormRow();
-        row5.add(haveWorker, 1);
-        row5.add(workerFormula, 5);
+        row5.add(haveWorker, 6);
+        row5.add(workerFormula, 6);
         var row6 = new FormLayout.FormRow();
-        row6.add(haveMaterial, 1);
-        row6.add(selectedMaterials, 5);
+        row6.add(haveMaterial, 6);
+        row6.add(selectedMaterials, 3);
+        row6.add(defaultMaterial, 3);
         var row7 = new FormLayout.FormRow();
-        row7.add(defaultMaterial, 3);
-        row7.add(materialFormula, 3);
+        row7.add(materialFormula, 6);
+        var row8 = new FormLayout.FormRow();
+        row8.add(mapEditorView, 6);
 
-        form.add(row1, row2, row3, row4, row5, row6, row7);
+        form.add(row1, row1_1, row2, row3, row4, row5, row6, row7, row8);
         form.setExpandColumns(true);
         form.setWidthFull();
 
 
         return form;
+    }
+
+    private void setElements() {
+        defaultMaterial.setItems(binder.getBean().getListOfMaterials());
+        mapEditorView.setMap(binder.getBean().getVariables());
+    }
+
+    public void edit(Operation entity) {
+        this.currentEntity = entity;
+        binder.setBean(entity);
+        setElements();
     }
 }

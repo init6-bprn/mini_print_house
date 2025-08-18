@@ -61,6 +61,6 @@ public class AdditionalWorksLayout extends VerticalLayout implements HasBinder{
 
     @Override
     public String getDescription() {
-        return " " + templateBinder.getBean().getActionName() + ",";
+        return " " + templateBinder.getBean().getDescription() + ",";
     }
 }

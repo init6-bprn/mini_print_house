@@ -2,7 +2,10 @@ package ru.bprn.printhouse.views.operation.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
@@ -27,11 +30,16 @@ public class Operation implements HasMateria {
     @NotBlank
     private String name = "Additional Work";
 
+    private String description = "";
+
     @ManyToOne(fetch = FetchType.EAGER)
     private TypeOfOperation typeOfOperation;
 
     // Работа может быть убрана из расчета?
     private boolean switchOff = false;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Set<String> parentClassSet = new HashSet<>();
 
     // Используемое оборудование
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
@@ -53,7 +61,7 @@ public class Operation implements HasMateria {
     private boolean haveMaterial = true;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> variables = new HashMap<>();
+    private Map<String, Double> variables = new HashMap<>();
 
     @Transient
     @Override

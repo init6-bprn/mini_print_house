@@ -3,9 +3,7 @@ package ru.bprn.printhouse.views.operation;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.icon.Icon;
@@ -21,21 +19,21 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.views.operation.entity.Operation;
-import ru.bprn.printhouse.data.entity.Formulas;
-import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
-import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
-import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
-import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
+import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
+import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
+import ru.bprn.printhouse.views.operation.entity.Operation;
+import ru.bprn.printhouse.views.operation.service.OperationService;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
+import ru.bprn.printhouse.views.templates.OperationEditor;
 import ru.bprn.printhouse.views.templates.SelectAbstractMaterialsDialog;
 
 @PageTitle("Создание дополнительных работ")
 @Route(value = "additional_works", layout = MainLayout.class)
 @AnonymousAllowed
-public class OperationView extends VerticalLayout {
+public class OperationView extends SplitLayout {
     private final TextField filterField = new TextField();
     private final Grid<Operation> grid = new Grid<>(Operation.class, false);
     private final OperationService service;
@@ -44,22 +42,27 @@ public class OperationView extends VerticalLayout {
     private final AbstractMaterialService materialService;
     private final BeanValidationBinder<Operation> bean = new BeanValidationBinder<>(Operation.class);
     private final SelectAbstractMaterialsDialog materialDialog;
+    private final VariablesForMainWorksService variablesForMainWorksService;
     private final Select<AbstractMaterials> materialSelect = new Select<>();
+    private OperationEditor operationEditor;
 
     public OperationView(OperationService service,
                          FormulasService formulasService,
                          TypeOfOperationService typeOfOperationService,
-                         AbstractMaterialService materialService) {
+                         AbstractMaterialService materialService,
+                         VariablesForMainWorksService variablesForMainWorksService) {
         this.service = service;
         this.formulasService = formulasService;
         this.typeOfOperationService = typeOfOperationService;
         this.materialService = materialService;
         materialDialog = new SelectAbstractMaterialsDialog("Выберите материалы", materialService);
+        this.variablesForMainWorksService = variablesForMainWorksService;
         this.setSizeFull();
-        var splitLayout = new SplitLayout(addGrid(), addForm(), SplitLayout.Orientation.HORIZONTAL);
-        splitLayout.setSizeFull();
-        splitLayout.setSplitterPosition(60.0);
-        this.add(splitLayout);
+        this.addToPrimary(addGrid());
+        this.addToSecondary(addForm());
+        this.setOrientation(SplitLayout.Orientation.HORIZONTAL);
+        this.setSizeFull();
+        this.setSplitterPosition(60.0);
     }
 
     private Component addGrid() {
@@ -76,9 +79,7 @@ public class OperationView extends VerticalLayout {
         populate(null);
 
         grid.addItemClickListener(e->{
-           bean.setBean(e.getItem());
-           materialSelect.setItems(bean.getBean().getListOfMaterials());
-           bean.refreshFields();
+            operationEditor.edit(e.getItem());
         });
 
         materialDialog.getGrid().setItems(materialService.findAll());
@@ -87,6 +88,7 @@ public class OperationView extends VerticalLayout {
     }
 
     private Component addForm() {
+        /*
         materialSelect.setLabel("Материал по умолчанию");
 
         materialDialog.addOpenedChangeListener(openedChangeEvent -> {
@@ -155,8 +157,10 @@ public class OperationView extends VerticalLayout {
         var cancel = new Button("Отменить", buttonClickEvent -> cancel());
         var hl = new HorizontalLayout(save,cancel);
         hl.setJustifyContentMode(JustifyContentMode.END);
-        formLayout.addFormItem(hl,"");
-        return new VerticalLayout(formLayout);
+
+         */
+
+        return operationEditor = new OperationEditor(bean.getBean(), this::save, typeOfOperationService, materialService, formulasService, variablesForMainWorksService);
     }
 
     public void populate(String str) {
@@ -164,13 +168,15 @@ public class OperationView extends VerticalLayout {
 
     }
 
-    private void save(){
-        if (bean.isValid()) {
-            service.save(bean.getBean());
-            Notification.show("Сохранено");
+    private void save(Object object){
+        Operation note;
+        if (object instanceof Operation) {
+            note = service.save((Operation) object);
+            Notification.show(note.getName()+" сохранено");
             populate(null);
             cancel();
         }
+
         else Notification.show("Заполните требуемые поля!");
     }
 

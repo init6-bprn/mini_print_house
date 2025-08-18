@@ -34,7 +34,7 @@ import java.util.List;
 @Route(value = "formulas_dictionary", layout = MainLayout.class)
 @AnonymousAllowed
 public class FormulasDictionary extends VerticalLayout {
-    private final TextField formulaField = new TextField("Фомула");
+    private final TextField formulaField = new TextField("Формула");
     private final BeanValidationBinder<Formulas> formulaBinder;
     private final StringBuilder strVariables = new StringBuilder();
     private List<VariablesForMainWorks> list;
