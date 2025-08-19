@@ -66,6 +66,7 @@ public class MapEditorView extends VerticalLayout {
 
         editor.setBinder(binder);
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
+        grid.setHeight("200px");
     }
 
     private Button createAddButton() {

@@ -50,6 +50,8 @@ public class OperationEditor extends AbstractEditor<Operation> {
         this.typeOfOperationService = typeOfOperationService;
         typeOfOperationSelect.setItems(typeOfOperationService.findAll());
 
+        getMaterialButton.setAriaLabel("Выбор формулы");
+
         selectedMaterials.setItems(materialService.findAll());
         selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
 
@@ -75,6 +77,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
         formulaDialog = new FormulaDialog(formulasService, variablesForMainWorksService,
                 typeOfOperationService, selectedFormula -> {
             Notification.show("Вы выбрали: " + selectedFormula);
+            machineFormula.setValue(selectedFormula.getFormula());
         });
 
         if (operation != null) this.edit(operation);
@@ -107,8 +110,10 @@ public class OperationEditor extends AbstractEditor<Operation> {
         row3.add(haveMachine, 6);
         row3.add(machineSelect, 6);
         var row4 = new FormLayout.FormRow();
-        row4.add(getMaterialButton,1);
+        getMaterialButton.getElement().getStyle().set("align-self", "baseline");
+        machineFormula.getElement().getStyle().set("align-self", "baseline");
         row4.add(machineFormula, 5);
+        row4.add(getMaterialButton,1);
         var row5 = new FormLayout.FormRow();
         row5.add(haveWorker, 6);
         row5.add(workerFormula, 6);
