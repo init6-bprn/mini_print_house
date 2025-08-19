@@ -22,6 +22,7 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.machine.service.AbstractMachineService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
@@ -43,6 +44,7 @@ public class OperationView extends SplitLayout {
     private final BeanValidationBinder<Operation> bean = new BeanValidationBinder<>(Operation.class);
     private final SelectAbstractMaterialsDialog materialDialog;
     private final VariablesForMainWorksService variablesForMainWorksService;
+    private final AbstractMachineService abstractMachineService;
     private final Select<AbstractMaterials> materialSelect = new Select<>();
     private OperationEditor operationEditor;
 
@@ -50,13 +52,15 @@ public class OperationView extends SplitLayout {
                          FormulasService formulasService,
                          TypeOfOperationService typeOfOperationService,
                          AbstractMaterialService materialService,
-                         VariablesForMainWorksService variablesForMainWorksService) {
+                         VariablesForMainWorksService variablesForMainWorksService,
+                         AbstractMachineService abstractMachineService) {
         this.service = service;
         this.formulasService = formulasService;
         this.typeOfOperationService = typeOfOperationService;
         this.materialService = materialService;
         materialDialog = new SelectAbstractMaterialsDialog("Выберите материалы", materialService);
         this.variablesForMainWorksService = variablesForMainWorksService;
+        this.abstractMachineService = abstractMachineService;
         this.setSizeFull();
         this.addToPrimary(addGrid());
         this.addToSecondary(addForm());
@@ -160,7 +164,7 @@ public class OperationView extends SplitLayout {
 
          */
 
-        return operationEditor = new OperationEditor(bean.getBean(), this::save, typeOfOperationService, materialService, formulasService, variablesForMainWorksService);
+        return operationEditor = new OperationEditor(bean.getBean(), this::save, typeOfOperationService, materialService, formulasService, variablesForMainWorksService, abstractMachineService);
     }
 
     public void populate(String str) {

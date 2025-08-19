@@ -11,6 +11,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
+import ru.bprn.printhouse.views.machine.service.AbstractMachineService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
@@ -18,6 +19,7 @@ import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class OperationEditor extends AbstractEditor<Operation> {
@@ -36,7 +38,17 @@ public class OperationEditor extends AbstractEditor<Operation> {
     private final TextField materialFormula = new TextField("Формула расчета количества расходных материалов");
     private final MapEditorView mapEditorView = new MapEditorView();
     private FormulaDialog formulaDialog;
-    private final Button getMaterialButton = new Button("Выбрать", e->{
+    private byte clicker = 0;
+    private final Button getMachineFormulaButton = new Button("Выбрать", e->{
+        clicker = 1;
+        formulaDialog.open();
+    });
+    private final Button getActionFormulaButton = new Button("Выбрать", e->{
+        clicker = 2;
+        formulaDialog.open();
+    });
+    private final Button getMaterialFormulaButton = new Button("Выбрать", e->{
+        clicker = 3;
         formulaDialog.open();
     });
 
@@ -45,12 +57,13 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
     public OperationEditor(Operation operation, Consumer<Object> onSave,
                            TypeOfOperationService typeOfOperationService, AbstractMaterialService materialService,
-                           FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService) {
+                           FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService,
+                           AbstractMachineService abstractMachineService) {
         super(onSave);
         this.typeOfOperationService = typeOfOperationService;
         typeOfOperationSelect.setItems(typeOfOperationService.findAll());
 
-        getMaterialButton.setAriaLabel("Выбор формулы");
+        getMachineFormulaButton.setAriaLabel("Выбор формулы");
 
         selectedMaterials.setItems(materialService.findAll());
         selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
@@ -60,6 +73,8 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
         typeOfOperationSelect.setLabel("Тип работы:");
         machineSelect.setLabel("Выберите устройство:");
+        machineSelect.setItemLabelGenerator(AbstractMachine::getName);
+        machineSelect.setItems(abstractMachineService.findAll());
 
         this.binder.forField(name).bind(Operation::getName, Operation::setName);
         this.binder.forField(typeOfOperationSelect).bind(Operation::getTypeOfOperation, Operation::setTypeOfOperation);
@@ -77,13 +92,53 @@ public class OperationEditor extends AbstractEditor<Operation> {
         formulaDialog = new FormulaDialog(formulasService, variablesForMainWorksService,
                 typeOfOperationService, selectedFormula -> {
             Notification.show("Вы выбрали: " + selectedFormula);
-            machineFormula.setValue(selectedFormula.getFormula());
+            setFormulaFields(selectedFormula.getFormula());
+        });
+
+        selectedMaterials.addValueChangeListener(event -> {
+            Set<AbstractMaterials> selected = event.getValue();
+            defaultMaterial.setItems(selected);
+            if (selected != null && !selected.isEmpty() && !selected.contains(defaultMaterial.getValue())) {
+                defaultMaterial.clear(); // Только если новый набор не пустой
+            }
+        });
+
+        haveMachine.addValueChangeListener(e->{
+          boolean selector = e.getValue();
+          machineSelect.setValue(selector ? machineSelect.getValue(): null);
+          machineSelect.setEnabled(selector);
+          machineFormula.setValue(selector? machineFormula.getValue() : "");
+          machineFormula.setEnabled(selector);
+          getMachineFormulaButton.setEnabled(selector);
+        });
+
+        haveWorker.addValueChangeListener(e->{
+            boolean selector = e.getValue();
+            workerFormula.setValue(selector? workerFormula.getValue() : "");
+            workerFormula.setEnabled(selector);
+            getActionFormulaButton.setEnabled(selector);
+        });
+
+        haveMaterial.addValueChangeListener(e->{
+            boolean selector = e.getValue();
+            materialFormula.setValue(selector? materialFormula.getValue() : "");
+            materialFormula.setEnabled(selector);
+            defaultMaterial.setValue(selector? defaultMaterial.getValue() : null);
+            defaultMaterial.setEnabled(selector);
+            selectedMaterials.setEnabled(selector);
+            getMaterialFormulaButton.setEnabled(selector);
         });
 
         if (operation != null) this.edit(operation);
         add(buildForm());
         addButtons();
 
+    }
+
+    private void setFormulaFields(String formula) {
+        if (clicker == 1) machineFormula.setValue(formula);
+        if (clicker == 2) workerFormula.setValue(formula);
+        if (clicker == 3) materialFormula.setValue(formula);
     }
 
     @Override
@@ -110,19 +165,25 @@ public class OperationEditor extends AbstractEditor<Operation> {
         row3.add(haveMachine, 6);
         row3.add(machineSelect, 6);
         var row4 = new FormLayout.FormRow();
-        getMaterialButton.getElement().getStyle().set("align-self", "baseline");
+        getMachineFormulaButton.getElement().getStyle().set("align-self", "baseline");
         machineFormula.getElement().getStyle().set("align-self", "baseline");
         row4.add(machineFormula, 5);
-        row4.add(getMaterialButton,1);
+        row4.add(getMachineFormulaButton,1);
         var row5 = new FormLayout.FormRow();
         row5.add(haveWorker, 6);
-        row5.add(workerFormula, 6);
+        getActionFormulaButton.getElement().getStyle().set("align-self", "baseline");
+        workerFormula.getElement().getStyle().set("align-self", "baseline");
+        row5.add(workerFormula, 5);
+        row5.add(getActionFormulaButton, 1);
         var row6 = new FormLayout.FormRow();
         row6.add(haveMaterial, 6);
         row6.add(selectedMaterials, 3);
         row6.add(defaultMaterial, 3);
         var row7 = new FormLayout.FormRow();
-        row7.add(materialFormula, 6);
+        getMaterialFormulaButton.getElement().getStyle().set("align-self", "baseline");
+        machineFormula.getElement().getStyle().set("align-self", "baseline");
+        row7.add(materialFormula, 5);
+        row7.add(getMaterialFormulaButton, 1);
         var row8 = new FormLayout.FormRow();
         row8.add(mapEditorView, 6);
 
