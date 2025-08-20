@@ -41,11 +41,10 @@ public class OperationView extends SplitLayout {
     private final FormulasService formulasService;
     private final TypeOfOperationService typeOfOperationService;
     private final AbstractMaterialService materialService;
-    private final BeanValidationBinder<Operation> bean = new BeanValidationBinder<>(Operation.class);
+    //private final BeanValidationBinder<Operation> bean = new BeanValidationBinder<>(Operation.class);
     private final SelectAbstractMaterialsDialog materialDialog;
     private final VariablesForMainWorksService variablesForMainWorksService;
     private final AbstractMachineService abstractMachineService;
-    private final Select<AbstractMaterials> materialSelect = new Select<>();
     private OperationEditor operationEditor;
 
     public OperationView(OperationService service,
@@ -63,10 +62,12 @@ public class OperationView extends SplitLayout {
         this.abstractMachineService = abstractMachineService;
         this.setSizeFull();
         this.addToPrimary(addGrid());
-        this.addToSecondary(addForm());
+        this.addToSecondary(operationEditor = new OperationEditor(null, this::save, typeOfOperationService,
+                materialService, formulasService, variablesForMainWorksService, abstractMachineService));
+        operationEditor.setEnabled(false);
         this.setOrientation(SplitLayout.Orientation.HORIZONTAL);
         this.setSizeFull();
-        this.setSplitterPosition(60.0);
+        this.setSplitterPosition(50.0);
     }
 
     private Component addGrid() {
@@ -83,7 +84,11 @@ public class OperationView extends SplitLayout {
         populate(null);
 
         grid.addItemClickListener(e->{
-            operationEditor.edit(e.getItem());
+            if (e.getItem() != null) {
+                operationEditor.setEnabled(true);
+                operationEditor.setBean(e.getItem());
+            }
+            else operationEditor.setEnabled(false);
         });
 
         materialDialog.getGrid().setItems(materialService.findAll());
@@ -91,85 +96,8 @@ public class OperationView extends SplitLayout {
         return  new VerticalLayout(buttons(), filterField, grid);
     }
 
-    private Component addForm() {
-        /*
-        materialSelect.setLabel("Материал по умолчанию");
-
-        materialDialog.addOpenedChangeListener(openedChangeEvent -> {
-            if (openedChangeEvent.isOpened()) materialDialog.setSelectedMaterial(bean.getBean().getListOfMaterials());
-            else {
-                var oldValue = materialSelect.getOptionalValue();
-                materialSelect.setItems(materialDialog.getGrid().getSelectedItems());
-                oldValue.ifPresent(materialSelect::setValue);
-            }
-        });
-        bean.forField(materialDialog.getGrid().asMultiSelect()).bind(Operation::getListOfMaterials, Operation::setListOfMaterials);
-        bean.forField(materialSelect).asRequired().bind(Operation::getDefaultMaterial, Operation::setDefaultMaterial);
-
-        var mButton = new Button("Материал", e->materialDialog.open());
-
-        var name = new TextField("Название");
-        bean.forField(name).asRequired().bind(Operation::getName, Operation::setName);
-        Select<TypeOfOperation> typeOfWork = new Select<>();
-        typeOfWork.setLabel("Тип работы");
-        typeOfWork.setItems(typeOfOperationService.findAll());
-        bean.forField(typeOfWork).asRequired().bind(Operation::getTypeOfOperation, Operation::setTypeOfOperation);
-
-        var actionCheck = new Checkbox("Есть работа?");
-        bean.forField(actionCheck).bind(Operation::haveAction, Operation::setHaveAction);
-        Select<Formulas> actFormula = new Select<>();
-        actFormula.setLabel("Формула");
-        actFormula.setItems(formulasService.findAll());
-        bean.forField(actFormula).asRequired().bind(productType -> {
-                    return actFormula.getListDataView().getItems()
-                            .filter(f -> f.getFormula().equals(productType.getMaterialFormula()))
-                            .findFirst()
-                            .orElse(null);
-                },
-                (productType, formula) -> {
-                    if (formula != null) {
-                        productType.setMaterialFormula(formula.getFormula());
-                    } else {
-                        productType.setMaterialFormula(null);
-                    }
-                });
-        var materialCheck = new Checkbox("Есть материал?");
-        bean.forField(materialCheck).bind(Operation::haveMaterials, Operation::setHaveMaterial);
-        Select<Formulas> mFormula = new Select<>();
-        mFormula.setLabel("Формула");
-        mFormula.setItems(formulasService.findAll());
-        bean.forField(mFormula).asRequired().bind(operationType -> {
-                    return mFormula.getListDataView().getItems()
-                            .filter(f -> f.getFormula().equals(operationType.getMaterialFormula()))
-                            .findFirst()
-                            .orElse(null);
-                },
-                (operationType, formula) -> {
-                    if (formula != null) {
-                        operationType.setMaterialFormula(formula.getFormula());
-                        operationType.setDescriptionActionFormula(formula.getDescription());
-                    } else {
-                        operationType.setMaterialFormula(null);
-                        operationType.setDescriptionActionFormula(null);
-                    }
-                });
-
-        var formLayout = new FormLayout();
-        formLayout.add(name, typeOfWork, actionCheck, actFormula, materialCheck, mFormula, mButton, materialSelect);
-
-        var save = new Button("Сохранить", buttonClickEvent -> save());
-        var cancel = new Button("Отменить", buttonClickEvent -> cancel());
-        var hl = new HorizontalLayout(save,cancel);
-        hl.setJustifyContentMode(JustifyContentMode.END);
-
-         */
-
-        return operationEditor = new OperationEditor(bean.getBean(), this::save, typeOfOperationService, materialService, formulasService, variablesForMainWorksService, abstractMachineService);
-    }
-
     public void populate(String str) {
         grid.setItems(service.populate(str));
-
     }
 
     private void save(Object object){
@@ -178,16 +106,18 @@ public class OperationView extends SplitLayout {
             note = service.save((Operation) object);
             Notification.show(note.getName()+" сохранено");
             populate(null);
-            cancel();
+            //cancel();
         }
 
         else Notification.show("Заполните требуемые поля!");
     }
-
+/*
     private void cancel(){
         bean.removeBean();
         bean.refreshFields();
     }
+
+ */
 
     private HorizontalLayout buttons() {
         var dialogChain = new ConfirmDialog("Внимание!" , "", "Да",
@@ -200,8 +130,8 @@ public class OperationView extends SplitLayout {
         var hl = new HorizontalLayout();
 
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
-            bean.setBean(new Operation());
-            bean.refreshFields();
+            operationEditor.setEnabled(true);
+            operationEditor.setBean(new Operation());
         });
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createTemplateButton.setTooltipText("Создать новую работу");
@@ -227,9 +157,7 @@ public class OperationView extends SplitLayout {
     }
 
     private void deleteElement() {
-        service.delete(bean.getBean());
-        bean.removeBean();
-        bean.refreshFields();
+        service.delete(grid.asSingleSelect().getValue());
         populate(filterField.getValue().trim());
     }
 

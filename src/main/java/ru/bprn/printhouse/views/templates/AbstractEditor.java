@@ -45,7 +45,7 @@ public abstract class AbstractEditor<T> extends VerticalLayout {
     private void save() {
         if (binder.validate().isOk()) {
             onSave.accept(currentEntity);
-            Notification.show("Сохранено", 3000, Notification.Position.TOP_CENTER);
+            Notification.show("Передаю на сохранение", 3000, Notification.Position.TOP_CENTER);
             clear();
         }
     }

@@ -200,9 +200,9 @@ public class OperationEditor extends AbstractEditor<Operation> {
         mapEditorView.setMap(binder.getBean().getVariables());
     }
 
-    public void edit(Operation entity) {
-        this.currentEntity = entity;
-        binder.setBean(entity);
+    public void setBean(Operation o){
+        edit(o);
         setElements();
     }
+
 }

@@ -42,7 +42,7 @@ public class Operation implements HasMateria {
     private Set<String> parentClassSet = new HashSet<>();
 
     // Используемое оборудование
-    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne(fetch = FetchType.EAGER)
     private AbstractMachine abstractMachine = null;
     private String machineTimeFormula = "";
     private boolean haveMachine = true;
@@ -52,7 +52,7 @@ public class Operation implements HasMateria {
     private boolean haveAction = true;
 
     // Материал
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<AbstractMaterials> listOfMaterials = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.EAGER)
