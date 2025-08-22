@@ -8,6 +8,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
+import org.jetbrains.annotations.NotNull;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
@@ -17,7 +18,9 @@ import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
+import ru.bprn.printhouse.views.templates.entity.Variable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -36,7 +39,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
     private final Select<AbstractMaterials> defaultMaterial = new Select<>("Материал по умолчанию", e->{});
     private final MultiSelectComboBox<AbstractMaterials> selectedMaterials = new MultiSelectComboBox<>("Выбранные материалы");
     private final TextField materialFormula = new TextField("Формула расчета количества расходных материалов");
-    private final MapEditorView mapEditorView = new MapEditorView();
+    private final MapEditorView mapEditorView;
     private FormulaDialog formulaDialog;
     private byte clicker = 0;
     private final Button getMachineFormulaButton = new Button("Выбрать", setBeane->{
@@ -54,7 +57,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
 
     private final TypeOfOperationService typeOfOperationService;
-    @org.jetbrains.annotations.NotNull
+    @NotNull
     private final AbstractMaterialService materialService;
 
     public OperationEditor(Operation operation, Consumer<Object> onSave,
@@ -78,6 +81,8 @@ public class OperationEditor extends AbstractEditor<Operation> {
         machineSelect.setLabel("Выберите устройство:");
         machineSelect.setItemLabelGenerator(AbstractMachine::getName);
         machineSelect.setItems(abstractMachineService.findAll());
+
+         mapEditorView = new MapEditorView(operation != null ? operation.getVariables() : new ArrayList<>(), this::handleVariablesChange);
 
         this.binder.forField(name).bind(Operation::getName, Operation::setName);
         this.binder.forField(typeOfOperationSelect).bind(Operation::getTypeOfOperation, Operation::setTypeOfOperation);
@@ -205,7 +210,13 @@ public class OperationEditor extends AbstractEditor<Operation> {
             defaultMaterial.setItems(operation.getListOfMaterials());
         }
         edit(operation);
-        mapEditorView.setMap(binder.getBean().getVariables());
+        mapEditorView.setVariables(binder.getBean().getVariables());
+    }
+
+    private void handleVariablesChange(List<Variable> updatedVariables) {
+        // Просто сохраняем обновленный список
+        this.binder.getBean().setVariables(updatedVariables);
+        System.out.println("Список переменных обновлен, всего: " + updatedVariables.size());
     }
 
 }

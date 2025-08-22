@@ -12,6 +12,7 @@ import org.hibernate.type.SqlTypes;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.templates.entity.HasMateria;
+import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.*;
 
@@ -61,7 +62,7 @@ public class Operation implements HasMateria {
     private boolean haveMaterial = true;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Double> variables = new HashMap<>();
+    private List<Variable> variables = new LinkedList<>();
 
     @Transient
     @Override
