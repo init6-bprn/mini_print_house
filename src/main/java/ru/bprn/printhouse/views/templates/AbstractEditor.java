@@ -50,7 +50,7 @@ public abstract class AbstractEditor<T> extends VerticalLayout {
         }
     }
 
-    private void clear() {
+    public void clear() {
         binder.setBean(null);
         currentEntity = null;
     }

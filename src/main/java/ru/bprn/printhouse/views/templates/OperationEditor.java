@@ -39,7 +39,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
     private final MapEditorView mapEditorView = new MapEditorView();
     private FormulaDialog formulaDialog;
     private byte clicker = 0;
-    private final Button getMachineFormulaButton = new Button("Выбрать", e->{
+    private final Button getMachineFormulaButton = new Button("Выбрать", setBeane->{
         clicker = 1;
         formulaDialog.open();
     });
@@ -54,6 +54,8 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
 
     private final TypeOfOperationService typeOfOperationService;
+    @org.jetbrains.annotations.NotNull
+    private final AbstractMaterialService materialService;
 
     public OperationEditor(Operation operation, Consumer<Object> onSave,
                            TypeOfOperationService typeOfOperationService, AbstractMaterialService materialService,
@@ -61,6 +63,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
                            AbstractMachineService abstractMachineService) {
         super(onSave);
         this.typeOfOperationService = typeOfOperationService;
+        this.materialService = materialService;
         typeOfOperationSelect.setItems(typeOfOperationService.findAll());
 
         getMachineFormulaButton.setAriaLabel("Выбор формулы");
@@ -69,7 +72,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
         selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
 
         defaultMaterial.setItemLabelGenerator(AbstractMaterials::getName);
-        if (operation != null && operation.getListOfMaterials() != null) setElements();
+        if (operation != null && operation.getListOfMaterials() != null) defaultMaterial.setItems();
 
         typeOfOperationSelect.setLabel("Тип работы:");
         machineSelect.setLabel("Выберите устройство:");
@@ -87,7 +90,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
         this.binder.forField(selectedMaterials).bind(Operation::getListOfMaterials, Operation::setListOfMaterials);
         this.binder.forField(defaultMaterial).bind(Operation::getDefaultMaterial, Operation::setDefaultMaterial);
         this.binder.forField(workerFormula).bind(Operation::getActionFormula, Operation::setActionFormula);
-        this.binder.forField(materialFormula).bind(Operation::getMatFormula, Operation::setMaterialFormula);
+        this.binder.forField(materialFormula).bind(Operation::getMaterialFormula, Operation::setMaterialFormula);
 
         formulaDialog = new FormulaDialog(formulasService, variablesForMainWorksService,
                 typeOfOperationService, selectedFormula -> {
@@ -195,14 +198,14 @@ public class OperationEditor extends AbstractEditor<Operation> {
         return form;
     }
 
-    private void setElements() {
-        defaultMaterial.setItems(binder.getBean().getListOfMaterials());
+    public void editor(Operation operation) {
+        this.clear();
+        if (!operation.getListOfMaterials().isEmpty()) {
+            selectedMaterials.setValue(operation.getListOfMaterials());
+            defaultMaterial.setItems(operation.getListOfMaterials());
+        }
+        edit(operation);
         mapEditorView.setMap(binder.getBean().getVariables());
-    }
-
-    public void setBean(Operation o){
-        edit(o);
-        setElements();
     }
 
 }

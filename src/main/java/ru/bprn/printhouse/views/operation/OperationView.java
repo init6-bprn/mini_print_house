@@ -86,7 +86,7 @@ public class OperationView extends SplitLayout {
         grid.addItemClickListener(e->{
             if (e.getItem() != null) {
                 operationEditor.setEnabled(true);
-                operationEditor.setBean(e.getItem());
+                operationEditor.editor(e.getItem());
             }
             else operationEditor.setEnabled(false);
         });
@@ -131,7 +131,7 @@ public class OperationView extends SplitLayout {
 
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
             operationEditor.setEnabled(true);
-            operationEditor.setBean(new Operation());
+            operationEditor.editor(new Operation());
         });
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createTemplateButton.setTooltipText("Создать новую работу");
