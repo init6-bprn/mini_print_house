@@ -1,15 +1,11 @@
 package ru.bprn.printhouse.views.operation;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.binder.Setter;
-import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.shared.Registration;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
@@ -95,6 +91,12 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
     @Override
     public boolean isReadOnly() {
         return area.isReadOnly();
+    }
+
+    public void setEnabled(boolean enabled) {
+        area.setEnabled(enabled);
+        selectButton.setEnabled(enabled);
+        editButton.setEnabled(enabled);
     }
 
     @Override

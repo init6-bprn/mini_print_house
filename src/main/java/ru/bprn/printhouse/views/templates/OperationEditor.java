@@ -104,7 +104,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
                 machineSelect.setValue(selector ? machineSelect.getValue() : null);
                 machineSelect.setEnabled(selector);
                 if (!selector) this.binder.getBean().setMachineTimeFormula("");
-                equipmentFormula.setReadOnly(!selector);
+                equipmentFormula.setEnabled(selector);
             }
         });
 
@@ -112,14 +112,14 @@ public class OperationEditor extends AbstractEditor<Operation> {
             boolean selector = e.getValue();
             if (this.binder.getBean() != null) {
                 if (!selector) this.binder.getBean().setActionFormula("");
-                workerFormula.setReadOnly(!selector);
+                workerFormula.setEnabled(selector);
             }
         });
 
         haveMaterial.addValueChangeListener(e->{
             boolean selector = e.getValue();
             if (this.binder.getBean() != null) {
-                materialFormula.setReadOnly(!selector);
+                materialFormula.setEnabled(selector);
                 defaultMaterial.setValue(selector ? defaultMaterial.getValue() : null);
                 defaultMaterial.setEnabled(selector);
                 selectedMaterials.setEnabled(selector);
