@@ -56,16 +56,13 @@ public class OperationEditor extends AbstractEditor<Operation> {
         typeOfOperationSelect.setItems(typeOfOperationService.findAll());
 
         equipmentFormula = new EditableTextArea<>("Формула расчета времени работы оборудования",
-                this.binder, Operation::getMachineTimeFormula, Operation::setMachineTimeFormula,
-                typeOfOperationService, variablesForMainWorksService, formulasService);
+                formulasService, typeOfOperationService, variablesForMainWorksService);
 
         workerFormula = new EditableTextArea<>("Формула расчета времени работы работника",
-                this.binder, Operation::getActionFormula, Operation::setActionFormula,
-                typeOfOperationService, variablesForMainWorksService, formulasService);
+                formulasService, typeOfOperationService, variablesForMainWorksService);
 
         materialFormula = new EditableTextArea<>("Формула расчета количества расходных материалов",
-                this.binder, Operation::getMaterialFormula, Operation::setMaterialFormula,
-                typeOfOperationService, variablesForMainWorksService, formulasService);
+                formulasService, typeOfOperationService, variablesForMainWorksService);
 
         selectedMaterials.setItems(materialService.findAll());
         selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
@@ -89,6 +86,9 @@ public class OperationEditor extends AbstractEditor<Operation> {
         this.binder.forField(haveMaterial).bind(Operation::isHaveMaterial, Operation::setHaveMaterial);
         this.binder.forField(selectedMaterials).bind(Operation::getListOfMaterials, Operation::setListOfMaterials);
         this.binder.forField(defaultMaterial).bind(Operation::getDefaultMaterial, Operation::setDefaultMaterial);
+        this.binder.forField(equipmentFormula).bind(Operation::getMachineTimeFormula, Operation::setMachineTimeFormula);
+        this.binder.forField(workerFormula).bind(Operation::getActionFormula, Operation::setActionFormula);
+        this.binder.forField(materialFormula).bind(Operation::getMaterialFormula, Operation::setMaterialFormula);
 
         selectedMaterials.addValueChangeListener(event -> {
             Set<AbstractMaterials> selected = event.getValue();
@@ -100,25 +100,31 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
         haveMachine.addValueChangeListener(e->{
             boolean selector = e.getValue();
-            machineSelect.setValue(selector ? machineSelect.getValue(): null);
-            machineSelect.setEnabled(selector);
-            if (selector) this.binder.getBean().setMachineTimeFormula("");
-            equipmentFormula.setEnabled(selector);
+            if (this.binder.getBean() != null) {
+                machineSelect.setValue(selector ? machineSelect.getValue() : null);
+                machineSelect.setEnabled(selector);
+                if (!selector) this.binder.getBean().setMachineTimeFormula("");
+                equipmentFormula.setReadOnly(!selector);
+            }
         });
 
         haveWorker.addValueChangeListener(e->{
             boolean selector = e.getValue();
-            if (selector) this.binder.getBean().setActionFormula("");
-            workerFormula.setEnabled(selector);
+            if (this.binder.getBean() != null) {
+                if (!selector) this.binder.getBean().setActionFormula("");
+                workerFormula.setReadOnly(!selector);
+            }
         });
 
         haveMaterial.addValueChangeListener(e->{
             boolean selector = e.getValue();
-            materialFormula.setEnabled(selector);
-            defaultMaterial.setValue(selector? defaultMaterial.getValue() : null);
-            defaultMaterial.setEnabled(selector);
-            selectedMaterials.setEnabled(selector);
-            if (selector) this.binder.getBean().setMaterialFormula("");
+            if (this.binder.getBean() != null) {
+                materialFormula.setReadOnly(!selector);
+                defaultMaterial.setValue(selector ? defaultMaterial.getValue() : null);
+                defaultMaterial.setEnabled(selector);
+                selectedMaterials.setEnabled(selector);
+                if (!selector) this.binder.getBean().setMaterialFormula("");
+            }
         });
 
         if (operation != null) this.edit(operation);
@@ -175,9 +181,6 @@ public class OperationEditor extends AbstractEditor<Operation> {
         }
         edit(operation);
         mapEditorView.setVariables(binder.getBean().getVariables());
-        equipmentFormula.refresh(binder);
-        workerFormula.refresh(binder);
-        materialFormula.refresh(binder);
     }
 
     private void handleVariablesChange(List<Variable> updatedVariables) {
