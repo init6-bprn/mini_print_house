@@ -65,7 +65,6 @@ public class ProductsView extends HorizontalLayout {
 
         card.setHeight("240px");
         card.setMaxWidth("200px");
-        add(card);
 
         return card;
     }
