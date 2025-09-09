@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.views;
 
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -13,28 +14,28 @@ import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import org.vaadin.lineawesome.LineAwesomeIcon;
 import ru.bprn.printhouse.data.entity.User;
 import ru.bprn.printhouse.security.AuthenticatedUser;
-import ru.bprn.printhouse.views.material.PrintSheetMaterialView;
-import ru.bprn.printhouse.views.operation.OperationView;
-import ru.bprn.printhouse.views.operation.TypeOfOperationView;
 import ru.bprn.printhouse.views.dictionary.*;
 import ru.bprn.printhouse.views.machine.cutters.PaperCuttersView;
 import ru.bprn.printhouse.views.machine.printers.DigitalPrintingMachineView;
 import ru.bprn.printhouse.views.machine.printers.PrintSpeedMaterialDensityView;
 import ru.bprn.printhouse.views.machine.printers.PrintersView;
 import ru.bprn.printhouse.views.material.MaterialView;
+import ru.bprn.printhouse.views.material.PrintSheetMaterialView;
 import ru.bprn.printhouse.views.material.PrintingMaterialView;
+import ru.bprn.printhouse.views.operation.OperationView;
+import ru.bprn.printhouse.views.operation.TypeOfOperationView;
 import ru.bprn.printhouse.views.products.ProductsView;
 import ru.bprn.printhouse.views.templates.TemplatesView;
 import ru.bprn.printhouse.views.templates.WorkFlowView;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.Optional;
 
 /**
@@ -79,105 +80,70 @@ public class MainLayout extends AppLayout {
     }
 
     private SideNav createNavigation() {
+        SideNav nav = new SideNav();
 
-       SideNav nav = new SideNav();
+        SideNavItem dictionariesSection = new SideNavItem("Словари");
+        addNavItemIfAccessible(dictionariesSection, "Количество цветов", QuantityColorsDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Тип принтера", TypeOfPrinterDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Тип материала", TypeOfMaterialDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Плотность материала", ThicknessDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Размер печатного листа", SizeOfPrintLeafDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Размер изделия", StandartSizeDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Отступы", GapDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Спуск полос", ImposeCaseDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Переменные для работ", VariablesForMainWorksDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Стоимость материалов", PriceOfMaterialDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Скорость печати на разных материалах", TimeOfDigitalPrintOperationDictionary.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(dictionariesSection, "Словарь формул устройств", FormulasDictionary.class, VaadinIcon.RECORDS.create());
+        if (dictionariesSection.getItems().stream().findAny().isPresent()) {
+            nav.addItem(dictionariesSection);
+        }
 
-        var navGroup = new SideNavItem("Словари");
-        if (accessChecker.hasAccess(QuantityColorsDictionary.class))
-            navGroup.addItem(new SideNavItem("Количество цветов", QuantityColorsDictionary.class, VaadinIcon.RECORDS.create()));
+        SideNavItem equipmentSection = new SideNavItem("Оборудование");
+        addNavItemIfAccessible(equipmentSection, "ЦПМ", PrintersView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        addNavItemIfAccessible(equipmentSection, "Листовые принтеры", DigitalPrintingMachineView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        addNavItemIfAccessible(equipmentSection, "Резаки", PaperCuttersView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        addNavItemIfAccessible(equipmentSection, "Скорость-плотность ЦПМ", PrintSpeedMaterialDensityView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        if (equipmentSection.getItems().stream().findAny().isPresent()) {
+            nav.addItem(equipmentSection);
+        }
 
-        if (accessChecker.hasAccess(TypeOfPrinterDictionary.class))
-            navGroup.addItem(new SideNavItem("Тип принтера", TypeOfPrinterDictionary.class, VaadinIcon.RECORDS.create()));
+        SideNavItem materialsSection = new SideNavItem("Материалы");
+        addNavItemIfAccessible(materialsSection, "Бумага для цифры", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        addNavItemIfAccessible(materialsSection, "Стоимость отпечатка", CostOfPrintSizeLeafAndColorDictionary.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        addNavItemIfAccessible(materialsSection, "Краски для принтеров", PrintingMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        addNavItemIfAccessible(materialsSection, "Бумага листовая", PrintSheetMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        if (materialsSection.getItems().stream().findAny().isPresent()) {
+            nav.addItem(materialsSection);
+        }
 
-        if (accessChecker.hasAccess(TypeOfMaterialDictionary.class))
-            navGroup.addItem(new SideNavItem("Тип материала", TypeOfMaterialDictionary.class, VaadinIcon.RECORDS.create()));
+        SideNavItem templatesSection = new SideNavItem("Шаблоны");
+        addNavItemIfAccessible(templatesSection, "Новый редактор шаблонов", TemplatesView.class, LineAwesomeIcon.FILE.create());
+        addNavItemIfAccessible(templatesSection, "WorkFlows", WorkFlowView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        if (templatesSection.getItems().stream().findAny().isPresent()) {
+            nav.addItem(templatesSection);
+        }
 
-        if (accessChecker.hasAccess(ThicknessDictionary.class))
-            navGroup.addItem(new SideNavItem("Плотность материала", ThicknessDictionary.class, VaadinIcon.RECORDS.create()));
+        SideNavItem productsSection = new SideNavItem("Продукты");
+        addNavItemIfAccessible(productsSection, "Products", ProductsView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        if (productsSection.getItems().stream().findAny().isPresent()) {
+            nav.addItem(productsSection);
+        }
 
-        if (accessChecker.hasAccess(SizeOfPrintLeafDictionary.class))
-            navGroup.addItem(new SideNavItem("Размер печатного листа", SizeOfPrintLeafDictionary.class, VaadinIcon.RECORDS.create()));
-
-        if (accessChecker.hasAccess(StandartSizeDictionary.class))
-            navGroup.addItem(new SideNavItem("Размер изделия", StandartSizeDictionary.class, VaadinIcon.RECORDS.create()));
-
-        if (accessChecker.hasAccess(GapDictionary.class))
-            navGroup.addItem(new SideNavItem("Отступы", GapDictionary.class, VaadinIcon.RECORDS.create()));
-
-        if (accessChecker.hasAccess(ImposeCaseDictionary.class))
-            navGroup.addItem(new SideNavItem("Спуск полос", ImposeCaseDictionary.class, VaadinIcon.RECORDS.create()));
-
-        if (accessChecker.hasAccess(VariablesForMainWorksDictionary.class))
-            navGroup.addItem(new SideNavItem("Переменные для работ", VariablesForMainWorksDictionary.class, VaadinIcon.RECORDS.create()));
-
-        if (accessChecker.hasAccess(PriceOfMaterialDictionary.class))
-            navGroup.addItem(new SideNavItem("Стоимость материалов", PriceOfMaterialDictionary.class, VaadinIcon.RECORDS.create()));
-
-        if (accessChecker.hasAccess(TimeOfDigitalPrintOperationDictionary.class))
-            navGroup.addItem(new SideNavItem("Скорость печати на разных материалах", TimeOfDigitalPrintOperationDictionary.class, VaadinIcon.RECORDS.create()));
-
-        if (accessChecker.hasAccess(FormulasDictionary.class))
-            navGroup.addItem(new SideNavItem("Словарь формул устройств", FormulasDictionary.class, VaadinIcon.RECORDS.create()));
-
-        nav.addItem(navGroup);
-
-        navGroup = new SideNavItem("Оборудование");
-        if (accessChecker.hasAccess(PrintersView.class))
-            navGroup.addItem(new SideNavItem("ЦПМ", PrintersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-
-        if (accessChecker.hasAccess(DigitalPrintingMachineView.class))
-            navGroup.addItem(new SideNavItem("Листовые принтеры", DigitalPrintingMachineView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-
-        if (accessChecker.hasAccess(PaperCuttersView.class))
-            navGroup.addItem(new SideNavItem("Резаки", PaperCuttersView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-
-        if (accessChecker.hasAccess(PrintSpeedMaterialDensityView.class))
-            navGroup.addItem(new SideNavItem("Скорость-плотность ЦПМ", PrintSpeedMaterialDensityView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-        nav.addItem(navGroup);
-
-        navGroup = new SideNavItem("Материалы");
-        if (accessChecker.hasAccess(MaterialView.class))
-            navGroup.addItem(new SideNavItem("Бумага для цифры", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-
-        if (accessChecker.hasAccess(CostOfPrintSizeLeafAndColorDictionary.class))
-            navGroup.addItem(new SideNavItem("Стоимость отпечатка", CostOfPrintSizeLeafAndColorDictionary.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-
-        if (accessChecker.hasAccess(PrintingMaterialView.class))
-            navGroup.addItem(new SideNavItem("Краски для принтеров", PrintingMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-
-        if (accessChecker.hasAccess(PrintSheetMaterialView.class))
-            navGroup.addItem(new SideNavItem("Бумага листовая", PrintSheetMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-
-        nav.addItem(navGroup);
-
-        navGroup = new SideNavItem("Шаблоны");
-
-        if (accessChecker.hasAccess(TemplatesView.class))
-            navGroup.addItem(new SideNavItem("Новый редактор шаблонов", TemplatesView.class, LineAwesomeIcon.FILE.create()));
-
-        if (accessChecker.hasAccess(WorkFlowView.class))
-            navGroup.addItem(new SideNavItem("WorkFlows", WorkFlowView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-
-        nav.addItem(navGroup);
-
-        navGroup = new SideNavItem("Продукты");
-        //if (accessChecker.hasAccess(TemplateView.class))
-        //    dick.addItem(new SideNavItem("Шаблоны работ", TemplateView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-
-        if (accessChecker.hasAccess(ProductsView.class))
-            navGroup.addItem(new SideNavItem("Products", ProductsView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-        nav.addItem(navGroup);
-
-        navGroup = new SideNavItem("Работы");
-
-        if (accessChecker.hasAccess(TypeOfOperationView.class))
-            navGroup.addItem(new SideNavItem("Типы работ", TypeOfOperationView.class, VaadinIcon.RECORDS.create()));
-
-        if (accessChecker.hasAccess(OperationView.class))
-            navGroup.addItem(new SideNavItem("Дополнительные работы", OperationView.class, LineAwesomeIcon.GLOBE_SOLID.create()));
-        nav.addItem(navGroup);
+        SideNavItem operationsSection = new SideNavItem("Работы");
+        addNavItemIfAccessible(operationsSection, "Типы работ", TypeOfOperationView.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(operationsSection, "Дополнительные работы", OperationView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        if (operationsSection.getItems().stream().findAny().isPresent()) {
+            nav.addItem(operationsSection);
+        }
 
         return nav;
+    }
+
+    private void addNavItemIfAccessible(SideNavItem parent, String label, Class<? extends Component> view, Component icon) {
+        if (accessChecker.hasAccess(view)) {
+            parent.addItem(new SideNavItem(label, view, icon));
+        }
     }
 
     private Footer createFooter() {
@@ -188,10 +154,13 @@ public class MainLayout extends AppLayout {
             User user = maybeUser.get();
 
             Avatar avatar = new Avatar(user.getName());
-            byte[] profilePictureData = user.getProfilePicture();
-            if (profilePictureData != null) {
-                com.vaadin.flow.function.SerializableSupplier<InputStream> imageSupplier = () -> new ByteArrayInputStream(profilePictureData);
-
+            if (user.getProfilePicture() != null) {
+                // Этот конструктор StreamResource не является устаревшим.
+                // Он принимает InputStreamFactory (лямбда-выражение), что является текущим рекомендуемым API.
+                StreamResource imageResource = new StreamResource("profile-pic",
+                        () -> new ByteArrayInputStream(user.getProfilePicture()));
+                avatar.setImageResource(imageResource);
+            }
             avatar.setThemeName("xsmall");
             avatar.getElement().setAttribute("tabindex", "-1");
 
@@ -217,10 +186,9 @@ public class MainLayout extends AppLayout {
             layout.add(loginLink);
         }
 
-
         return layout;
     }
-/*
+
     @Override
     protected void afterNavigation() {
         super.afterNavigation();
@@ -231,7 +199,4 @@ public class MainLayout extends AppLayout {
         PageTitle title = getContent().getClass().getAnnotation(PageTitle.class);
         return title == null ? "" : title.value();
     }
-
- */
-
 }
