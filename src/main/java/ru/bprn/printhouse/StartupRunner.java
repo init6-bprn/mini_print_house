@@ -3,6 +3,8 @@ package ru.bprn.printhouse;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
@@ -14,6 +16,7 @@ import java.util.List;
 
 @Component
 @AllArgsConstructor
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class StartupRunner implements ApplicationRunner {
 
     private final TemplatesMenuItemService scanner;
