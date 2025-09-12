@@ -6,12 +6,15 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
+import ru.bprn.printhouse.views.templates.ProductOperationEditor;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -32,6 +35,7 @@ public class ProductOperation {
         @ToString.Exclude
         private Operation operation;
 
+        // Порядок выполнения операций
         private Integer sequence;
 
         // Специфичные для этой связки параметры, которые переопределяют или дополняют Operation
@@ -39,6 +43,8 @@ public class ProductOperation {
 
         @ManyToOne(fetch = FetchType.EAGER) // Выбранный материал для этой операции
         private AbstractMaterials selectedMaterial;
+
+        private Set<AbstractMaterials> alternativeMaterials = new HashSet<>();
 
         @Lob
         private String customMachineTimeFormula; // Если нужно переопределить формулу из Operation
@@ -48,13 +54,27 @@ public class ProductOperation {
         private String customMaterialFormula;
 
         @JdbcTypeCode(SqlTypes.JSON)
-        private List<Variable> customVariables = new LinkedList<>(); // Если нужно добавить/переопределить переменные
+        private List<Variable> customVariables = new ArrayList<>(); // Если нужно добавить/переопределить переменные
 
         // Ссылка на Product
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "abstract_product_id")
         @ToString.Exclude
         private AbstractProductType product;
+
+        private boolean switchOff = false;
+        
+        public ProductOperation(Operation operation) {
+                this.operation = operation;
+                this.sequence = 0; // Default value
+                this.effectiveWasteFactor = 0.0; // Default value
+                this.switchOff = operation.isSwitchOff();
+                this.customMachineTimeFormula = operation.getMachineTimeFormula();
+                this.customActionFormula = operation.getActionFormula();
+                this.customMaterialFormula = operation.getMaterialFormula();
+                this.selectedMaterial = operation.getDefaultMaterial();
+                this.customVariables = new ArrayList<>(operation.getVariables());
+        }
 
         // Getters, Setters, etc.
 

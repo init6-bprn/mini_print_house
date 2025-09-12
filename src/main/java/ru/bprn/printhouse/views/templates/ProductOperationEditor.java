@@ -1,6 +1,7 @@
 package ru.bprn.printhouse.views.templates;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -27,6 +28,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     private final IntegerField sequenceField = new IntegerField("Последовательность");
     private final NumberField effectiveWasteFactorField = new NumberField("Фактор брака");
     private final ComboBox<AbstractMaterials> selectedMaterialComboBox = new ComboBox<>("Выбранный материал");
+    private final Checkbox switchOn = new Checkbox("Пользователь может отключить эту работу (uncheck - не может)", true);
 
     // Reusing EditableTextArea for custom formulas
     private final EditableTextArea<ProductOperation> customMachineTimeFormulaArea;
@@ -79,6 +81,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         binder.forField(sequenceField).bind(ProductOperation::getSequence, ProductOperation::setSequence);
         binder.forField(effectiveWasteFactorField).bind(ProductOperation::getEffectiveWasteFactor, ProductOperation::setEffectiveWasteFactor);
         binder.forField(selectedMaterialComboBox).bind(ProductOperation::getSelectedMaterial, ProductOperation::setSelectedMaterial);
+        binder.forField(switchOn).bind(ProductOperation::isSwitchOff, ProductOperation::setSwitchOff);
         binder.forField(customMachineTimeFormulaArea).bind(ProductOperation::getCustomMachineTimeFormula, ProductOperation::setCustomMachineTimeFormula);
         binder.forField(customActionFormulaArea).bind(ProductOperation::getCustomActionFormula, ProductOperation::setCustomActionFormula);
         binder.forField(customMaterialFormulaArea).bind(ProductOperation::getCustomMaterialFormula, ProductOperation::setCustomMaterialFormula);
@@ -100,6 +103,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 new FormLayout.ResponsiveStep("600px", 6)
         );
 
+        form.add(switchOn, 6);
         form.add(operationComboBox, 6);
         form.add(sequenceField, 2);
         form.add(effectiveWasteFactorField, 2);

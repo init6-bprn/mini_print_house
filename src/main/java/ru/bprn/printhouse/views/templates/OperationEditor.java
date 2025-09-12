@@ -28,7 +28,6 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
     private final TextField name = new TextField("Название шаблона:");
     private final Select<TypeOfOperation> typeOfOperationSelect = new Select<>();
-    private final Checkbox switchOn = new Checkbox("Пользователь может отключить эту работу (uncheck - не может)", true);
     private final Checkbox haveMachine = new Checkbox("Есть оборудование (uncheck - нет)", true);
     private final Select<AbstractMachine> machineSelect = new Select<>();
     private final EditableTextArea<Operation> equipmentFormula;
@@ -79,7 +78,6 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
         this.binder.forField(name).bind(Operation::getName, Operation::setName);
         this.binder.forField(typeOfOperationSelect).bind(Operation::getTypeOfOperation, Operation::setTypeOfOperation);
-        this.binder.forField(switchOn).bind(Operation::isSwitchOff, Operation::setSwitchOff);
         this.binder.forField(haveMachine).bind(Operation::isHaveMachine, Operation::setHaveMachine);
         this.binder.forField(machineSelect).bind(Operation::getAbstractMachine, Operation::setAbstractMachine);
         this.binder.forField(haveWorker).bind(Operation::isHaveAction, Operation::setHaveAction);
@@ -149,8 +147,6 @@ public class OperationEditor extends AbstractEditor<Operation> {
         form.setExpandFields(true);
         var row1 = new FormLayout.FormRow();
         row1.add(name, 6);
-        var row1_1 = new FormLayout.FormRow();
-        row1_1.add(switchOn, 6);
         var row2 = new FormLayout.FormRow();
         row2.add(typeOfOperationSelect,6);
         var row3 = new FormLayout.FormRow();
@@ -165,7 +161,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
         var row8 = new FormLayout.FormRow();
         row8.add(mapEditorView, 6);
 
-        form.add(row1, row1_1, row2, row3, equipmentFormula, row5, workerFormula, row6, materialFormula, row8);
+        form.add(row1, row2, row3, equipmentFormula, row5, workerFormula, row6, materialFormula, row8);
         form.setExpandColumns(true);
         form.setWidthFull();
 

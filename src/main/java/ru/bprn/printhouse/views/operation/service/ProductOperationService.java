@@ -31,4 +31,26 @@ public class ProductOperationService {
         productOperationRepository.delete(productOperation);
     }
 
+    public Optional<ProductOperation> duplicate(ProductOperation original) {
+        if (original == null) {
+            return Optional.empty();
+        }
+
+        ProductOperation copy = new ProductOperation();
+
+        copy.setOperation(original.getOperation());
+        copy.setSequence(original.getSequence());
+        copy.setEffectiveWasteFactor(original.getEffectiveWasteFactor());
+        copy.setSelectedMaterial(original.getSelectedMaterial());
+        copy.setCustomMachineTimeFormula(original.getCustomMachineTimeFormula());
+        copy.setCustomActionFormula(original.getCustomActionFormula());
+        copy.setCustomMaterialFormula(original.getCustomMaterialFormula());
+        copy.setCustomVariables(new java.util.ArrayList<>(original.getCustomVariables()));
+        copy.setProduct(original.getProduct());
+        copy.setSwitchOff(original.isSwitchOff());
+
+        return Optional.of(productOperationRepository.save(copy));
+    }
+
 }
+
