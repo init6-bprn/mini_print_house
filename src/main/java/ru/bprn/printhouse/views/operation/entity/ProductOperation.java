@@ -6,15 +6,12 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
-import ru.bprn.printhouse.views.templates.ProductOperationEditor;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -43,8 +40,6 @@ public class ProductOperation {
 
         @ManyToOne(fetch = FetchType.EAGER) // Выбранный материал для этой операции
         private AbstractMaterials selectedMaterial;
-
-        private Set<AbstractMaterials> alternativeMaterials = new HashSet<>();
 
         @Lob
         private String customMachineTimeFormula; // Если нужно переопределить формулу из Operation

@@ -8,9 +8,10 @@ import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface OperationRepository extends JpaRepository<Operation, Long> {
+public interface OperationRepository extends JpaRepository<Operation, UUID> {
     List<Operation> findAllByTypeOfOperation(TypeOfOperation type);
 
     @Query("select c from Operation c where lower(c.name) like lower(concat('%', :searchTerm, '%'))")
