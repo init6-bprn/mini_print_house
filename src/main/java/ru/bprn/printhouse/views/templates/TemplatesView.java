@@ -86,16 +86,12 @@ public class TemplatesView extends SplitLayout {
     private MenuItem moveUpItem;
     private MenuItem moveDownItem;
 
-    private MenuItem moveUpItem;
-    private MenuItem moveDownItem;
-
     public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
                          OperationService operationService, PrintSheetsMaterialService printSheetsMaterialService,
                          FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService,
                          StandartSizeService standartSizeService, TemplatesMenuItemService menuItemService, TypeOfOperationService typeOfOperationService,
                          AbstractMaterialService abstractMaterialService){
-                         StandartSizeService standartSizeService, TemplatesMenuItemService menuItemService, TypeOfOperationService typeOfOperationService,
-                         AbstractMaterialService abstractMaterialService){
+
 
         this.templatesService = templatesService;
         this.abstractProductService = abstractProductService;
@@ -105,8 +101,7 @@ public class TemplatesView extends SplitLayout {
 
         this.universalEditorFactory = new UniversalEditorFactory(
                 printSheetsMaterialService, formulasService, variablesForMainWorksService, standartSizeService, typeOfOperationService, abstractMaterialService, operationService);
-                printSheetsMaterialService, formulasService, variablesForMainWorksService, standartSizeService, typeOfOperationService, abstractMaterialService, operationService);
-
+                
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);
 
@@ -117,7 +112,6 @@ public class TemplatesView extends SplitLayout {
                 switch (obj) {
                     case Templates templates -> parent = null;
                     case AbstractProductType product -> parent = treeGrid.getTreeData().getParent(product);
-                    case ProductOperation productOperation -> parent  = treeGrid.getTreeData().getParent(productOperation);
                     case ProductOperation productOperation -> parent  = treeGrid.getTreeData().getParent(productOperation);
                     default -> parent = null;
                 }
@@ -168,10 +162,6 @@ public class TemplatesView extends SplitLayout {
                     label.getStyle().set("color", "green");
                     yield new HorizontalLayout(icon, label);
                 }
-                case ProductOperation po -> {
-                    Icon icon = VaadinIcon.COG_O.create();
-                    // ProductOperation не имеет своего имени, берем его из связанной Operation
-                    Span label = new Span(po.getOperation().getName());
                 case ProductOperation po -> {
                     Icon icon = VaadinIcon.COG_O.create();
                     // ProductOperation не имеет своего имени, берем его из связанной Operation
@@ -248,14 +238,6 @@ public class TemplatesView extends SplitLayout {
                 if (this.getSecondaryComponent() != null) this.remove(this.getSecondaryComponent());
             }
             updateButtonStates(selectedRow);
-
-            if (selectedRow != null) {
-                AbstractEditor<?> editor = universalEditorFactory.createEditor(selectedRow, this::save);
-                addEditor(editor);
-            } else {
-                // Если ничего не выбрано, очищаем правую панель
-                if (this.getSecondaryComponent() != null) this.remove(this.getSecondaryComponent());
-            }
         });
 
         hlay.add(vl);
@@ -273,19 +255,6 @@ public class TemplatesView extends SplitLayout {
         var components = createSubMenu.addItem("Создать новый компонент");
         addComponentsToSubMenu(components.getSubMenu(), "product");
 
-        var operations = createSubMenu.addItem("Добавить операцию в продукт", e -> {
-            if (currentProductType == null) {
-                Notification.show("Сначала выберите продукт в дереве");
-            }
-        });
-        operations.setEnabled(false); // Активируется при выборе продукта
-        treeGrid.addSelectionListener(event -> {
-            Object selectedItem = event.getFirstSelectedItem().orElse(null);
-            operations.setEnabled(selectedItem instanceof AbstractProductType);
-            updateButtonStates(selectedItem);
-        });
-
-        addOperationTemplatesToSubMenu(operations.getSubMenu());
         var operations = createSubMenu.addItem("Добавить операцию в продукт", e -> {
             if (currentProductType == null) {
                 Notification.show("Сначала выберите продукт в дереве");
@@ -323,20 +292,12 @@ public class TemplatesView extends SplitLayout {
                     }
                     case ProductOperation productOperation when obj instanceof AbstractProductType -> {
                         paste(objToCopy, productOperation.getProduct()); // Вставляем в тот же продукт
-                    case ProductOperation productOperation when obj instanceof AbstractProductType -> {
-                        paste(objToCopy, productOperation.getProduct()); // Вставляем в тот же продукт
                         objToCopy = null;
                     }
                     case null, default -> Notification.show("Выберите правильный элемент для вставки скопированного");
                 }
             }
         });
-
-        moveUpItem = menuBar.addItem(VaadinIcon.ARROW_UP.create(), "Выше", e -> moveSelectedItem(true));
-        moveDownItem = menuBar.addItem(VaadinIcon.ARROW_DOWN.create(), "Ниже", e -> moveSelectedItem(false));
-
-        moveUpItem.setEnabled(false);
-        moveDownItem.setEnabled(false);
 
         moveUpItem = menuBar.addItem(VaadinIcon.ARROW_UP.create(), "Выше", e -> moveSelectedItem(true));
         moveDownItem = menuBar.addItem(VaadinIcon.ARROW_DOWN.create(), "Ниже", e -> moveSelectedItem(false));
@@ -360,21 +321,6 @@ public class TemplatesView extends SplitLayout {
             for (TemplatesMenuItem item : list) {
                 Object obj = EntityFactory.createEntity(item.getClassName());
                 menu.addItem(item.getName(), e-> addEditor(universalEditorFactory.createEditor(obj, this::save)));
-            }
-    }
-
-    private void addOperationTemplatesToSubMenu(SubMenu menu) {
-        List<Operation> operationTemplates = operationService.findAll();
-        if (operationTemplates != null && !operationTemplates.isEmpty())
-            for (Operation opTemplate : operationTemplates) { // Исправлена ошибка: populate() был вне лямбды
-                menu.addItem(opTemplate.getName(), e -> {
-                    ProductOperation newProductOperation = templatesService.addOperationToProduct(currentProductType, opTemplate);                    
-                    // Вместо populate() добавляем элемент напрямую в TreeData
-                    treeGrid.getTreeData().addItem(currentProductType, newProductOperation);
-                    treeGrid.getDataProvider().refreshAll();
-                    // Выбираем новый элемент, что вызовет открытие редактора
-                    treeGrid.select(newProductOperation);
-                });
             }
     }
 
@@ -468,7 +414,6 @@ public class TemplatesView extends SplitLayout {
             switch (obj) {
                 case Templates template-> templatesService.duplicateTemplate(template);
                 case AbstractProductType productType-> templatesService.addProductToTemplate((Templates) parent, templatesService.duplicateProduct(productType));
-                case ProductOperation productOperation -> templatesService.duplicateProductOperation(productOperation);
                 case ProductOperation productOperation -> templatesService.duplicateProductOperation(productOperation);
                 default->{}
             }
