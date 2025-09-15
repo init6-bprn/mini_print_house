@@ -4,6 +4,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -33,7 +34,7 @@ import java.util.function.Consumer;
 public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
 
     // UI Components
-    private final ComboBox<Operation> operationComboBox = new ComboBox<>("Операция");
+    private final H3 header = new H3();
     private final IntegerField sequenceField = new IntegerField("Последовательность");
     private final NumberField effectiveWasteFactorField = new NumberField("Фактор брака");
     private final ComboBox<AbstractMaterials> selectedMaterialComboBox = new ComboBox<>("Выбранный материал");
@@ -59,7 +60,8 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     private final H4 variablesHeader = new H4("Пользовательские переменные");
     private final List<Binder<Variable>> variableBinders = new ArrayList<>();
 
-    public ProductOperationEditor(Consumer<Object> onSave,
+    public ProductOperationEditor(ProductOperation entity,
+                                  Consumer<Object> onSave,
                                   OperationService operationService,
                                   AbstractMaterialService materialService,
                                   FormulasService formulasService,
@@ -71,10 +73,6 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         this.formulasService = formulasService;
         this.variablesForMainWorksService = variablesForMainWorksService;
         this.typeOfOperationService = typeOfOperationService;
-
-        // Initialize ComboBoxes
-        operationComboBox.setItems(operationService.findAll());
-        operationComboBox.setItemLabelGenerator(Operation::getName);
 
         selectedMaterialComboBox.setItems(materialService.findAll());
         selectedMaterialComboBox.setItemLabelGenerator(AbstractMaterials::getName);
@@ -88,7 +86,6 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 formulasService, typeOfOperationService, variablesForMainWorksService);
 
         // Bind fields
-        binder.forField(operationComboBox).bind(ProductOperation::getOperation, ProductOperation::setOperation);
         binder.forField(sequenceField).bind(ProductOperation::getSequence, ProductOperation::setSequence);
         binder.forField(effectiveWasteFactorField).bind(ProductOperation::getEffectiveWasteFactor, ProductOperation::setEffectiveWasteFactor);
         binder.forField(selectedMaterialComboBox).bind(ProductOperation::getSelectedMaterial, ProductOperation::setSelectedMaterial);
@@ -100,6 +97,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         // Add components to the layout
         add(buildForm());
         addButtons();
+        edit(entity);
     }
 
     @Override
@@ -113,14 +111,11 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 new FormLayout.ResponsiveStep("600px", 6)
         );
 
+        form.add(header, 6);
         form.add(switchOffAllowed, 6);
-        form.add(operationComboBox, 6);
-        form.add(sequenceField, 2);
+        // form.add(sequenceField, 2); // Поле sequence не редактируется пользователем
         form.add(effectiveWasteFactorField, 2);
         form.add(selectedMaterialComboBox, 2);
-        form.add(customMachineTimeFormulaArea, 6);
-        form.add(customActionFormulaArea, 6);
-        form.add(customMaterialFormulaArea, 6);
         
         variablesHeader.setVisible(false);
         form.add(variablesHeader, 6);
@@ -132,6 +127,11 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     @Override
     public void edit(ProductOperation entity) {
         super.edit(entity);
+        if (entity != null) {
+            header.setText("Операция: " + entity.getName());
+        } else {
+            header.setText("");
+        }
         populateVariableEditors(entity);
     }
 

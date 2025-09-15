@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -26,8 +27,10 @@ public class ProductOperation {
         @GeneratedValue(strategy = GenerationType.UUID)
         private UUID id;
 
+        private String name;
+
         // Ссылка на вашу справочную Operation
-        @ManyToOne(fetch = FetchType.LAZY)
+        @ManyToOne(fetch = FetchType.EAGER)
         @JoinColumn(name = "operation_id")
         @ToString.Exclude
         private Operation operation;
@@ -61,6 +64,7 @@ public class ProductOperation {
         
         public ProductOperation(Operation operation) {
                 this.operation = operation;
+                this.name = operation.getName();
                 this.sequence = 0; // Default value
                 this.effectiveWasteFactor = 0.0; // Default value
                 this.switchOff = operation.isSwitchOff();
@@ -69,6 +73,23 @@ public class ProductOperation {
                 this.customMaterialFormula = operation.getMaterialFormula();
                 this.selectedMaterial = operation.getDefaultMaterial();
                 this.customVariables = new ArrayList<>(operation.getVariables());
+                // Выполняем глубокое копирование переменных
+                this.customVariables = operation.getVariables().stream()
+                        .map(Variable::new) // Используем конструктор копирования Variable
+                        .collect(Collectors.toList());
+        }
+
+        public ProductOperation(ProductOperation original) {
+                this.operation = original.getOperation(); // Ссылка на тот же шаблон операции
+                this.name = original.getName();
+                this.sequence = original.getSequence();
+                this.effectiveWasteFactor = original.getEffectiveWasteFactor();
+                this.selectedMaterial = original.getSelectedMaterial();
+                this.customMachineTimeFormula = original.getCustomMachineTimeFormula();
+                this.customActionFormula = original.getCustomActionFormula();
+                this.customMaterialFormula = original.getCustomMaterialFormula();
+                this.customVariables = original.getCustomVariables().stream().map(Variable::new).collect(Collectors.toList());
+                this.switchOff = original.isSwitchOff();
         }
 
         // Getters, Setters, etc.

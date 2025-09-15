@@ -4,10 +4,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
+import ru.bprn.printhouse.views.operation.entity.ProductOperation;
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
-import ru.bprn.printhouse.views.operation.entity.Operation;
 
 import java.util.*;
 
@@ -29,12 +30,9 @@ public class AbstractProductType {
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> variables = new HashMap<>();
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE, orphanRemoval = true)
-    @JoinTable(
-            name = "abstract_product_type_operation",
-            joinColumns = @JoinColumn(name = "abstract_product_type_id"),
-            inverseJoinColumns = @JoinColumn(name = "operation_id"))
-    private Set<Operation> operationsSet = new HashSet<>();
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("sequence")
+    private List<ProductOperation> productOperations = new ArrayList<>();
 
     @Override
     public final boolean equals(Object o) {

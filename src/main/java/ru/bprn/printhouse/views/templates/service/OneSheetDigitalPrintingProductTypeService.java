@@ -1,26 +1,25 @@
 package ru.bprn.printhouse.views.templates.service;
 
 import org.springframework.stereotype.Service;
-import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
-import ru.bprn.printhouse.views.operation.service.OperationService;
-import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
+
+import ru.bprn.printhouse.views.operation.entity.ProductOperation;
+import ru.bprn.printhouse.views.operation.service.ProductOperationService;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.repository.OneSheetDigitalPrintingProductTypeRepository;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
 public class OneSheetDigitalPrintingProductTypeService {
     private final OneSheetDigitalPrintingProductTypeRepository repository;
-    private final OperationService operationService;
+    private final ProductOperationService productOperationService;
 
-    public OneSheetDigitalPrintingProductTypeService (OneSheetDigitalPrintingProductTypeRepository repository, OperationService operationService) {
+    public OneSheetDigitalPrintingProductTypeService (OneSheetDigitalPrintingProductTypeRepository repository, ProductOperationService productOperationService) {
 
         this.repository = repository;
-        this.operationService = operationService;
+        this.productOperationService = productOperationService;
     }
 
     public OneSheetDigitalPrintingProductType save(OneSheetDigitalPrintingProductType productType){
@@ -45,15 +44,12 @@ public class OneSheetDigitalPrintingProductTypeService {
         newProduct.setVariables(productType.getVariables());
         newProduct.setMultiplay(productType.isMultiplay());
 
-        /*
-        if (!productType.getOperationsSet().isEmpty()) {
-            Set<Operation> operationSet = new HashSet<>();
-            for (Operation operation : productType.getOperationsSet())
-                this.operationService.duplicate(operation).ifPresent(operationSet::add);  //  <--- косяк здесь
-            newProduct.setOperationsSet(operationSet);   //  <--- косяк здесь и выше
-        }
-
-         */
+        // Дублируем вложенные ProductOperation
+        List<ProductOperation> duplicatedOperations = productType.getProductOperations().stream()
+                .map(productOperationService::duplicate)
+                .peek(newOp -> newOp.setProduct(newProduct)) // Устанавливаем связь с новым продуктом
+                .collect(Collectors.toList());
+        newProduct.setProductOperations(duplicatedOperations);
         return save(newProduct);
     }
 }
