@@ -59,6 +59,20 @@ public class Variable {
         this.show = true; // По умолчанию показываем
     }
 
+    // Конструктор копирования для глубокого копирования
+    public Variable(Variable original) {
+        this.id = UUID.randomUUID(); // Новый ID для новой переменной
+        this.key = original.key;
+        this.value = original.value;
+        this.description = original.description;
+        this.type = original.type;
+        this.show = original.show;
+        this.minValue = original.minValue;
+        this.maxValue = original.maxValue;
+        this.step = original.step;
+        this.pattern = original.pattern;
+    }
+
     @JsonIgnore
     public Object getValueAsObject() {
         if (value == null || value.isBlank()) {

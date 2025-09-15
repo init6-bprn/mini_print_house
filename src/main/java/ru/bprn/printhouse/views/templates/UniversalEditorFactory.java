@@ -5,6 +5,8 @@ import ru.bprn.printhouse.data.service.StandartSizeService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
+import ru.bprn.printhouse.views.operation.entity.ProductOperation;
+import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
@@ -19,10 +21,12 @@ public class UniversalEditorFactory {
     private final StandartSizeService standartSizeService;
     private final TypeOfOperationService typeOfOperationService;
     private final AbstractMaterialService abstractMaterialService;
+    private final OperationService operationService;
 
     public UniversalEditorFactory(PrintSheetsMaterialService printSheetsMaterialService, FormulasService formulasService,
                                   VariablesForMainWorksService variablesForMainWorksService, StandartSizeService standartSizeService,
-                                  TypeOfOperationService typeOfOperationService, AbstractMaterialService abstractMaterialService) {
+                                  TypeOfOperationService typeOfOperationService, AbstractMaterialService abstractMaterialService,
+                                  OperationService operationService) {
         this.printSheetsMaterialService = printSheetsMaterialService;
 
         this.formulasService = formulasService;
@@ -30,6 +34,7 @@ public class UniversalEditorFactory {
         this.standartSizeService = standartSizeService;
         this.typeOfOperationService = typeOfOperationService;
         this.abstractMaterialService = abstractMaterialService;
+        this.operationService = operationService;
     }
 
     public AbstractEditor<?> createEditor(
@@ -38,8 +43,8 @@ public class UniversalEditorFactory {
         return switch (productType) {
             case OneSheetDigitalPrintingProductType product -> new OneSheetDigitalPrintingProductTypeEditor(
                             product, onSave, printSheetsMaterialService, formulasService, variablesForMainWorksService, standartSizeService);
-            //case Operation operation -> new OperationEditor(operation, onSave, typeOfOperationService, abstractMaterialService);
             case Templates template ->  new TemplateEditor(template, onSave);
+            case ProductOperation productOperation -> new ProductOperationEditor(productOperation, onSave, operationService, abstractMaterialService, formulasService, variablesForMainWorksService, typeOfOperationService);
             default -> null;
         };
     }

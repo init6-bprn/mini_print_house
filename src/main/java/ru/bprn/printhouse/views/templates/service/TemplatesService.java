@@ -4,7 +4,9 @@ import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.views.operation.entity.Operation;
+import ru.bprn.printhouse.views.operation.entity.ProductOperation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
+import ru.bprn.printhouse.views.operation.service.ProductOperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.repository.TemplatesRepository;
@@ -17,11 +19,13 @@ public class TemplatesService {
     private final TemplatesRepository repository;
     private final AbstractProductService abstractProductService;
     private final OperationService operationService;
+    private final ProductOperationService productOperationService;
 
-    public TemplatesService (TemplatesRepository repository, AbstractProductService abstractProductService, OperationService operationService) {
+    public TemplatesService (TemplatesRepository repository, AbstractProductService abstractProductService, OperationService operationService, ProductOperationService productOperationService) {
         this.repository = repository;
         this.abstractProductService = abstractProductService;
         this.operationService = operationService;
+        this.productOperationService = productOperationService;
     }
 
     public List<Templates> findAll() {return this.repository.findAll();}
@@ -44,7 +48,7 @@ public class TemplatesService {
         switch (object) {
             case Templates templates-> save(templates);
             case AbstractProductType productType -> addProductToTemplateAndSaveAll(currentTemplate, productType);
-            case Operation operation -> operationService.save(operation);
+            case ProductOperation productOperation ->abstractProductService.saveProductOperation(productOperation);
             default -> s = "Не сохранено";
         }
         return  s;
@@ -60,8 +64,11 @@ public class TemplatesService {
                     save((Templates) parent);
                 }
             }
-            case Operation operation -> {
-                if (parent instanceof AbstractProductType) ((AbstractProductType) parent).getOperationsSet().remove(operation);
+            case ProductOperation productOperation -> {
+                if (parent instanceof AbstractProductType) {
+                    ((AbstractProductType) parent).getProductOperations().remove(productOperation);
+                    abstractProductService.save((AbstractProductType) parent);
+                }
             }
             default -> s ="Не знаю, что удалить!";
         }
@@ -106,7 +113,22 @@ public class TemplatesService {
         }
     }
 
-    public void duplicateOperation(AbstractProductType product, Operation operation) {this.abstractProductService.duplicateOperation(product, operation);}
+    public void duplicateProductOperation(ProductOperation original) {
+        if (original == null || original.getProduct() == null) return;
+        AbstractProductType parentProduct = original.getProduct();
+        ProductOperation newProductOperation = productOperationService.duplicate(original);
+        newProductOperation.setProduct(parentProduct);
+        parentProduct.getProductOperations().add(newProductOperation);
+        abstractProductService.save(parentProduct);
+    }
+
+    public ProductOperation addOperationToProduct(AbstractProductType product, Operation operation) {
+        return this.abstractProductService.addOperationToProduct(product, operation);
+    }
+
+    public void swapProductOperations(ProductOperation productOperation, boolean moveUp) {
+        abstractProductService.swapProductOperations(productOperation, moveUp);
+    }
 
     public TreeDataProvider<Object> populateGrid(String filter) {
         Collection<Templates> collection;
@@ -118,7 +140,10 @@ public class TemplatesService {
         for (Templates obj:collection) {
             data.addItem(null, obj);
             for (AbstractProductType product: obj.getProductTypes()) {
-                if (product != null) data.addItem(obj, product);
+                if (product != null) {
+                    data.addItem(obj, product);
+                    product.getProductOperations().forEach(op -> data.addItem(product, op));
+                }
             }
 
         }
