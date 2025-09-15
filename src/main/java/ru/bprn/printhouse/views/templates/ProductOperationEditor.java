@@ -11,10 +11,10 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.validator.RegexpValidator;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.validator.StringLengthValidator;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
-import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.operation.EditableTextArea;
@@ -44,8 +44,8 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     private final EditableTextArea<ProductOperation> customActionFormulaArea;
     private final EditableTextArea<ProductOperation> customMaterialFormulaArea;
 
-    // Layout for dynamic variable fields
-    private final FormLayout variablesLayout = new FormLayout();
+    // Main form layout
+    private final FormLayout form = new FormLayout();
     
     // Services needed for populating ComboBoxes and EditableTextAreas
     private final OperationService operationService;
@@ -53,6 +53,11 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     private final FormulasService formulasService;
     private final VariablesForMainWorksService variablesForMainWorksService;
     private final TypeOfOperationService typeOfOperationService;
+
+    // List to keep track of dynamically added variable editors
+    private final List<Component> dynamicVariableEditors = new ArrayList<>();
+    private final H4 variablesHeader = new H4("Пользовательские переменные");
+    private final List<Binder<Variable>> variableBinders = new ArrayList<>();
 
     public ProductOperationEditor(Consumer<Object> onSave,
                                   OperationService operationService,
@@ -99,7 +104,6 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
 
     @Override
     protected Component buildForm() {
-        FormLayout form = new FormLayout();
         form.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 1),
                 new FormLayout.ResponsiveStep("120px", 2),
@@ -117,6 +121,9 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         form.add(customMachineTimeFormulaArea, 6);
         form.add(customActionFormulaArea, 6);
         form.add(customMaterialFormulaArea, 6);
+        
+        variablesHeader.setVisible(false);
+        form.add(variablesHeader, 6);
 
         form.setWidthFull();
         return form;
@@ -129,29 +136,28 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     }
 
     private void populateVariableEditors(ProductOperation entity) {
-        // Очищаем layout и основной layout, где он находится
-        variablesLayout.removeAll();
-        remove(variablesLayout);
+        variablesHeader.setVisible(false);
+        variableBinders.clear();
+
+        // Удаляем старые редакторы переменных из формы
+        dynamicVariableEditors.forEach(form::remove);
+        dynamicVariableEditors.clear();
+
 
         List<Variable> variables = (entity != null && entity.getCustomVariables() != null)
                 ? entity.getCustomVariables()
                 : Collections.emptyList();
 
         if (!variables.isEmpty()) {
-            add(new H4("Пользовательские переменные"));
-            variablesLayout.setResponsiveSteps(
-                    new FormLayout.ResponsiveStep("0", 1),
-                    new FormLayout.ResponsiveStep("300px", 2),
-                    new FormLayout.ResponsiveStep("600px", 3)
-            );
-
+            variablesHeader.setVisible(true);
+            // Создаем и добавляем новые редакторы
             for (Variable variable : variables) {
                 Component editor = createEditorForVariable(variable); // Создаем редактор для каждой переменной
                 if (editor != null) {
-                    variablesLayout.add(editor); // И добавляем его в layout
+                    form.add(editor, 2); // Добавляем в основную форму, занимая 2 колонки
+                    dynamicVariableEditors.add(editor); // Сохраняем ссылку для последующей очистки
                 }
             }
-            add(variablesLayout);
         }
     }
 
@@ -161,6 +167,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 : variable.getKey();
 
         Binder<Variable> variableBinder = new Binder<>(Variable.class);
+        variableBinders.add(variableBinder);
         Component valueEditor;
 
         switch (variable.getType()) {
@@ -176,7 +183,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 tryParseInt(variable.getStep()).ifPresent(step -> {
                     if (step > 0) {
                         integerField.setStep(step);
-                        integerField.setHasControls(true); // Показываем кнопки +/-
+                        integerField.setStepButtonsVisible(true); // Показываем кнопки +/-
                     }
                 });
 
@@ -195,7 +202,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 tryParseDouble(variable.getStep()).ifPresent(step -> {
                     if (step > 0) {
                         numberField.setStep(step);
-                        numberField.setHasControls(true); // Показываем кнопки +/-
+                        numberField.setStepButtonsVisible(true); // Показываем кнопки +/-
                     }
                 });
 
@@ -238,6 +245,20 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         return layout;
     }
 
+    @Override
+    protected void save() {
+        // Сначала валидируем и сохраняем все дочерние биндеры
+        for (Binder<Variable> variableBinder : variableBinders) {
+            try {
+                variableBinder.writeBean(variableBinder.getBean());
+            } catch (ValidationException e) {
+                // Если хотя бы одна переменная невалидна, прерываем сохранение
+                return;
+            }
+        }
+        // Если все переменные сохранились в свои бины, сохраняем основной объект
+        super.save();
+    }
     private java.util.Optional<Integer> tryParseInt(String s) {
         if (s == null || s.isBlank()) return java.util.Optional.empty();
         try {
