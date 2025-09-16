@@ -26,15 +26,14 @@ import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
 
     // UI Components
     private final H3 header = new H3();
+    private final TextField nameField = new TextField("Название операции в продукте");
     private final IntegerField sequenceField = new IntegerField("Последовательность");
     private final NumberField effectiveWasteFactorField = new NumberField("Фактор брака");
     private final ComboBox<AbstractMaterials> selectedMaterialComboBox = new ComboBox<>("Выбранный материал");
@@ -86,6 +85,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 formulasService, typeOfOperationService, variablesForMainWorksService);
 
         // Bind fields
+        binder.forField(nameField).bind(ProductOperation::getName, ProductOperation::setName);
         binder.forField(sequenceField).bind(ProductOperation::getSequence, ProductOperation::setSequence);
         binder.forField(effectiveWasteFactorField).bind(ProductOperation::getEffectiveWasteFactor, ProductOperation::setEffectiveWasteFactor);
         binder.forField(selectedMaterialComboBox).bind(ProductOperation::getSelectedMaterial, ProductOperation::setSelectedMaterial);
@@ -102,23 +102,37 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
 
     @Override
     protected Component buildForm() {
-        form.setResponsiveSteps(
+        form.setColumnWidth("6em");
+        form.setResponsiveSteps(List.of(
                 new FormLayout.ResponsiveStep("0", 1),
                 new FormLayout.ResponsiveStep("120px", 2),
                 new FormLayout.ResponsiveStep("240px", 3),
                 new FormLayout.ResponsiveStep("360px", 4),
                 new FormLayout.ResponsiveStep("480px", 5),
                 new FormLayout.ResponsiveStep("600px", 6)
-        );
+        ));
+        form.setAutoResponsive(true);
+        form.setExpandFields(true);
 
-        form.add(header, 6);
-        form.add(switchOffAllowed, 6);
-        // form.add(sequenceField, 2); // Поле sequence не редактируется пользователем
-        form.add(effectiveWasteFactorField, 2);
-        form.add(selectedMaterialComboBox, 2);
-        
+        var headerRow = new FormLayout.FormRow();
+        headerRow.add(header, 6);
+
+        var nameRow = new FormLayout.FormRow();
+        nameRow.add(nameField, 6);
+
+        var switchOffRow = new FormLayout.FormRow();
+        switchOffRow.add(switchOffAllowed, 6);
+
+        var fieldsRow = new FormLayout.FormRow();
+        fieldsRow.add(effectiveWasteFactorField, 3);
+        fieldsRow.add(selectedMaterialComboBox, 3);
+
+        var variablesHeaderRow = new FormLayout.FormRow();
         variablesHeader.setVisible(false);
-        form.add(variablesHeader, 6);
+        variablesHeaderRow.add(variablesHeader, 6);
+
+        form.add(headerRow, nameRow, switchOffRow, fieldsRow, variablesHeaderRow);
+        form.setExpandColumns(true);
 
         form.setWidthFull();
         return form;
@@ -128,7 +142,10 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     public void edit(ProductOperation entity) {
         super.edit(entity);
         if (entity != null) {
-            header.setText("Операция: " + entity.getName());
+            String operationName = entity.getOperation() != null ? entity.getOperation().getName() : "";
+            String productOperationName = entity.getName() != null && !entity.getName().isBlank()
+                    ? " - " + entity.getName() : "";
+            header.setText("Операция: " + operationName + productOperationName);
         } else {
             header.setText("");
         }
@@ -140,7 +157,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         variableBinders.clear();
 
         // Удаляем старые редакторы переменных из формы
-        dynamicVariableEditors.forEach(form::remove);
+        dynamicVariableEditors.forEach(form::remove); // dynamicVariableEditors теперь хранит FormRow
         dynamicVariableEditors.clear();
 
 
@@ -151,12 +168,21 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         if (!variables.isEmpty()) {
             variablesHeader.setVisible(true);
             // Создаем и добавляем новые редакторы
-            for (Variable variable : variables) {
-                Component editor = createEditorForVariable(variable); // Создаем редактор для каждой переменной
-                if (editor != null) {
-                    form.add(editor, 2); // Добавляем в основную форму, занимая 2 колонки
-                    dynamicVariableEditors.add(editor); // Сохраняем ссылку для последующей очистки
-                }
+            for (Variable variable : variables) { // Создаем редактор для каждой переменной
+                Component valueEditor = createEditorForVariable(variable);
+
+                Checkbox showCheckbox = new Checkbox("Показывать");
+                showCheckbox.setTooltipText("Разрешить пользователю изменять эту переменную в карточке продукта");
+                showCheckbox.setValue(variable.isShow());
+                showCheckbox.addValueChangeListener(event -> variable.setShow(event.getValue()));
+
+                var variableRow = new FormLayout.FormRow();
+                variableRow.add(valueEditor, 3);
+                variableRow.add(showCheckbox, 3);
+                //variableRow.setVerticalComponentAlignment(Alignment.BASELINE, valueEditor, showCheckbox);
+
+                form.add(variableRow);
+                dynamicVariableEditors.add(variableRow); // Сохраняем ссылку на FormRow для последующей очистки
             }
         }
     }
@@ -234,15 +260,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         }
         variableBinder.setBean(variable);
 
-        // Чекбокс для управления свойством 'show'
-        Checkbox showCheckbox = new Checkbox("Показывать");
-        showCheckbox.setTooltipText("Разрешить пользователю изменять эту переменную в карточке продукта");
-        showCheckbox.setValue(variable.isShow());
-        showCheckbox.addValueChangeListener(event -> variable.setShow(event.getValue()));
-
-        HorizontalLayout layout = new HorizontalLayout(valueEditor, showCheckbox);
-        layout.setAlignItems(Alignment.BASELINE);
-        return layout;
+        return valueEditor;
     }
 
     @Override
@@ -268,7 +286,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         }
     }
 
-    private java.util.Optional<Double> tryParseDouble(String s) {
+    private Optional<Double> tryParseDouble(String s) {
         if (s == null || s.isBlank()) return java.util.Optional.empty();
         try {
             // Использование NumberFormat для учета локали (точка или запятая)

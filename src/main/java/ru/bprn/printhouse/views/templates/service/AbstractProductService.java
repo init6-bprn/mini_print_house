@@ -57,11 +57,11 @@ public class AbstractProductService {
         product.getProductOperations().add(newProductOperation);
         // Сохраняем родителя, чтобы сработал Cascade.ALL
         AbstractProductType savedProduct = abstractProductTypeRepository.save(product);
-        // Находим и возвращаем сохраненный экземпляр по его ID
+        // Находим и возвращаем сохраненный экземпляр.
+        // Так как мы добавляем операцию в конец, у нее будет самый большой sequence.
         return savedProduct.getProductOperations().stream()
-                .filter(op -> op.getId().equals(newProductOperation.getId()))
-                .findFirst()
-                .orElse(null);
+                .max(java.util.Comparator.comparing(ProductOperation::getSequence))
+                .orElse(null); // В теории, этого никогда не должно произойти, если список не пуст
     }
 
     public ProductOperation saveProductOperation(ProductOperation productOperation) {

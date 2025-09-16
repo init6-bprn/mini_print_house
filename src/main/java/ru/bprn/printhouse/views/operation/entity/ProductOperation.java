@@ -64,7 +64,7 @@ public class ProductOperation {
         
         public ProductOperation(Operation operation) {
                 this.operation = operation;
-                this.name = operation.getName();
+                this.name = ""; // Изначально имя пустое, чтобы пользователь задал его в редакторе
                 this.sequence = 0; // Default value
                 this.effectiveWasteFactor = 0.0; // Default value
                 this.switchOff = operation.isSwitchOff();

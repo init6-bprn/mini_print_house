@@ -113,13 +113,17 @@ public class TemplatesService {
         }
     }
 
-    public void duplicateProductOperation(ProductOperation original) {
-        if (original == null || original.getProduct() == null) return;
-        AbstractProductType parentProduct = original.getProduct();
+    public ProductOperation duplicateProductOperation(AbstractProductType parentProduct, ProductOperation original) {
+        if (original == null || original.getProduct() == null) return null;
         ProductOperation newProductOperation = productOperationService.duplicate(original);
         newProductOperation.setProduct(parentProduct);
+        // Устанавливаем sequence как следующий по порядку в списке родителя
+        newProductOperation.setSequence(parentProduct.getProductOperations().size());
         parentProduct.getProductOperations().add(newProductOperation);
-        abstractProductService.save(parentProduct);
+        AbstractProductType savedParent = abstractProductService.save(parentProduct);
+        return savedParent.getProductOperations().stream()
+                .max(java.util.Comparator.comparing(ProductOperation::getSequence))
+                .orElse(null);
     }
 
     public ProductOperation addOperationToProduct(AbstractProductType product, Operation operation) {

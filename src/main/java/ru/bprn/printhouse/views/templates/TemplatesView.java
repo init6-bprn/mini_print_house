@@ -35,6 +35,7 @@ import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
+import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
@@ -44,7 +45,10 @@ import ru.bprn.printhouse.views.templates.service.TemplatesMenuItemService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @PageTitle("Редактирование шаблонов")
 @Route(value = "templates", layout = MainLayout.class)
@@ -150,12 +154,15 @@ public class TemplatesView extends SplitLayout {
                     yield new HorizontalLayout(icon, label);
                 }
                 case ProductOperation po -> {
-                    Icon icon = VaadinIcon.COG_O.create();
-                    // ProductOperation не имеет своего имени, берем его из связанной Operation
-                    Span label = new Span(po.getOperation().getName());
+                    Icon icon;
+                    if (po.isSwitchOff()) {
+                        icon = VaadinIcon.BAN.create();
+                        icon.setColor("gray");
+                    } else {
+                        icon = VaadinIcon.COG_O.create();
+                    }
+                    Span label = new Span(po.getOperation().getName()+" - "+ po.getName());
                     label.getStyle().set("color", "darkred");
-                    if (po.isSwitchOff()) label.getStyle().set("text-decoration", "line-through");
-                    if (po.isSwitchOff()) label.getStyle().set("text-decoration", "line-through");
                     yield new HorizontalLayout(icon, label);
                 }
                 default -> {
@@ -278,7 +285,7 @@ public class TemplatesView extends SplitLayout {
                         objToCopy = null;
                     }
                     case ProductOperation productOperation when obj instanceof AbstractProductType -> {
-                        paste(objToCopy, productOperation.getProduct()); // Вставляем в тот же продукт
+                        paste(objToCopy, obj);
                         objToCopy = null;
                     }
                     case null, default -> Notification.show("Выберите правильный элемент для вставки скопированного");
@@ -313,17 +320,53 @@ public class TemplatesView extends SplitLayout {
 
     private void addOperationTemplatesToSubMenu(SubMenu menu) {
         List<Operation> operationTemplates = operationService.findAll();
-        if (operationTemplates != null && !operationTemplates.isEmpty())
-            for (Operation opTemplate : operationTemplates) { // Исправлена ошибка: populate() был вне лямбды
-                menu.addItem(opTemplate.getName(), e -> {
-                    ProductOperation newProductOperation = templatesService.addOperationToProduct(currentProductType, opTemplate);                    
-                    // Вместо populate() добавляем элемент напрямую в TreeData
-                    treeGrid.getTreeData().addItem(currentProductType, newProductOperation);
-                    treeGrid.getDataProvider().refreshAll();
-                    // Выбираем новый элемент, что вызовет открытие редактора
-                    treeGrid.select(newProductOperation);
+        if (operationTemplates == null || operationTemplates.isEmpty()) {
+            return;
+        }
+
+        // Группируем операции по их типу
+        Map<TypeOfOperation, List<Operation>> groupedOperations = operationTemplates.stream()
+                .filter(op -> op.getTypeOfOperation() != null)
+                .collect(Collectors.groupingBy(Operation::getTypeOfOperation));
+
+        // Создаем подменю для каждого типа, отсортировав их по имени
+        groupedOperations.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey(Comparator.comparing(TypeOfOperation::getName)))
+                .forEach(entry -> {
+                    TypeOfOperation type = entry.getKey();
+                    List<Operation> opsForType = entry.getValue();
+
+                    MenuItem typeMenuItem = menu.addItem(type.getName());
+                    SubMenu typeSubMenu = typeMenuItem.getSubMenu();
+
+                    // Добавляем операции в подменю их типа
+                    opsForType.stream()
+                            .sorted(Comparator.comparing(Operation::getName))
+                            .forEach(opTemplate -> addOperationToMenu(typeSubMenu, opTemplate));
                 });
-            }
+
+        // Обрабатываем операции без назначенного типа
+        List<Operation> operationsWithoutType = operationTemplates.stream()
+                .filter(op -> op.getTypeOfOperation() == null)
+                .sorted(Comparator.comparing(Operation::getName))
+                .toList();
+
+        if (!operationsWithoutType.isEmpty()) {
+            if (!groupedOperations.isEmpty()) menu.addSeparator();
+            MenuItem othersMenuItem = menu.addItem("Прочие");
+            SubMenu othersSubMenu = othersMenuItem.getSubMenu();
+            operationsWithoutType.forEach(opTemplate -> addOperationToMenu(othersSubMenu, opTemplate));
+        }
+    }
+
+    private void addOperationToMenu(SubMenu menu, Operation opTemplate) {
+        menu.addItem(opTemplate.getName(), e -> {
+            ProductOperation newProductOperation = templatesService.addOperationToProduct(currentProductType, opTemplate);
+            treeGrid.getTreeData().addItem(currentProductType, newProductOperation);
+            treeGrid.getDataProvider().refreshItem(currentProductType, true);
+            // Выбираем новый элемент, что вызовет открытие редактора
+            treeGrid.select(newProductOperation);
+        });
     }
 
     private void setCurrent(Object select) {
@@ -400,13 +443,19 @@ public class TemplatesView extends SplitLayout {
         if (obj!=null){
             switch (obj) {
                 case Templates template-> templatesService.duplicateTemplate(template);
-                case AbstractProductType productType-> templatesService.addProductToTemplate((Templates) parent, templatesService.duplicateProduct(productType));
-                case ProductOperation productOperation -> templatesService.duplicateProductOperation(productOperation);
+                case AbstractProductType productType -> templatesService.addProductToTemplate((Templates) parent, templatesService.duplicateProduct(productType));
+                case ProductOperation productOperation -> {
+                    ProductOperation newOperation = templatesService.duplicateProductOperation((AbstractProductType) parent, productOperation);
+                    if (newOperation != null) {
+                        treeGrid.getTreeData().addItem(parent, newOperation);
+                        treeGrid.getDataProvider().refreshItem(parent, true);
+                        treeGrid.select(newOperation);
+                    }
+                    return; // Возвращаемся, чтобы не вызывать populate() ниже
+                }
                 default->{}
             }
             populate(filterField.getValue().trim());
-            treeGrid.asSingleSelect().setValue(obj);
-            treeGrid.expand(obj);
         }
         else Notification.show("Сначала выделите какой-либо элемент таблицы");
     }
