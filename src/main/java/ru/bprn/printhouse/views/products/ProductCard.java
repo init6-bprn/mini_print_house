@@ -15,7 +15,7 @@ import ru.bprn.printhouse.views.templates.entity.Templates;
 public class ProductCard extends VerticalLayout {
 
     public ProductCard(Templates template) {
-        setWidth("300px");
+        setWidth("340px");
         getStyle()
                 .set("border", "1px solid var(--lumo-contrast-20pct)")
                 .set("border-radius", "var(--lumo-border-radius-m)")
@@ -35,7 +35,7 @@ public class ProductCard extends VerticalLayout {
 
         // 4. Блок быстрого заказа
         IntegerField quantityField = new IntegerField();
-        quantityField.setWidth("9em");
+        quantityField.setWidth("50%");
         quantityField.setPlaceholder("Тираж");
         quantityField.setValue(template.getQuantity()); // Тираж по умолчанию из шаблона
         quantityField.setStepButtonsVisible(true);
@@ -43,7 +43,8 @@ public class ProductCard extends VerticalLayout {
         quantityField.setMax(template.getMaxQuantity());
         quantityField.setStep(template.getStep());
 
-        Button addToCartButton = new Button("В корзину", VaadinIcon.CART.create());
+        Button addToCartButton = new Button("Купить", VaadinIcon.CART.create());
+        addToCartButton.setWidth("45%");
         addToCartButton.addClickListener(e -> {
             // Здесь будет логика добавления в корзину с конфигурацией по умолчанию
             Notification.show(String.format("Добавлено в корзину: %s, %d шт.", template.getName(), quantityField.getValue()));

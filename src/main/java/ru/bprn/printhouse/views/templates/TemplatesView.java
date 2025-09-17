@@ -426,42 +426,83 @@ public class TemplatesView extends SplitLayout {
     }
 
     private void save(Object object) {
+        boolean isNew = !treeGrid.getTreeData().contains(object);
         var note = templatesService.save(object, currentTemplate);
         Notification.show(note);
-        populate(filterField.getValue().trim());
-        treeGrid.asSingleSelect().setValue(selectedRow);
+
+        if (isNew) {
+            Object parentToRefresh = null;
+            if (object instanceof AbstractProductType) {
+                parentToRefresh = currentTemplate;
+            } else if (object instanceof ProductOperation) {
+                parentToRefresh = currentProductType;
+            }
+            treeGrid.getTreeData().addItem(parentToRefresh, object);
+            refreshAndSelect(object, parentToRefresh);
+        } else {
+            // Это обновление существующего элемента
+            refreshAndSelect(object, treeGrid.getTreeData().getParent(object));
+        }
     }
 
 
     private void deleteElement(Object object, Object parent){
         var note = templatesService.delete(object, parent);
         Notification.show(note);
-        populate(filterField.getValue().trim());
+        treeGrid.getTreeData().removeItem(object);
+        refreshAndSelect(null, parent);
     }
 
     private void paste(Object obj, Object parent) {
         if (obj!=null){
             switch (obj) {
-                case Templates template-> templatesService.duplicateTemplate(template);
-                case AbstractProductType productType -> templatesService.addProductToTemplate((Templates) parent, templatesService.duplicateProduct(productType));
+                case Templates template-> {
+                    Templates newTemplate = templatesService.duplicateTemplate(template); // Предполагается, что этот метод делает глубокую копию
+                    addHierarchicalItemToTreeData(null, newTemplate);
+                    refreshAndSelect(newTemplate, null);
+                }
+                case AbstractProductType productType -> {
+                    AbstractProductType newProduct = templatesService.duplicateProduct(productType); // Предполагается, что этот метод делает глубокую копию
+                    templatesService.addProductToTemplate((Templates) parent, newProduct);
+                    addHierarchicalItemToTreeData(parent, newProduct);
+                    refreshAndSelect(newProduct, parent);
+                }
                 case ProductOperation productOperation -> {
                     ProductOperation newOperation = templatesService.duplicateProductOperation((AbstractProductType) parent, productOperation);
                     if (newOperation != null) {
                         treeGrid.getTreeData().addItem(parent, newOperation);
-                        treeGrid.getDataProvider().refreshItem(parent, true);
-                        treeGrid.select(newOperation);
+                        refreshAndSelect(newOperation, parent);
                     }
-                    return; // Возвращаемся, чтобы не вызывать populate() ниже
                 }
                 default->{}
             }
-            populate(filterField.getValue().trim());
         }
         else Notification.show("Сначала выделите какой-либо элемент таблицы");
     }
 
+    private void addHierarchicalItemToTreeData(Object parent, Object item) {
+        treeGrid.getTreeData().addItem(parent, item);
+        if (item instanceof Templates template && template.getProductTypes() != null) {
+            template.getProductTypes().forEach(product -> addHierarchicalItemToTreeData(template, product));
+        } else if (item instanceof AbstractProductType productType && productType.getProductOperations() != null) {
+            productType.getProductOperations().forEach(op -> addHierarchicalItemToTreeData(productType, op));
+        }
+    }
+
     private void populate(String filter) {
         treeGrid.setDataProvider(templatesService.populateGrid(filter));
+    }
+
+    private void refreshAndSelect(Object itemToSelect, Object parentToRefresh) {
+        if (parentToRefresh != null) {
+            treeGrid.getDataProvider().refreshItem(parentToRefresh, true);
+        } else {
+            // Если родителя нет, значит, изменился корневой элемент. Обновляем всё дерево.
+            treeGrid.getDataProvider().refreshAll();
+        }
+        if (itemToSelect != null) {
+            treeGrid.select(itemToSelect);
+        }
     }
 
     public static class EntityFactory {

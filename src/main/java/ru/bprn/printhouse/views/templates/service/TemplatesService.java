@@ -82,9 +82,14 @@ public class TemplatesService {
             this.save(temp);
         }
     }
-
+/* 
     public void duplicateTemplate(Templates template){
-        var newTemplate = new Templates();
+        duplicateTemplate(template);
+    }
+    */
+
+    public Templates duplicateTemplate(Templates template) {
+                var newTemplate = new Templates();
         newTemplate.setDescription(template.getDescription());
         newTemplate.setName(template.getName()+" - Дубликат");
         newTemplate.setMaxQuantity(template.getMaxQuantity());
@@ -98,6 +103,7 @@ public class TemplatesService {
         }
         newTemplate.setProductTypes(set);
         this.save(newTemplate);
+        return newTemplate;
     }
 
     public AbstractProductType duplicateProduct(AbstractProductType productType) {return this.abstractProductService.duplicateProductType(productType);}
