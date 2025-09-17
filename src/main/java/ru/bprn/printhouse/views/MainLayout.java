@@ -31,7 +31,7 @@ import ru.bprn.printhouse.views.material.PrintSheetMaterialView;
 import ru.bprn.printhouse.views.material.PrintingMaterialView;
 import ru.bprn.printhouse.views.operation.OperationView;
 import ru.bprn.printhouse.views.operation.TypeOfOperationView;
-import ru.bprn.printhouse.views.products.ProductsView;
+import ru.bprn.printhouse.views.products.ProductCatalogView;
 import ru.bprn.printhouse.views.templates.TemplatesView;
 import ru.bprn.printhouse.views.templates.WorkFlowView;
 
@@ -125,7 +125,7 @@ public class MainLayout extends AppLayout {
         }
 
         SideNavItem productsSection = new SideNavItem("Продукты");
-        addNavItemIfAccessible(productsSection, "Products", ProductsView.class, LineAwesomeIcon.GLOBE_SOLID.create());
+        addNavItemIfAccessible(productsSection, "Каталог продукции", ProductCatalogView.class, LineAwesomeIcon.BOOK_SOLID.create());
         if (productsSection.getItems().stream().findAny().isPresent()) {
             nav.addItem(productsSection);
         }

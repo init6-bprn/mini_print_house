@@ -18,6 +18,7 @@ public class TemplateEditor extends AbstractEditor<Templates> {
     private final IntegerField minQuantity = new IntegerField("Минимальный тираж");
     private final IntegerField maxQuantity = new IntegerField("Максимальный тираж");
     private final IntegerField step = new IntegerField("Шаг тиража, кратно:");
+    private final IntegerField quantityField = new IntegerField("Тираж по умолчанию");
     private final Checkbox checkbox = new Checkbox("Математическое округление (uncheck - округление в большую)", true);
 
     public TemplateEditor(Templates templates, Consumer<Object> onSave){
@@ -31,6 +32,7 @@ public class TemplateEditor extends AbstractEditor<Templates> {
         this.binder.bind(description, Templates::getDescription, Templates::setDescription);
         this.binder.forField(minQuantity).bind(Templates::getMinQuantity, Templates::setMinQuantity);
         this.binder.forField(maxQuantity).bind(Templates::getMaxQuantity, Templates::setMaxQuantity);
+        this.binder.forField(quantityField).bind(Templates::getQuantity, Templates::setQuantity);
         this.binder.forField(step).bind(Templates::getStep, Templates::setStep);
         this.binder.forField(checkbox).bind(Templates::isRoundForMath, Templates::setRoundForMath);
 
@@ -59,7 +61,7 @@ public class TemplateEditor extends AbstractEditor<Templates> {
         var row2 = new FormLayout.FormRow();
         row2.add(description, 6);
         var row3 = new FormLayout.FormRow();
-        row3.add(minQuantity, maxQuantity, step);
+        row3.add(quantityField, minQuantity, maxQuantity, step);
         var row4 = new FormLayout.FormRow();
         row4.add(checkbox, 6);
         form.add(row1, row2, row3, row4);

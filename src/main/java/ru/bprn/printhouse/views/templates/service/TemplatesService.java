@@ -154,4 +154,12 @@ public class TemplatesService {
         return new TreeDataProvider<>(data);
     }
 
+    public List<Templates> findAllTemplates(String stringFilter) {
+        if (stringFilter == null || stringFilter.isEmpty()) {
+            return repository.findAll();
+        } else {
+            return repository.searchList(stringFilter);
+        }
+    }
+
 }

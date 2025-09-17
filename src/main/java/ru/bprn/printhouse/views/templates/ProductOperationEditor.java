@@ -171,9 +171,10 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
             for (Variable variable : variables) { // Создаем редактор для каждой переменной
                 Component valueEditor = createEditorForVariable(variable);
 
-                Checkbox showCheckbox = new Checkbox("Показывать");
+                Checkbox showCheckbox = new Checkbox("Показывать в карточке продукта?");
                 showCheckbox.setTooltipText("Разрешить пользователю изменять эту переменную в карточке продукта");
                 showCheckbox.setValue(variable.isShow());
+                showCheckbox.getElement().getStyle().set("align-self", "baseline");
                 showCheckbox.addValueChangeListener(event -> variable.setShow(event.getValue()));
 
                 var variableRow = new FormLayout.FormRow();
@@ -243,7 +244,6 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
             default: // STRING
                 TextField textField = new TextField(label);
                 var stringBinding = variableBinder.forField(textField);
-
                 stringBinding.withValidator(new StringLengthValidator(
                         "Длина строки не соответствует ограничениям",
                         tryParseInt(variable.getMinValue()).orElse(null),
@@ -259,6 +259,8 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 break;
         }
         variableBinder.setBean(variable);
+
+        valueEditor.getElement().getStyle().set("align-self", "baseline");
 
         return valueEditor;
     }
