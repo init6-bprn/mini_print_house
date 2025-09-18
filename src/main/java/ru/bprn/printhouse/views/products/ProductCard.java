@@ -10,6 +10,7 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
+import ru.bprn.printhouse.views.products.ProductConfiguratorDialog;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 
 public class ProductCard extends VerticalLayout {
@@ -59,8 +60,8 @@ public class ProductCard extends VerticalLayout {
         configureButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
         configureButton.setWidthFull();
         configureButton.addClickListener(e -> {
-            // Здесь будет открываться ProductConfiguratorDialog
-            Notification.show("Открывается конфигуратор для: " + template.getName());
+            ProductConfiguratorDialog dialog = new ProductConfiguratorDialog(template);
+            dialog.open();
         });
 
         add(productImage, name, description, quickOrderLayout, configureButton);

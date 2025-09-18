@@ -61,6 +61,13 @@ public class Operation implements HasMateria {
     private String materialFormula = "";
     private boolean haveMaterial = true;
 
+    @Lob
+    private String operationWasteFormula = ""; // брак операции
+
+    @Lob
+    private String setupWasteFormula = ""; // приладка
+
+
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Variable> variables = new LinkedList<>();
 

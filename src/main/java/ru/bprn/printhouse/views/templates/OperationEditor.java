@@ -37,6 +37,9 @@ public class OperationEditor extends AbstractEditor<Operation> {
     private final Select<AbstractMaterials> defaultMaterial = new Select<>("Материал по умолчанию", e->{});
     private final MultiSelectComboBox<AbstractMaterials> selectedMaterials = new MultiSelectComboBox<>("Выбранные материалы");
     private final EditableTextArea<Operation> materialFormula;
+    private final EditableTextArea<Operation> operationWasteFormula;
+    private final EditableTextArea<Operation> setupWasteFormula;
+
     private final MapEditorView mapEditorView;
 
 
@@ -63,6 +66,12 @@ public class OperationEditor extends AbstractEditor<Operation> {
         materialFormula = new EditableTextArea<>("Формула расчета количества расходных материалов",
                 formulasService, typeOfOperationService, variablesForMainWorksService);
 
+        operationWasteFormula = new EditableTextArea<>("Формула брака операции (в листах)",
+                formulasService, typeOfOperationService, variablesForMainWorksService);
+
+        setupWasteFormula = new EditableTextArea<>("Формула приладки (в листах)",
+                formulasService, typeOfOperationService, variablesForMainWorksService);
+
         selectedMaterials.setItems(materialService.findAll());
         selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
 
@@ -87,6 +96,8 @@ public class OperationEditor extends AbstractEditor<Operation> {
         this.binder.forField(equipmentFormula).bind(Operation::getMachineTimeFormula, Operation::setMachineTimeFormula);
         this.binder.forField(workerFormula).bind(Operation::getActionFormula, Operation::setActionFormula);
         this.binder.forField(materialFormula).bind(Operation::getMaterialFormula, Operation::setMaterialFormula);
+        this.binder.forField(operationWasteFormula).bind(Operation::getOperationWasteFormula, Operation::setOperationWasteFormula);
+        this.binder.forField(setupWasteFormula).bind(Operation::getSetupWasteFormula, Operation::setSetupWasteFormula);
 
         selectedMaterials.addValueChangeListener(event -> {
             Set<AbstractMaterials> selected = event.getValue();
@@ -161,7 +172,8 @@ public class OperationEditor extends AbstractEditor<Operation> {
         var row8 = new FormLayout.FormRow();
         row8.add(mapEditorView, 6);
 
-        form.add(row1, row2, row3, equipmentFormula, row5, workerFormula, row6, materialFormula, row8);
+        form.add(row1, row2, row3, equipmentFormula, row5, workerFormula, row6, materialFormula,
+                operationWasteFormula, setupWasteFormula, row8);
         form.setExpandColumns(true);
         form.setWidthFull();
 

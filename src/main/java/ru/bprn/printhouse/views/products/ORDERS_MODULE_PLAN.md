@@ -74,6 +74,7 @@
     *   **Элементы (Карточка продукта)**:
         *   Изображение, название, краткое описание.
         *   **Блок быстрого заказа**:
+        *   **Отображение цены**: Показывается расчетная цена за единицу и за тираж. Цена должна динамически пересчитываться при изменении тиража в блоке быстрого заказа.
             *   Поле для ввода тиража (значение по умолчанию из `Templates.quantity`).
             *   Кнопка "В корзину" для добавления товара с конфигурацией по умолчанию.
         *   Кнопка "Настроить", которая открывает `ProductConfiguratorDialog`.
@@ -105,15 +106,55 @@
 
 1.  **`PriceCalculationService` (Сервис расчета цены)**
     *   **Основной метод**: `calculatePrice(AbstractProductType product, int quantity, Map<String, Object> userVariables)`
-    *   **Логика работы**:
-        1.  Итерирует по списку `product.getProductOperations()`.
-        2.  Для каждой операции, если она не отключена, выполняет ее формулы (`customMachineTimeFormula`, `customActionFormula`, `customMaterialFormula`).
-        3.  Для выполнения формул используется скриптовый движок (у вас уже есть наработки в `FormulaEditor`), в контекст которого передаются:
-            *   `quantity` (тираж).
-            *   Переменные самого продукта (размеры и т.д.).
-            *   Все `customVariables` из операции, переопределенные пользовательскими значениями из `userVariables`.
-        4.  Результат (время, расход материала) умножается на стоимость (цена часа работы станка, цена материала и т.д. — их нужно будет где-то хранить, например, в `AbstractMachine` и `AbstractMaterials`).
-        5.  Стоимости всех операций суммируются, формируя итоговую цену `OrderItem`.
+    *   **Общая логика**: Сервис итерирует по компонентам (`AbstractProductType`) в шаблоне. Для каждого компонента выполняется цепочка расчетов, состоящая из специфической логики компонента и последующего расчета его операций.
+    *   **Детальная цепочка расчета на примере `OneSheetDigitalPrintingProductType`**:
+
+        1.  **Подготовка исходных данных**:
+            *   `quantity`: Тираж из конфигурации.
+            *   `productSizeX`, `productSizeY`, `bleed`: Размеры изделия и вылеты из `OneSheetDigitalPrintingProductType`.
+            *   `selectedMaterial`: Основной материал (бумага), выбранный пользователем.
+
+        2.  **Расчет дообрезного формата изделия**:
+            *   `preCutSizeX = productSizeX + bleed * 2`
+            *   `preCutSizeY = productSizeY + bleed * 2`
+
+        3.  **Расчет рабочей области печатного листа**:
+            *   Берется размер листа `selectedMaterial`.
+            *   Собираются все `ProductOperation` для данного компонента.
+            *   Для каждой операции определяется используемое оборудование (`AbstractMachine`).
+            *   Находятся максимальные непечатные поля (`Gap`) со всех сторон (`max_gap_left`, `max_gap_right`, `max_gap_up`, `max_gap_down`).
+            *   `workableAreaX = materialSizeX - max_gap_left - max_gap_right`
+            *   `workableAreaY = materialSizeY - max_gap_up - max_gap_down`
+
+        4.  **Расчет раскладки (листаж)**:
+            *   Вычисляется, сколько дообрезных изделий (`preCutSizeX`, `preCutSizeY`) можно разместить на рабочей области (`workableAreaX`, `workableAreaY`). Это `itemsPerSheet`.
+            *   `requiredSheets = ceil(quantity / itemsPerSheet)`
+
+        5.  **Расчет общего количества печатных листов (`totalPrintSheets`)**:
+            *   К `requiredSheets` добавляется количество листов на приладку и брак. Это значение может быть фиксированным или рассчитываться по формуле, связанной с основным материалом или операцией печати.
+
+        6.  **Расчет стоимости операций (на примере Печати и Резки)**:
+            *   Для каждой `ProductOperation` (печать, резка и т.д.) в контекст скриптового движка передаются все рассчитанные ранее переменные (`quantity`, `totalPrintSheets` и т.д.).
+            *   **Стоимость печати**:
+                *   `materialCostForPrint` (стоимость тонера/краски) = `evaluate(materialFormula)`
+                *   `amortizationForPrint` = `evaluate(machineFormula)`
+                *   `timeForPrint` = `evaluate(actionFormula)`
+                *   `laborCostForPrint` = `timeForPrint * labor_rate` (стоимость труда пока не реализована)
+                *   `totalPrintCost` = `materialCostForPrint` + `amortizationForPrint` + `laborCostForPrint`
+            *   **Стоимость резки**:
+                *   `amortizationForCut` = `evaluate(machineFormula)`
+                *   `timeForCut` = `evaluate(actionFormula)`
+                *   `laborCostForCut` = `timeForCut * labor_rate`
+                *   `totalCutCost` = `amortizationForCut` + `laborCostForCut`
+
+        7.  **Итоговая калькуляция себестоимости**:
+            *   `mainMaterialCost` = `totalPrintSheets` * `price_of_main_material` (цена берется из отдельной таблицы/сервиса цен на материалы).
+            *   `totalCost` = `mainMaterialCost` + `totalPrintCost` + `totalCutCost` + ... (стоимости всех остальных операций).
+            *   `costPerOneItem` = `totalCost` / `quantity`.
+            *   `roundedCostPerOneItem` = Округление `costPerOneItem` согласно настройке в `Templates` (`isRoundForMath`).
+            *   `finalTotalCost` = `roundedCostPerOneItem` * `quantity`.
+
+        8.  **Будущие доработки**: На `finalTotalCost` будут начисляться маржа, налоги, сборы и стоимость эквайринга.
 
 2.  **`OrderService` (Сервис управления заказами)**
     *   `addItemToCart(productTypeId, quantity, userVariables)`: Создает `OrderItem`, вызывает `PriceCalculationService`, сериализует конфигурацию в JSON и сохраняет позицию в "корзине" (которая может быть временным `CustomerOrder` в статусе `DRAFT`).

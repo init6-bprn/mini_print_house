@@ -50,6 +50,10 @@ public class ProductOperation {
         private String customActionFormula;
         @Lob
         private String customMaterialFormula;
+        @Lob
+        private String customOperationWasteFormula; // брак операции
+        @Lob
+        private String customSetupWasteFormula; // приладка
 
         @JdbcTypeCode(SqlTypes.JSON)
         private List<Variable> customVariables = new ArrayList<>(); // Если нужно добавить/переопределить переменные
@@ -71,6 +75,8 @@ public class ProductOperation {
                 this.customMachineTimeFormula = operation.getMachineTimeFormula();
                 this.customActionFormula = operation.getActionFormula();
                 this.customMaterialFormula = operation.getMaterialFormula();
+                this.customOperationWasteFormula = operation.getOperationWasteFormula();
+                this.customSetupWasteFormula = operation.getSetupWasteFormula();
                 this.selectedMaterial = operation.getDefaultMaterial();
                 this.customVariables = new ArrayList<>(operation.getVariables());
                 // Выполняем глубокое копирование переменных
@@ -88,6 +94,8 @@ public class ProductOperation {
                 this.customMachineTimeFormula = original.getCustomMachineTimeFormula();
                 this.customActionFormula = original.getCustomActionFormula();
                 this.customMaterialFormula = original.getCustomMaterialFormula();
+                this.customOperationWasteFormula = original.getCustomOperationWasteFormula();
+                this.customSetupWasteFormula = original.getCustomSetupWasteFormula();
                 this.customVariables = original.getCustomVariables().stream().map(Variable::new).collect(Collectors.toList());
                 this.switchOff = original.isSwitchOff();
         }
