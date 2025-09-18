@@ -15,7 +15,6 @@ import com.vaadin.flow.data.validator.RegexpValidator;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.validator.StringLengthValidator;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.operation.EditableTextArea;
@@ -23,6 +22,8 @@ import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
+import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
+import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.text.NumberFormat;
@@ -51,7 +52,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     private final OperationService operationService;
     private final AbstractMaterialService materialService;
     private final FormulasService formulasService;
-    private final VariablesForMainWorksService variablesForMainWorksService;
+    private final ProductTypeVariableService productTypeVariableService;
     private final TypeOfOperationService typeOfOperationService;
 
     // List to keep track of dynamically added variable editors
@@ -63,26 +64,25 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                                   Consumer<Object> onSave,
                                   OperationService operationService,
                                   AbstractMaterialService materialService,
-                                  FormulasService formulasService,
-                                  VariablesForMainWorksService variablesForMainWorksService,
+                                  FormulasService formulasService, FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
                                   TypeOfOperationService typeOfOperationService) {
         super(onSave);
         this.operationService = operationService;
         this.materialService = materialService;
         this.formulasService = formulasService;
-        this.variablesForMainWorksService = variablesForMainWorksService;
+        this.productTypeVariableService = productTypeVariableService;
         this.typeOfOperationService = typeOfOperationService;
 
         selectedMaterialComboBox.setItems(materialService.findAll());
         selectedMaterialComboBox.setItemLabelGenerator(AbstractMaterials::getName);
 
         // Initialize EditableTextAreas
-        customMachineTimeFormulaArea = new EditableTextArea<>("Формула времени оборудования",
-                formulasService, typeOfOperationService, variablesForMainWorksService);
-        customActionFormulaArea = new EditableTextArea<>("Формула времени работника",
-                formulasService, typeOfOperationService, variablesForMainWorksService);
-        customMaterialFormulaArea = new EditableTextArea<>("Формула расхода материала",
-                formulasService, typeOfOperationService, variablesForMainWorksService);
+        customMachineTimeFormulaArea = new EditableTextArea<>("Формула времени оборудования", formulasService, typeOfOperationService,
+                formulaValidationService, productTypeVariableService);
+        customActionFormulaArea = new EditableTextArea<>("Формула времени работника", formulasService, typeOfOperationService,
+                formulaValidationService, productTypeVariableService);
+        customMaterialFormulaArea = new EditableTextArea<>("Формула расхода материала", formulasService, typeOfOperationService,
+                formulaValidationService, productTypeVariableService);
 
         // Bind fields
         binder.forField(nameField).bind(ProductOperation::getName, ProductOperation::setName);
@@ -150,6 +150,16 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
             header.setText("");
         }
         populateVariableEditors(entity);
+
+        // Передаем контекст переменных в EditableTextArea
+        List<Variable> productVariables = (entity != null && entity.getProduct() != null) ? entity.getProduct().getVariables() : new ArrayList<>();
+        List<Variable> customOperationVariables = (entity != null) ? entity.getCustomVariables() : new ArrayList<>();
+        productVariables.addAll(customOperationVariables); // Объединяем переменные продукта и кастомные переменные операции
+
+        customMachineTimeFormulaArea.setVariableContext(productVariables);
+        customActionFormulaArea.setVariableContext(productVariables);
+        customMaterialFormulaArea.setVariableContext(productVariables);
+
     }
 
     private void populateVariableEditors(ProductOperation entity) {

@@ -17,8 +17,6 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.machine.service.AbstractMachineService;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
@@ -26,6 +24,8 @@ import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.OperationEditor;
+import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
+import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 import ru.bprn.printhouse.views.templates.SelectAbstractMaterialsDialog;
 
 @PageTitle("Создание дополнительных работ")
@@ -35,31 +35,31 @@ public class OperationView extends SplitLayout {
     private final TextField filterField = new TextField();
     private final Grid<Operation> grid = new Grid<>(Operation.class, false);
     private final OperationService service;
-    private final FormulasService formulasService;
     private final TypeOfOperationService typeOfOperationService;
     private final AbstractMaterialService materialService;
     private final SelectAbstractMaterialsDialog materialDialog;
-    private final VariablesForMainWorksService variablesForMainWorksService;
+    private final FormulaValidationService formulaValidationService;
+    private final ProductTypeVariableService productTypeVariableService;
     private final AbstractMachineService abstractMachineService;
     private OperationEditor operationEditor;
 
     public OperationView(OperationService service,
-                         FormulasService formulasService,
+                         ru.bprn.printhouse.data.service.FormulasService formulasService,
                          TypeOfOperationService typeOfOperationService,
                          AbstractMaterialService materialService,
-                         VariablesForMainWorksService variablesForMainWorksService,
+                         FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
                          AbstractMachineService abstractMachineService) {
         this.service = service;
-        this.formulasService = formulasService;
         this.typeOfOperationService = typeOfOperationService;
         this.materialService = materialService;
         materialDialog = new SelectAbstractMaterialsDialog("Выберите материалы", materialService);
-        this.variablesForMainWorksService = variablesForMainWorksService;
+        this.formulaValidationService = formulaValidationService;
+        this.productTypeVariableService = productTypeVariableService;
         this.abstractMachineService = abstractMachineService;
         this.setSizeFull();
         this.addToPrimary(addGrid());
-        this.addToSecondary(operationEditor = new OperationEditor(null, this::save, typeOfOperationService,
-                materialService, formulasService, variablesForMainWorksService, abstractMachineService));
+        this.addToSecondary(operationEditor = new OperationEditor(null, this::save, typeOfOperationService, materialService,
+                formulasService, formulaValidationService, productTypeVariableService, abstractMachineService));
         operationEditor.setEnabled(false);
         this.setOrientation(SplitLayout.Orientation.HORIZONTAL);
         this.setSizeFull();

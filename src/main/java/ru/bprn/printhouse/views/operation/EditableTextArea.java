@@ -8,10 +8,15 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.shared.Registration;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.operation.service.FormulaEditor;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.FormulaDialog;
+import ru.bprn.printhouse.views.templates.entity.Variable;
+import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
+import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
+
+import java.util.Collections;
+import java.util.List;
 
 public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implements HasValue<HasValue.ValueChangeEvent<String>, String> {
 
@@ -21,16 +26,22 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
 
     private final FormulasService formulasService;
     private final TypeOfOperationService worksService;
-    private final VariablesForMainWorksService variablesService;
+    private final FormulaValidationService formulaValidationService;
+    private final ProductTypeVariableService productTypeVariableService;
+
+    private List<Variable> operationVariables = Collections.emptyList();
 
     public EditableTextArea(String label, FormulasService formulasService,
                             TypeOfOperationService worksService,
-                            VariablesForMainWorksService variablesService) {
+                            FormulaValidationService formulaValidationService,
+                            ProductTypeVariableService productTypeVariableService) {
         this.formulasService = formulasService;
         this.worksService = worksService;
-        this.variablesService = variablesService;
+        this.formulaValidationService = formulaValidationService;
+        this.productTypeVariableService = productTypeVariableService;
 
         area.setLabel(label);
+        area.setHeight("80px");
         setupButtons();
         setupLayout();
     }
@@ -61,7 +72,12 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
     }
 
     private void openFormulaEditor() {
-        new FormulaEditor(getValue(), this::setValue, worksService, variablesService).open();
+        new FormulaEditor(getValue(), this::setValue,
+                operationVariables,
+                formulaValidationService,
+                worksService,
+                productTypeVariableService
+        ).open();
     }
 
     // === Реализация HasValue ===
@@ -116,5 +132,9 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
 
     public String getLabel() {
         return area.getLabel();
+    }
+
+    public void setVariableContext(List<Variable> operationVariables) {
+        this.operationVariables = operationVariables != null ? operationVariables : Collections.emptyList();
     }
 }

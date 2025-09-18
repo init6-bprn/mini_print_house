@@ -28,7 +28,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.StandartSizeService;
-import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
@@ -41,6 +40,8 @@ import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.TemplatesMenuItem;
 import ru.bprn.printhouse.views.templates.service.AbstractProductService;
+import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
+import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 import ru.bprn.printhouse.views.templates.service.TemplatesMenuItemService;
 import ru.bprn.printhouse.views.templates.service.TemplatesService;
 
@@ -61,6 +62,7 @@ public class TemplatesView extends SplitLayout {
     private final OperationService operationService;
     private final PrintSheetsMaterialService printSheetsMaterialService;
     private final TemplatesMenuItemService menuItemService;
+    private final ProductTypeVariableService productTypeVariableService;
 
     private final BeanValidationBinder<Templates> templatesBinder;
 
@@ -79,7 +81,7 @@ public class TemplatesView extends SplitLayout {
 
     public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
                          OperationService operationService, PrintSheetsMaterialService printSheetsMaterialService,
-                         FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService,
+                         FormulasService formulasService, FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
                          StandartSizeService standartSizeService, TemplatesMenuItemService menuItemService, TypeOfOperationService typeOfOperationService,
                          AbstractMaterialService abstractMaterialService){
 
@@ -89,9 +91,10 @@ public class TemplatesView extends SplitLayout {
         this.operationService = operationService;
         this.printSheetsMaterialService = printSheetsMaterialService;
         this.menuItemService = menuItemService;
+        this.productTypeVariableService = productTypeVariableService;
 
         this.universalEditorFactory = new UniversalEditorFactory(
-                printSheetsMaterialService, formulasService, variablesForMainWorksService, standartSizeService, typeOfOperationService, abstractMaterialService, operationService);
+                printSheetsMaterialService, formulasService, productTypeVariableService, formulaValidationService, standartSizeService, typeOfOperationService, abstractMaterialService, operationService);
                 
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);
@@ -313,7 +316,7 @@ public class TemplatesView extends SplitLayout {
         List<TemplatesMenuItem> list = menuItemService.getMenuByContext(context);
         if (list != null && !list.isEmpty())
             for (TemplatesMenuItem item : list) {
-                Object obj = EntityFactory.createEntity(item.getClassName());
+                Object obj = EntityFactory.createEntity(item.getClassName(), productTypeVariableService);
                 menu.addItem(item.getName(), e-> addEditor(universalEditorFactory.createEditor(obj, this::save)));
             }
     }
@@ -507,10 +510,15 @@ public class TemplatesView extends SplitLayout {
 
     public static class EntityFactory {
 
-        public static Object createEntity(String fullClassName) {
+        public static Object createEntity(String fullClassName, ProductTypeVariableService variableService) {
             try {
                 Class<?> clazz = Class.forName(fullClassName);
-                return clazz.getDeclaredConstructor().newInstance();
+                Object entity = clazz.getDeclaredConstructor().newInstance();
+                // Если созданный объект является наследником AbstractProductType, инициализируем его переменные
+                if (entity instanceof AbstractProductType apt) {
+                    apt.initializeVariables(variableService);
+                }
+                return entity;
             } catch (Exception e) {
                 throw new RuntimeException("Не удалось создать экземпляр " + fullClassName, e);
             }

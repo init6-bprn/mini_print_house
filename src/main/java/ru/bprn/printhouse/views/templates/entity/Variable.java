@@ -59,6 +59,26 @@ public class Variable {
         this.show = true; // По умолчанию показываем
     }
 
+    /**
+     * Конструктор для создания переменной сразу с ограничениями.
+     * @param key Ключ переменной
+     * @param value Значение
+     * @param description Описание
+     * @param type Тип
+     * @param minValue Минимальное значение (или длина)
+     * @param maxValue Максимальное значение (или длина)
+     * @param step Шаг для числовых полей
+     * @param pattern Regex-шаблон для строковых полей
+     */
+    public Variable(String key, Object value, String description, VariableType type, String minValue, String maxValue, String step, String pattern) {
+        this(key, value, description, type); // Вызов основного конструктора
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+        this.step = step;
+        this.pattern = pattern;
+    }
+
+
     // Конструктор копирования для глубокого копирования
     public Variable(Variable original) {
         this.id = UUID.randomUUID(); // Новый ID для новой переменной

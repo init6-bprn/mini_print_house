@@ -10,17 +10,13 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.data.entity.StandartSize;
-import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.data.service.StandartSizeService;
-import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -41,7 +37,7 @@ import java.util.function.Consumer;
 
         public OneSheetDigitalPrintingProductTypeEditor(OneSheetDigitalPrintingProductType entity, Consumer<Object> onSave,
                                                         PrintSheetsMaterialService materialService, FormulasService formulasService,
-                                                        VariablesForMainWorksService variablesForMainWorksService, StandartSizeService standartSizeService) {
+                                                        StandartSizeService standartSizeService) {
             super(onSave);
             this.entity = entity;
 
@@ -132,8 +128,6 @@ import java.util.function.Consumer;
             add(buildForm());
             addButtons();
             edit(this.entity);
-            initializeVariables(variablesForMainWorksService.findAll());
-
         }
 
         @Override
@@ -173,18 +167,4 @@ import java.util.function.Consumer;
             return form;
         }
 
-        private void initializeVariables(List<VariablesForMainWorks> allVariables) {
-            Map<String, Object> variables = new HashMap<>();
-
-            for (VariablesForMainWorks var : allVariables) {
-                if ("OneSheetDigitalPrintingProductType".equals(var.getClazz())) {
-                    variables.put(var.getName(), 0.0); // Double по умолчанию
-                }
-            }
-
-            entity.setVariables(variables);
-        }
-
     }
-
-

@@ -43,8 +43,8 @@ public class TemplatesMenuItem {
         @Column(name = "updated_at")
         private LocalDateTime updatedAt;
 
-    @Column(name = "context")
-    private String context;
+        @Column(name = "context")
+        private String context;
 
         @PrePersist
         protected void onCreate() {

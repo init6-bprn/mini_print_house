@@ -8,7 +8,6 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import org.jetbrains.annotations.NotNull;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.machine.service.AbstractMachineService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
@@ -17,6 +16,8 @@ import ru.bprn.printhouse.views.operation.EditableTextArea;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
+import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
+import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.ArrayList;
@@ -50,27 +51,27 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
     public OperationEditor(Operation operation, Consumer<Object> onSave,
                            TypeOfOperationService typeOfOperationService, AbstractMaterialService materialService,
-                           FormulasService formulasService, VariablesForMainWorksService variablesForMainWorksService,
+                           FormulasService formulasService, FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
                            AbstractMachineService abstractMachineService) {
         super(onSave);
         this.typeOfOperationService = typeOfOperationService;
         this.materialService = materialService;
         typeOfOperationSelect.setItems(typeOfOperationService.findAll());
 
-        equipmentFormula = new EditableTextArea<>("Формула расчета времени работы оборудования",
-                formulasService, typeOfOperationService, variablesForMainWorksService);
+        equipmentFormula = new EditableTextArea<Operation>("Формула времени оборудования", formulasService,
+                typeOfOperationService, formulaValidationService, productTypeVariableService);
 
-        workerFormula = new EditableTextArea<>("Формула расчета времени работы работника",
-                formulasService, typeOfOperationService, variablesForMainWorksService);
+        workerFormula = new EditableTextArea<Operation>("Формула времени работника", formulasService,
+                typeOfOperationService, formulaValidationService, productTypeVariableService);
 
-        materialFormula = new EditableTextArea<>("Формула расчета количества расходных материалов",
-                formulasService, typeOfOperationService, variablesForMainWorksService);
+        materialFormula = new EditableTextArea<Operation>("Формула расхода материала", formulasService,
+                typeOfOperationService, formulaValidationService, productTypeVariableService);
 
-        operationWasteFormula = new EditableTextArea<>("Формула брака операции (в листах)",
-                formulasService, typeOfOperationService, variablesForMainWorksService);
+        operationWasteFormula = new EditableTextArea<>("Формула брака операции", formulasService,
+                typeOfOperationService, formulaValidationService, productTypeVariableService);
 
-        setupWasteFormula = new EditableTextArea<>("Формула приладки (в листах)",
-                formulasService, typeOfOperationService, variablesForMainWorksService);
+        setupWasteFormula = new EditableTextArea<>("Формула приладки", formulasService,
+                typeOfOperationService, formulaValidationService, productTypeVariableService);
 
         selectedMaterials.setItems(materialService.findAll());
         selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
@@ -188,6 +189,14 @@ public class OperationEditor extends AbstractEditor<Operation> {
             defaultMaterial.setItems(operation.getListOfMaterials());
         }
         edit(operation);
+
+        // Передаем контекст переменных в EditableTextArea
+        List<Variable> operationVariables = binder.getBean() != null ? binder.getBean().getVariables() : new ArrayList<>();
+        equipmentFormula.setVariableContext(operationVariables);
+        workerFormula.setVariableContext(operationVariables);
+        materialFormula.setVariableContext(operationVariables);
+        operationWasteFormula.setVariableContext(operationVariables);
+        setupWasteFormula.setVariableContext(operationVariables);
         mapEditorView.setVariables(binder.getBean().getVariables());
     }
 

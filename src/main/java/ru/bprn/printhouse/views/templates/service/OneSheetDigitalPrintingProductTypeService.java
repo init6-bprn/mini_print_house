@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
 import ru.bprn.printhouse.views.operation.service.ProductOperationService;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
+import ru.bprn.printhouse.views.templates.entity.Variable;
 import ru.bprn.printhouse.views.templates.repository.OneSheetDigitalPrintingProductTypeRepository;
 
 import java.util.List;
@@ -41,7 +42,12 @@ public class OneSheetDigitalPrintingProductTypeService {
         newProduct.setDefaultMaterial(productType.getDefaultMaterial());
         newProduct.setBleed(productType.getBleed());
         newProduct.setMaterialFormula(productType.getMaterialFormula());
-        newProduct.setVariables(productType.getVariables());
+        //newProduct.setVariables(productType.getVariables());
+        // Глубокое копирование списка переменных
+        List<Variable> copiedVariables = productType.getVariables().stream()
+                .map(Variable::new) // Используем конструктор копирования
+                .collect(Collectors.toList());
+        newProduct.setVariables(copiedVariables);
         newProduct.setMultiplay(productType.isMultiplay());
 
         // Дублируем вложенные ProductOperation

@@ -64,4 +64,10 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
     public String getMatFormula() {
         return materialFormula;
     }
+
+    // Метод @PrePersist addVariable() был удален.
+    // Теперь инициализация переменных происходит через
+    // AbstractProductType.initializeVariables()
+    // при создании нового объекта в TemplatesView.EntityFactory.
+    
 }
