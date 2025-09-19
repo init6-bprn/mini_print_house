@@ -9,9 +9,11 @@ import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.service.ProductOperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
+import ru.bprn.printhouse.views.templates.entity.Variable;
 import ru.bprn.printhouse.views.templates.repository.TemplatesRepository;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TemplatesService {
@@ -92,10 +94,13 @@ public class TemplatesService {
                 var newTemplate = new Templates();
         newTemplate.setDescription(template.getDescription());
         newTemplate.setName(template.getName()+" - Дубликат");
-        newTemplate.setMaxQuantity(template.getMaxQuantity());
-        newTemplate.setMinQuantity(template.getMinQuantity());
-        newTemplate.setQuantity(template.getQuantity());
-        newTemplate.setRoundForMath(template.isRoundForMath());
+
+        // Глубокое копирование переменных
+        List<Variable> copiedVariables = template.getVariables().stream()
+                .map(Variable::new) // Используем конструктор копирования
+                .collect(Collectors.toList());
+        newTemplate.setVariables(copiedVariables);
+
         Set<AbstractProductType> set = new HashSet<>();
         for (AbstractProductType product:template.getProductTypes()) {
             var dc = duplicateProduct(product);

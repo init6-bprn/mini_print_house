@@ -23,16 +23,19 @@ public class UniversalEditorFactory {
     private final StandartSizeService standartSizeService;
     private final TypeOfOperationService typeOfOperationService;
     private final AbstractMaterialService abstractMaterialService;
+    private final TemplatesView templatesView;
     private final OperationService operationService;
 
     public UniversalEditorFactory(PrintSheetsMaterialService printSheetsMaterialService, FormulasService formulasService, ProductTypeVariableService productTypeVariableService,
                                   FormulaValidationService formulaValidationService, StandartSizeService standartSizeService,
                                   TypeOfOperationService typeOfOperationService, AbstractMaterialService abstractMaterialService,
-                                  OperationService operationService) {
+                                  OperationService operationService,
+                                  TemplatesView templatesView) {
         this.printSheetsMaterialService = printSheetsMaterialService;
 
         this.formulasService = formulasService;
         this.formulaValidationService = formulaValidationService;
+        this.templatesView = templatesView;
         this.productTypeVariableService = productTypeVariableService;
         this.standartSizeService = standartSizeService;
         this.typeOfOperationService = typeOfOperationService;

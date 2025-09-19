@@ -3,12 +3,16 @@ package ru.bprn.printhouse.views.templates.entity;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.type.SqlTypes;
 import ru.bprn.printhouse.annotation.MenuItem;
+import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -31,22 +35,8 @@ public class Templates{
 
     private String description = "Описание изделия";
 
-    // Здесь надо добавить фотку(ки) изделия
-    @Positive
-    private int quantity = 1;
-
-    @Positive
-    private int minQuantity = 1;
-
-    @Positive
-    private int maxQuantity = 100000;
-
-    @Positive
-    private int step = 1;
-
-    private boolean roundForMath = false;
-
-    private String roundAt = "";
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<Variable> variables = new ArrayList<>();
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE, orphanRemoval = true)
     @JoinTable(
@@ -54,6 +44,10 @@ public class Templates{
             joinColumns = @JoinColumn(name = "templates_id"),
             inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<AbstractProductType> productTypes = new HashSet<>();
+
+    public void initializeVariables(TemplateVariableService variableService) {
+        this.setVariables(variableService.getVariablesFor(this.getClass()));
+    }
 
     @Override
     public final boolean equals(Object o) {

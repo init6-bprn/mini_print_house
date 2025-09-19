@@ -11,7 +11,9 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import ru.bprn.printhouse.views.products.ProductConfiguratorDialog;
+import ru.bprn.printhouse.views.templates.entity.Variable;
 import ru.bprn.printhouse.views.templates.entity.Templates;
+import java.util.Optional;
 
 public class ProductCard extends VerticalLayout {
 
@@ -38,12 +40,14 @@ public class ProductCard extends VerticalLayout {
         IntegerField quantityField = new IntegerField();
         quantityField.setWidth("50%");
         quantityField.setPlaceholder("Тираж");
-        quantityField.setValue(template.getQuantity()); // Тираж по умолчанию из шаблона
         quantityField.setStepButtonsVisible(true);
-        quantityField.setMin(template.getMinQuantity());
-        quantityField.setMax(template.getMaxQuantity());
-        quantityField.setStep(template.getStep());
 
+        getVariable(template, "quantity").ifPresent(quantityVar -> {
+            tryParseInt(quantityVar.getValue()).ifPresent(quantityField::setValue);
+            tryParseInt(quantityVar.getMinValue()).ifPresent(quantityField::setMin);
+            tryParseInt(quantityVar.getMaxValue()).ifPresent(quantityField::setMax);
+            tryParseInt(quantityVar.getStep()).ifPresent(quantityField::setStep);
+        });
         Button addToCartButton = new Button("Купить", VaadinIcon.CART.create());
         addToCartButton.setWidth("45%");
         addToCartButton.addClickListener(e -> {
@@ -66,5 +70,25 @@ public class ProductCard extends VerticalLayout {
 
         add(productImage, name, description, quickOrderLayout, configureButton);
         setSpacing(false);
+    }
+
+    private Optional<Variable> getVariable(Templates template, String key) {
+        if (template == null || template.getVariables() == null) {
+            return Optional.empty();
+        }
+        return template.getVariables().stream()
+                .filter(v -> key.equals(v.getKey()))
+                .findFirst();
+    }
+
+    private Optional<Integer> tryParseInt(String s) {
+        if (s == null || s.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Integer.parseInt(s));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
     }
 }

@@ -3,6 +3,7 @@ package ru.bprn.printhouse.views.machine.printers;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.FormRow;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.function.ValueProvider;
@@ -12,6 +13,7 @@ import ru.bprn.printhouse.views.material.service.PrintingMaterialService;
 import ru.bprn.printhouse.views.templates.AbstractEditor;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -20,7 +22,7 @@ public class DigitalPrintingMachineEditor extends AbstractEditor<DigitalPrinting
     private final PrintingMaterialService materialService;
 
     private final TextField name = new TextField("Название");
-    private final MultiSelectComboBox<AbstractMaterials> materials = new MultiSelectComboBox<>("Материалы для печати");
+    private final MultiSelectComboBox<AbstractMaterials> materials = new MultiSelectComboBox<>("Цветность печати");
     private final NumberField gapTop = new NumberField("Верхнее непечатное поле, мм");
     private final NumberField gapBottom = new NumberField("Нижнее непечатное поле, мм");
     private final NumberField gapLeft = new NumberField("Левое непечатное поле, мм");
@@ -59,7 +61,34 @@ public class DigitalPrintingMachineEditor extends AbstractEditor<DigitalPrinting
         binder.forField(materials).bind(DigitalPrintingMachine::getAbstractMaterials, DigitalPrintingMachine::setAbstractMaterials);
 
         FormLayout formLayout = new FormLayout();
-        formLayout.add(name, maxLength, maxWidth, clickSize, gapTop, gapBottom, gapLeft, gapRight, materials);
+        formLayout.setColumnWidth("6em");
+        formLayout.setResponsiveSteps(List.of(
+               new FormLayout.ResponsiveStep("0", 1),
+               new FormLayout.ResponsiveStep("120px", 2),
+               new FormLayout.ResponsiveStep("240px", 3),
+               new FormLayout.ResponsiveStep("360px", 4),
+               new FormLayout.ResponsiveStep("480px", 5),
+               new FormLayout.ResponsiveStep("600px", 6)
+        ));
+        formLayout.setAutoResponsive(true);
+        formLayout.setExpandFields(true);
+        FormRow row1 = new FormRow();
+        row1.add(name, 6);
+        FormRow row3 = new FormRow();
+        row3.add(maxLength, 2);
+        row3.add(maxWidth, 2);
+        row3.add(clickSize, 2);
+        FormRow row2 = new FormRow();
+        row2.add(gapTop, 2);
+        row2.add(gapBottom, 2);
+        row2.add(gapLeft, 2);
+        row2.add(gapRight, 2);
+        row2.add(materials, 4);
+
+        formLayout.add(row1, row3, row2);
+        formLayout.setExpandColumns(true);
+        formLayout.setWidthFull();
+
         return formLayout;
     }
 

@@ -13,7 +13,8 @@ import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductT
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.HashMap;
-import java.util.Map; 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -27,8 +28,10 @@ public class PriceCalculationService {
      * @return Итоговая стоимость в виде BigDecimal.
      */
     public int calculatePrice(Templates template, Map<String, Object> configuration) { 
-        int totalPrice = 0;
-        int quantity = (int) configuration.getOrDefault("quantity", template.getQuantity());
+        int totalPrice = 0;        
+        int quantity = (int) configuration.getOrDefault("quantity", 
+            getVariableValue(template.getVariables(), "quantity", 1.0).intValue()
+        );
 
         for (AbstractProductType productType : template.getProductTypes()) {
             totalPrice += calculateProductTypePrice(productType, quantity, configuration);
@@ -240,6 +243,18 @@ public class PriceCalculationService {
     }
 
     private double getVariableValue(Set<Variable> variables, String key, double defaultValue) {
+        if (variables == null) {
+            return defaultValue;
+        }
+        return variables.stream()
+                .filter(v -> key.equals(v.getKey()))
+                .findFirst()
+                .map(Variable::getValueAsObject)
+                .filter(Number.class::isInstance)
+                .map(v -> ((Number) v).doubleValue()).orElse(defaultValue);
+    }
+
+    private double getVariableValue(List<Variable> variables, String key, double defaultValue) {
         if (variables == null) {
             return defaultValue;
         }

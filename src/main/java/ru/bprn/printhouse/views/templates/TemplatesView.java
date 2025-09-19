@@ -39,11 +39,7 @@ import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.TemplatesMenuItem;
-import ru.bprn.printhouse.views.templates.service.AbstractProductService;
-import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
-import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
-import ru.bprn.printhouse.views.templates.service.TemplatesMenuItemService;
-import ru.bprn.printhouse.views.templates.service.TemplatesService;
+import ru.bprn.printhouse.views.templates.service.*;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -63,6 +59,7 @@ public class TemplatesView extends SplitLayout {
     private final PrintSheetsMaterialService printSheetsMaterialService;
     private final TemplatesMenuItemService menuItemService;
     private final ProductTypeVariableService productTypeVariableService;
+    private final TemplateVariableService templateVariableService;
 
     private final BeanValidationBinder<Templates> templatesBinder;
 
@@ -82,7 +79,7 @@ public class TemplatesView extends SplitLayout {
     public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
                          OperationService operationService, PrintSheetsMaterialService printSheetsMaterialService,
                          FormulasService formulasService, FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
-                         StandartSizeService standartSizeService, TemplatesMenuItemService menuItemService, TypeOfOperationService typeOfOperationService,
+                         StandartSizeService standartSizeService, TemplatesMenuItemService menuItemService, TemplateVariableService templateVariableService, TypeOfOperationService typeOfOperationService,
                          AbstractMaterialService abstractMaterialService){
 
 
@@ -92,9 +89,10 @@ public class TemplatesView extends SplitLayout {
         this.printSheetsMaterialService = printSheetsMaterialService;
         this.menuItemService = menuItemService;
         this.productTypeVariableService = productTypeVariableService;
+        this.templateVariableService = templateVariableService;
 
         this.universalEditorFactory = new UniversalEditorFactory(
-                printSheetsMaterialService, formulasService, productTypeVariableService, formulaValidationService, standartSizeService, typeOfOperationService, abstractMaterialService, operationService);
+                printSheetsMaterialService, formulasService, productTypeVariableService, formulaValidationService, standartSizeService, typeOfOperationService, abstractMaterialService, operationService, this);
                 
         templatesBinder = new BeanValidationBinder<>(Templates.class);
         templatesBinder.setChangeDetectionEnabled(true);
@@ -248,7 +246,11 @@ public class TemplatesView extends SplitLayout {
 
         var create = menuBar.addItem(VaadinIcon.PLUS.create(), "Создать");
         var createSubMenu = create.getSubMenu();
-        createSubMenu.addItem("Создать новый шаблон", e->addEditor(universalEditorFactory.createEditor(new Templates(), this::save)));
+        createSubMenu.addItem("Создать новый шаблон", e-> {
+            Templates newTemplate = new Templates();
+            newTemplate.initializeVariables(templateVariableService);
+            addEditor(universalEditorFactory.createEditor(newTemplate, this::save));
+        });
         var components = createSubMenu.addItem("Создать новый компонент");
         addComponentsToSubMenu(components.getSubMenu(), "product");
 
@@ -459,8 +461,10 @@ public class TemplatesView extends SplitLayout {
     private void paste(Object obj, Object parent) {
         if (obj!=null){
             switch (obj) {
-                case Templates template-> {
+                case Templates template -> {
                     Templates newTemplate = templatesService.duplicateTemplate(template); // Предполагается, что этот метод делает глубокую копию
+                    // После дублирования переменные уже должны быть скопированы, но на всякий случай
+                    if (newTemplate.getVariables().isEmpty()) newTemplate.initializeVariables(templateVariableService);
                     addHierarchicalItemToTreeData(null, newTemplate);
                     refreshAndSelect(newTemplate, null);
                 }
@@ -517,6 +521,10 @@ public class TemplatesView extends SplitLayout {
                 // Если созданный объект является наследником AbstractProductType, инициализируем его переменные
                 if (entity instanceof AbstractProductType apt) {
                     apt.initializeVariables(variableService);
+                }
+                // Для Templates тоже нужна инициализация, но сервис другой.
+                if (entity instanceof Templates t) {
+                    // Как передать сюда templateVariableService?
                 }
                 return entity;
             } catch (Exception e) {

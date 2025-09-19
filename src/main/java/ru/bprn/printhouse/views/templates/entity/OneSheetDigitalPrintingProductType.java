@@ -2,7 +2,6 @@ package ru.bprn.printhouse.views.templates.entity;
 
 import com.vaadin.flow.component.icon.VaadinIcon;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,15 +23,6 @@ import java.util.stream.Collectors;
 @MenuItem(name = "Однолистовая Печать", icon = VaadinIcon.PRINT, context = "product", description = "Компонент однолистовой печати")
 public class OneSheetDigitalPrintingProductType extends AbstractProductType implements HasMateria{
 
-    // --------  Размер изделия, поля и расположение на печатном листе -----------------
-    @Positive
-    private Double productSizeX = 1d;
-
-    @Positive
-    private Double productSizeY = 1d;
-
-    private Double bleed = 0d;
-
     private String materialFormula;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -44,8 +34,6 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
             joinColumns = @JoinColumn(name = "product_type_id"),
             inverseJoinColumns = @JoinColumn(name = "material_id"))
     private Set<PrintSheetsMaterial> selectedMaterials = new HashSet<>();
-
-    private boolean multiplay;
 
     @Override
     @Transient

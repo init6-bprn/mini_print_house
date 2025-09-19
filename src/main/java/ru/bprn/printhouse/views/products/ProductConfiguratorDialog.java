@@ -22,6 +22,7 @@ import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ProductConfiguratorDialog extends Dialog {
 
@@ -54,11 +55,14 @@ public class ProductConfiguratorDialog extends Dialog {
 
     private void configureQuantityField() {
         quantityField.setWidthFull();
-        quantityField.setValue(template.getQuantity());
         quantityField.setStepButtonsVisible(true);
-        quantityField.setMin(template.getMinQuantity());
-        quantityField.setMax(template.getMaxQuantity());
-        quantityField.setStep(template.getStep());
+
+        getVariable(template, "quantity").ifPresent(quantityVar -> {
+            tryParseInt(quantityVar.getValue()).ifPresent(quantityField::setValue);
+            tryParseInt(quantityVar.getMinValue()).ifPresent(quantityField::setMin);
+            tryParseInt(quantityVar.getMaxValue()).ifPresent(quantityField::setMax);
+            tryParseInt(quantityVar.getStep()).ifPresent(quantityField::setStep);
+        });
     }
 
     private Component createProductTypeSection(AbstractProductType productType) {
@@ -173,5 +177,25 @@ public class ProductConfiguratorDialog extends Dialog {
         Button cancelButton = new Button("Отмена", e -> close());
 
         getFooter().add(cancelButton, addToCartButton);
+    }
+
+    private Optional<Variable> getVariable(Templates template, String key) {
+        if (template == null || template.getVariables() == null) {
+            return Optional.empty();
+        }
+        return template.getVariables().stream()
+                .filter(v -> key.equals(v.getKey()))
+                .findFirst();
+    }
+
+    private Optional<Integer> tryParseInt(String s) {
+        if (s == null || s.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Integer.parseInt(s));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
     }
 }

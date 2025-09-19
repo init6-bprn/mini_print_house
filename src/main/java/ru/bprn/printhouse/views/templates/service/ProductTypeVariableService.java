@@ -30,6 +30,7 @@ public class ProductTypeVariableService {
         variables.add(new Variable("quantityOfMainMaterial", 1, "Количество единиц основного материала", Variable.VariableType.INTEGER, "1", "100000", "1", null));
         variables.add(new Variable("productWidth", 210.0, "Ширина изделия", Variable.VariableType.DOUBLE, "35", "1000", "0.5", null));
         variables.add(new Variable("productLength", 148.5, "Длина изделия", Variable.VariableType.DOUBLE, "35", "1000", "0.5", null));
+        variables.add(new Variable("bleed", 2, "Поле на подрезку", Variable.VariableType.DOUBLE, "-7", "10", "0.5", null));
         variables.add(new Variable("productWidthBeforeCut", 210.0, "Ширина изделия до обрезки", Variable.VariableType.DOUBLE, "35", "1000", "0.5", null));
         variables.add(new Variable("productLengthBeforeCut", 148.5, "Длина изделия до обрезки", Variable.VariableType.DOUBLE, "35", "1000", "0.5", null));
         variables.add(new Variable("mainMaterialWidth", 488, "Ширина основного материала", Variable.VariableType.INTEGER, "100", "488", "1", null));
@@ -40,6 +41,7 @@ public class ProductTypeVariableService {
         variables.add(new Variable("columns", 1, "Количество колонок изделий на печатном листе", Variable.VariableType.INTEGER, "1", "100", "1", null));
         variables.add(new Variable("rows", 1, "Количество строк изделий на печатном листе", Variable.VariableType.INTEGER, "1", "60", "1", null));
         variables.add(new Variable("thickness", 1, "Толщина основного материала", Variable.VariableType.DOUBLE, "0.01", "1000", null, null));
+        variables.add(new Variable("multiplication", "true", "Замостить", Variable.VariableType.BOOLEAN, null,null, null, null));
         return variables;
     }
 }
