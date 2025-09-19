@@ -3,9 +3,7 @@ package ru.bprn.printhouse.views.machine.printers;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.icon.Icon;
@@ -13,21 +11,16 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.data.entity.Gap;
-import ru.bprn.printhouse.data.service.GapService;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.machine.entity.DigitalPrintingMachine;
 import ru.bprn.printhouse.views.machine.service.DigitalPrintingMachineService;
-import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
+import ru.bprn.printhouse.views.machine.service.MachineVariableService;
 import ru.bprn.printhouse.views.material.service.PrintingMaterialService;
 
 @PageTitle("Цифровые печатные машины")
@@ -37,22 +30,20 @@ public class DigitalPrintingMachineView extends VerticalLayout {
     private final TextField filterField = new TextField();
     private final Grid<DigitalPrintingMachine> grid = new Grid<>(DigitalPrintingMachine.class, false);
     private final DigitalPrintingMachineService service;
-    private final GapService gapService;
     private final PrintingMaterialService materialService;
-    private final BeanValidationBinder<DigitalPrintingMachine> bean = new BeanValidationBinder<>(DigitalPrintingMachine.class);
-    private final MultiSelectComboBox<AbstractMaterials> materials = new MultiSelectComboBox<>("Материалы для печати");
-    private final VerticalLayout form;
+    private final MachineVariableService machineVariableService;
+    private DigitalPrintingMachineEditor editor;
 
     public DigitalPrintingMachineView(DigitalPrintingMachineService service,
-                                      GapService gapService,
-                                      PrintingMaterialService materialService) {
+                                      PrintingMaterialService materialService,
+                                      MachineVariableService machineVariableService) {
         this.service = service;
-        this.gapService = gapService;
         this.materialService = materialService;
+        this.machineVariableService = machineVariableService;
         this.setSizeFull();
-        form = addForm();
-        form.setEnabled(false);
-        var splitLayout = new SplitLayout(addGrid(), form, SplitLayout.Orientation.HORIZONTAL);
+        this.editor = new DigitalPrintingMachineEditor(null, this::save, materialService);
+        editor.setVisible(false);
+        var splitLayout = new SplitLayout(addGrid(), editor, SplitLayout.Orientation.HORIZONTAL);
         splitLayout.setSizeFull();
         splitLayout.setSplitterPosition(60.0);
         this.add(splitLayout);
@@ -73,72 +64,34 @@ public class DigitalPrintingMachineView extends VerticalLayout {
 
         grid.addItemClickListener(e->{
             if (!grid.asSingleSelect().isEmpty()) {
-                form.setEnabled(true);
-                bean.setBean(e.getItem());
-                materials.setValue(bean.getBean().getAbstractMaterials());
-                bean.refreshFields();
+                editor.setVisible(true);
+                editor.edit(e.getItem());
             } else cancel();
         });
 
         grid.addSelectionListener(e->{
-           if (e.getFirstSelectedItem().isEmpty()) form.setEnabled(false);
+           if (e.getFirstSelectedItem().isEmpty()) cancel();
         });
 
         return  new VerticalLayout(buttons(), filterField, grid);
-    }
-
-    private VerticalLayout addForm() {
-
-        var name = new TextField("Название");
-        bean.forField(name).asRequired().bind(DigitalPrintingMachine::getName, DigitalPrintingMachine::setName);
-
-        var sizeX = new IntegerField("Максимальная длина материала в мм");
-        bean.forField(sizeX).asRequired().bind(DigitalPrintingMachine::getMaxSizeX, DigitalPrintingMachine::setMaxSizeX);
-
-        var sizeY = new IntegerField("Максимальная ширина материала в мм");
-        bean.forField(sizeY).asRequired().bind(DigitalPrintingMachine::getMaxSizeY, DigitalPrintingMachine::setMaxSizeY);
-
-        var sizeOfClick = new IntegerField("Размер клика в мм");
-        bean.forField(sizeOfClick).asRequired().bind(DigitalPrintingMachine::getSizeOfClick, DigitalPrintingMachine::setSizeOfClick);
-
-        Select<Gap> gapSelect1 = new Select<>();
-        gapSelect1.setLabel("Отступы");
-        gapSelect1.setItems(gapService.findAll());
-        bean.forField(gapSelect1).asRequired().bind(DigitalPrintingMachine::getGap, DigitalPrintingMachine::setGap);
-
-        materials.setSelectedItemsOnTop(true);
-        materials.setItems(materialService.findAllAsAbstract());
-        bean.forField(materials).bind(DigitalPrintingMachine::getAbstractMaterials, DigitalPrintingMachine::setAbstractMaterials);
-
-        var formLayout = new FormLayout();
-        formLayout.add(name, sizeX, sizeY, sizeOfClick, gapSelect1, materials);
-
-        var save = new Button("Сохранить", buttonClickEvent -> save());
-        var cancel = new Button("Отменить", buttonClickEvent -> cancel());
-        var hl = new HorizontalLayout(save,cancel);
-        hl.setJustifyContentMode(JustifyContentMode.END);
-        formLayout.addFormItem(hl,"");
-        return new VerticalLayout(formLayout);
     }
 
     public void populate(String str) {
         grid.setItems(service.populate(str));
     }
 
-    private void save(){
-        if (bean.isValid()) {
-            service.save(bean.getBean());
+    private void save(Object entity){
+        if (entity instanceof DigitalPrintingMachine machine) {
+            service.save(machine);
             Notification.show("Сохранено");
             populate(null);
             cancel();
         }
-        else Notification.show("Заполните требуемые поля!");
     }
 
     private void cancel(){
-        bean.removeBean();
-        bean.refreshFields();
-        form.setEnabled(false);
+        editor.setVisible(false);
+        grid.asSingleSelect().clear();
     }
 
     private HorizontalLayout buttons() {
@@ -152,9 +105,10 @@ public class DigitalPrintingMachineView extends VerticalLayout {
         var hl = new HorizontalLayout();
 
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
-            form.setEnabled(true);
-            bean.setBean(new DigitalPrintingMachine());
-            bean.refreshFields();
+            DigitalPrintingMachine newMachine = new DigitalPrintingMachine();
+            newMachine.initializeVariables(machineVariableService);
+            editor.setVisible(true);
+            editor.edit(newMachine);
         });
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createTemplateButton.setTooltipText("Создать новый принтер");
@@ -184,10 +138,9 @@ public class DigitalPrintingMachineView extends VerticalLayout {
     }
 
     private void deleteElement() {
-        service.delete(bean.getBean());
-        bean.removeBean();
-        bean.refreshFields();
+        service.delete(grid.asSingleSelect().getValue());
         populate(filterField.getValue().trim());
+        cancel();
     }
 
 }

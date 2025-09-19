@@ -8,8 +8,10 @@ import ru.bprn.printhouse.views.machine.repository.DigitalPrintingMachineReposit
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintingMaterials;
 import ru.bprn.printhouse.views.material.repository.PrintingMaterialsRepository;
+import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DigitalPrintingMachineService {
@@ -78,11 +80,11 @@ public class DigitalPrintingMachineService {
         if (bean!= null){
             var printingMachine = new DigitalPrintingMachine();
             printingMachine.setName("Дубликат "+bean.getName());
-            printingMachine.setGap(bean.getGap());
-            printingMachine.setMaxSizeX(bean.getMaxSizeX());
-            printingMachine.setMaxSizeY(bean.getMaxSizeY());
-            printingMachine.setSizeOfClick(bean.getSizeOfClick());
             printingMachine.setSearchStr(bean.getSearchStr());
+            // Глубокое копирование переменных
+            if (bean.getVariables() != null) {
+                printingMachine.setVariables(bean.getVariables().stream().map(Variable::new).collect(Collectors.toList()));
+            }
             this.repository.saveAndFlush(printingMachine);
         }
     }

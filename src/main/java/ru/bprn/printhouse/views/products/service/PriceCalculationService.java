@@ -1,10 +1,9 @@
 package ru.bprn.printhouse.views.products.service;
 
-import org.springframework.stereotype.Service;
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
-import ru.bprn.printhouse.data.entity.Gap;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
@@ -14,8 +13,7 @@ import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductT
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Map; 
 import java.util.Set;
 
 @Service
@@ -28,7 +26,7 @@ public class PriceCalculationService {
      * @param configuration Карта с пользовательскими настройками (тираж, выбранные материалы, значения переменных).
      * @return Итоговая стоимость в виде BigDecimal.
      */
-    public int calculatePrice(Templates template, Map<String, Object> configuration) {
+    public int calculatePrice(Templates template, Map<String, Object> configuration) { 
         int totalPrice = 0;
         int quantity = (int) configuration.getOrDefault("quantity", template.getQuantity());
 
@@ -39,7 +37,7 @@ public class PriceCalculationService {
         return totalPrice;
     }
 
-    private int calculateProductTypePrice(AbstractProductType productType, int quantity, Map<String, Object> configuration) {
+    private int calculateProductTypePrice(AbstractProductType productType, int quantity, Map<String, Object> configuration) { 
         // Подготовка общего контекста для скриптового движка
         Map<String, Object> context = new HashMap<>();
 
@@ -59,6 +57,20 @@ public class PriceCalculationService {
         // Здесь можно будет добавить 'else if' для других типов продуктов
 
         // Этап 2: Расчет стоимости операций на основе подготовленного контекста
+        int mainMaterialCost = 0;
+        if (productType instanceof OneSheetDigitalPrintingProductType osdpt) {
+            // Стоимость основного материала (бумаги)
+            Object materialFromConfig = configuration.get("apt_" + productType.getId() + "_material");
+            PrintSheetsMaterial selectedMaterial = (materialFromConfig instanceof PrintSheetsMaterial)
+                    ? (PrintSheetsMaterial) materialFromConfig
+                    : osdpt.getDefaultMat();
+
+            int totalPrintSheets = ((Number) context.getOrDefault("totalPrintSheets", 0)).intValue();
+            if (selectedMaterial != null && selectedMaterial.getPrice() != null) {
+                mainMaterialCost = totalPrintSheets * selectedMaterial.getPrice();
+            }
+        }
+
         int productTypePrice = 0;
         for (ProductOperation operation : productType.getProductOperations()) {
             // Проверяем, включена ли операция в конфигурации
@@ -69,7 +81,7 @@ public class PriceCalculationService {
             productTypePrice += calculateOperationPrice(operation, context, configuration);
         }
 
-        return productTypePrice;
+        return mainMaterialCost + productTypePrice;
     }
 
     /**
@@ -82,6 +94,15 @@ public class PriceCalculationService {
         double productSizeY = (double) context.getOrDefault("sizeY", 0.0);
         double bleed = (double) context.getOrDefault("bleed", 0.0);
 
+        // Добавляем переменные из всех машин, участвующих в операциях, в общий контекст
+        // Это позволит использовать их в формулах приладки, брака и т.д.
+        for (ProductOperation op : product.getProductOperations()) {
+            AbstractMachine machine = op.getOperation().getMachine();
+            if (machine != null && machine.getVariables() != null) {
+                machine.getVariables().forEach(var -> context.putIfAbsent(var.getKey(), var.getValueAsObject()));
+            }
+        }
+
         // Получаем выбранный материал из конфигурации или материал по умолчанию
         Object materialFromConfig = configuration.get("apt_" + product.getId() + "_material");
         PrintSheetsMaterial selectedMaterial = (materialFromConfig instanceof PrintSheetsMaterial)
@@ -91,24 +112,18 @@ public class PriceCalculationService {
         if (selectedMaterial == null) return; // Не можем считать без материала
 
         // 2. Расчет дообрезного формата изделия
-        double preCutSizeX = productSizeX + bleed * 2;
-        double preCutSizeY = productSizeY + bleed * 2;
+        double preCutSizeX = productSizeX + (bleed * 2);
+        double preCutSizeY = productSizeY + (bleed * 2);
 
         // 3. Расчет рабочей области печатного листа
         double materialSizeX = selectedMaterial.getSizeX();
         double materialSizeY = selectedMaterial.getSizeY();
 
-        int maxGapTop = 0, maxGapBottom = 0, maxGapLeft = 0, maxGapRight = 0;
-        for (ProductOperation operation : product.getProductOperations()) {
-            AbstractMachine machine = operation.getOperation().getMachine();
-            if (machine != null && machine.getGap() != null) {
-                Gap gap = machine.getGap();
-                maxGapTop = Math.max(maxGapTop, gap.getGapTop());
-                maxGapBottom = Math.max(maxGapBottom, gap.getGapBottom());
-                maxGapLeft = Math.max(maxGapLeft, gap.getGapLeft());
-                maxGapRight = Math.max(maxGapRight, gap.getGapRight());
-            }
-        }
+        // Используем переменные из машины для расчета непечатных полей
+        double maxGapTop = ((Number) context.getOrDefault("gap_top", 0.0)).doubleValue();
+        double maxGapBottom = ((Number) context.getOrDefault("gap_bottom", 0.0)).doubleValue();
+        double maxGapLeft = ((Number) context.getOrDefault("gap_left", 0.0)).doubleValue();
+        double maxGapRight = ((Number) context.getOrDefault("gap_right", 0.0)).doubleValue();
 
         double workableAreaX = materialSizeX - maxGapLeft - maxGapRight;
         double workableAreaY = materialSizeY - maxGapTop - maxGapBottom;
@@ -128,7 +143,21 @@ public class PriceCalculationService {
             requiredSheets = (int) Math.ceil((double) quantity / itemsPerSheet);
         }
 
-        // Помещаем все рассчитанные переменные в контекст для использования в формулах
+        // 5. Расчет общего количества печатных листов (totalPrintSheets)
+        // К requiredSheets добавляется количество листов на приладку и брак из формул
+        int totalSetupWasteSheets = 0;
+        int totalOperationWasteSheets = 0;
+        Map<String, Object> wasteContext = new HashMap<>(context);
+        wasteContext.put("requiredSheets", requiredSheets);
+
+        for (ProductOperation operation : product.getProductOperations()) {
+            totalSetupWasteSheets += (int) evaluateFormula(operation.getCustomSetupWasteFormula(), wasteContext);
+            totalOperationWasteSheets += (int) evaluateFormula(operation.getCustomOperationWasteFormula(), wasteContext);
+        }
+        int totalPrintSheets = requiredSheets + totalSetupWasteSheets + totalOperationWasteSheets;
+
+
+        // Помещаем все рассчитанные переменные в основной контекст для использования в формулах
         context.put("preCutSizeX", preCutSizeX);
         context.put("preCutSizeY", preCutSizeY);
         context.put("materialSizeX", materialSizeX);
@@ -138,13 +167,24 @@ public class PriceCalculationService {
         context.put("itemsPerSheet", itemsPerSheet);
         context.put("requiredSheets", requiredSheets);
 
-        // TODO: Пункт 5. Расчет общего количества печатных листов (totalPrintSheets)
-        // Пока что totalPrintSheets = requiredSheets, но в будущем добавится приладка и брак
-        context.put("totalPrintSheets", requiredSheets);
+        context.put("totalSetupWasteSheets", totalSetupWasteSheets);
+        context.put("totalOperationWasteSheets", totalOperationWasteSheets);
+        context.put("totalPrintSheets", totalPrintSheets);
     }
 
-    private int calculateOperationPrice(ProductOperation operation, Map<String, Object> parentContext, Map<String, Object> configuration) {
+    private int calculateOperationPrice(ProductOperation operation, Map<String, Object> parentContext, Map<String, Object> configuration) { 
         Map<String, Object> operationContext = new HashMap<>(parentContext);
+
+        // Добавляем переменные из машины, связанной с этой операцией.
+        // Они могут быть переопределены переменными из самой операции.
+        AbstractMachine machine = operation.getOperation().getMachine();
+        if (machine != null && machine.getVariables() != null) {
+            for (Variable var : machine.getVariables()) {
+                // putIfAbsent, чтобы не переопределять переменные, которые уже могли быть заданы
+                // на более высоком уровне (например, глобальные переменные продукта)
+                operationContext.putIfAbsent(var.getKey(), var.getValueAsObject());
+            }
+        }
 
         // Добавляем переменные операции, переопределяя их пользовательскими значениями
         for (Variable var : operation.getCustomVariables()) {
@@ -153,7 +193,7 @@ public class PriceCalculationService {
         }
 
         int materialCost = 0;
-        if (operation.getCustomMaterialFormula() != null && operation.getCustomMaterialFormula().getFormula() != null) {
+        if (operation.getCustomMaterialFormula() != null && !operation.getCustomMaterialFormula().isBlank()) {
             AbstractMaterials selectedMaterial = (AbstractMaterials) configuration.getOrDefault("op_" + operation.getId() + "_material", operation.getSelectedMaterial());
             if (selectedMaterial != null && selectedMaterial.getPrice() != null) {
                 int materialPrice = selectedMaterial.getPrice(); // Цена в копейках
@@ -163,8 +203,7 @@ public class PriceCalculationService {
         }
 
         int machineCost = 0;
-        if (operation.getCustomMachineTimeFormula() != null && operation.getCustomMachineTimeFormula().getFormula() != null) {
-            AbstractMachine machine = operation.getOperation().getMachine();
+        if (operation.getCustomMachineTimeFormula() != null && !operation.getCustomMachineTimeFormula().isBlank()) {
             if (machine != null && machine.getCostPerHour() != null) {
                 double costPerSecond = (double) machine.getCostPerHour() / 3600.0; // Цена в копейках за секунду
                 double timeInSeconds = evaluateFormula(operation.getCustomMachineTimeFormula().getFormula(), operationContext);
@@ -173,7 +212,7 @@ public class PriceCalculationService {
         }
 
         int actionCost = 0;
-        if (operation.getCustomActionFormula() != null && operation.getCustomActionFormula().getFormula() != null) {
+        if (operation.getCustomActionFormula() != null && !operation.getCustomActionFormula().isBlank()) {
             double actionValue = evaluateFormula(operation.getCustomActionFormula().getFormula(), operationContext);
             actionCost = (int) actionValue; // Предполагаем, что формула возвращает копейки
         }

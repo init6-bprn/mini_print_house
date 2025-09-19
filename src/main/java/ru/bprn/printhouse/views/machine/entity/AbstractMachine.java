@@ -9,12 +9,17 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
+import ru.bprn.printhouse.views.machine.service.MachineVariableService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintingMaterials;
+import ru.bprn.printhouse.views.templates.entity.Variable;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "machine_type")
@@ -42,6 +47,18 @@ public abstract class AbstractMachine {
 
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "abstractMachines", targetEntity = AbstractMaterials.class)
     private Set<AbstractMaterials> abstractMaterials;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<Variable> variables = new LinkedList<>();
+
+    public void initializeVariables(MachineVariableService service) {
+        if (this.variables == null || this.variables.isEmpty()) {
+            this.variables = service.getVariablesFor(this.getClass()).stream()
+                    .map(Variable::new) // Создаем копии, чтобы избежать изменения оригиналов
+                    .collect(Collectors.toList());
+        }
+    }
+
 
     @Override
     public final boolean equals(Object o) {
