@@ -30,10 +30,8 @@ public class OperationService {
             var work = new Operation();
             work.setName(bean.getName());
             work.setHaveAction(bean.isHaveAction());
-            work.setActionFormula(bean.getActionFormula());
             work.setTypeOfOperation(bean.getTypeOfOperation());
             work.setHaveMaterial(bean.isHaveMaterial());
-            work.setMaterialFormula(bean.getMaterialFormula());
             work.setListOfMaterials(bean.getListOfMaterials());
             work.setDefaultMaterial(bean.getDefaultMaterial());
             return Optional.of(this.repository.save(work));

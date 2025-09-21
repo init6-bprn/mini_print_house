@@ -38,22 +38,8 @@ public class ProductOperation {
         // Порядок выполнения операций
         private Integer sequence;
 
-        // Специфичные для этой связки параметры, которые переопределяют или дополняют Operation
-        private double effectiveWasteFactor; // Фактический процент брака для этой операции в продукте
-
         @ManyToOne(fetch = FetchType.EAGER) // Выбранный материал для этой операции
         private AbstractMaterials selectedMaterial;
-
-        @Lob
-        private String customMachineTimeFormula; // Если нужно переопределить формулу из Operation
-        @Lob
-        private String customActionFormula;
-        @Lob
-        private String customMaterialFormula;
-        @Lob
-        private String customOperationWasteFormula; // брак операции
-        @Lob
-        private String customSetupWasteFormula; // приладка
 
         @JdbcTypeCode(SqlTypes.JSON)
         private List<Variable> customVariables = new ArrayList<>(); // Если нужно добавить/переопределить переменные
@@ -70,15 +56,8 @@ public class ProductOperation {
                 this.operation = operation;
                 this.name = ""; // Изначально имя пустое, чтобы пользователь задал его в редакторе
                 this.sequence = 0; // Default value
-                this.effectiveWasteFactor = 0.0; // Default value
                 this.switchOff = operation.isSwitchOff();
-                this.customMachineTimeFormula = operation.getMachineTimeFormula();
-                this.customActionFormula = operation.getActionFormula();
-                this.customMaterialFormula = operation.getMaterialFormula();
-                this.customOperationWasteFormula = operation.getOperationWasteFormula();
-                this.customSetupWasteFormula = operation.getSetupWasteFormula();
                 this.selectedMaterial = operation.getDefaultMaterial();
-                this.customVariables = new ArrayList<>(operation.getVariables());
                 // Выполняем глубокое копирование переменных
                 this.customVariables = operation.getVariables().stream()
                         .map(Variable::new) // Используем конструктор копирования Variable
@@ -89,13 +68,7 @@ public class ProductOperation {
                 this.operation = original.getOperation(); // Ссылка на тот же шаблон операции
                 this.name = original.getName();
                 this.sequence = original.getSequence();
-                this.effectiveWasteFactor = original.getEffectiveWasteFactor();
                 this.selectedMaterial = original.getSelectedMaterial();
-                this.customMachineTimeFormula = original.getCustomMachineTimeFormula();
-                this.customActionFormula = original.getCustomActionFormula();
-                this.customMaterialFormula = original.getCustomMaterialFormula();
-                this.customOperationWasteFormula = original.getCustomOperationWasteFormula();
-                this.customSetupWasteFormula = original.getCustomSetupWasteFormula();
                 this.customVariables = original.getCustomVariables().stream().map(Variable::new).collect(Collectors.toList());
                 this.switchOff = original.isSwitchOff();
         }

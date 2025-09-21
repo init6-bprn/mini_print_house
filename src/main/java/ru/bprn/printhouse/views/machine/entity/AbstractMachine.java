@@ -9,9 +9,11 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
+
 import ru.bprn.printhouse.views.machine.service.MachineVariableService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintingMaterials;
+import ru.bprn.printhouse.views.price.entity.PriceOfMachine;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.LinkedList;
@@ -50,6 +52,9 @@ public abstract class AbstractMachine {
 
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Variable> variables = new LinkedList<>();
+
+    @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PriceOfMachine> priceHistory;
 
     public void initializeVariables(MachineVariableService service) {
         if (this.variables == null || this.variables.isEmpty()) {

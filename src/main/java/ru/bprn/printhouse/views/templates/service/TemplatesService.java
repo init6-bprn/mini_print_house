@@ -45,31 +45,41 @@ public class TemplatesService {
         return temp.map(Templates::getProductTypes).orElse(null);
     }
 
-    public String save(Object object, Templates currentTemplate) {
+    public String save(Object object, Templates currentTemplate, boolean isNew) {
         String s ="Сохранено";
         switch (object) {
             case Templates templates-> save(templates);
-            case AbstractProductType productType -> addProductToTemplateAndSaveAll(currentTemplate, productType);
+            case AbstractProductType productType -> {
+                if (isNew) {
+                    addProductToTemplateAndSaveAll(currentTemplate, productType);
+                } else {
+                    abstractProductService.save(productType);
+                }
+            }
             case ProductOperation productOperation ->abstractProductService.saveProductOperation(productOperation);
             default -> s = "Не сохранено";
         }
         return  s;
     }
 
-    public String delete (Object object, Object parent){
-        String s ="Сохранено";
+    public String delete(Object object, Object parent) {
+        String s = "Удалено";
         switch (object) {
             case Templates template -> delete(template);
             case AbstractProductType entity -> {
-                if (parent instanceof Templates) {
-                    ((Templates) parent).getProductTypes().remove(entity);
-                    save((Templates) parent);
+                if (parent instanceof Templates template) {
+                    findById(template.getId()).ifPresent(managedTemplate -> {
+                        managedTemplate.getProductTypes().removeIf(p -> p.getId().equals(entity.getId()));
+                        save(managedTemplate);
+                    });
                 }
             }
             case ProductOperation productOperation -> {
-                if (parent instanceof AbstractProductType) {
-                    ((AbstractProductType) parent).getProductOperations().remove(productOperation);
-                    abstractProductService.save((AbstractProductType) parent);
+                if (parent instanceof AbstractProductType productType) {
+                    abstractProductService.findAllById(productType.getId()).ifPresent(managedProduct -> {
+                        managedProduct.getProductOperations().removeIf(op -> op.getId().equals(productOperation.getId()));
+                        abstractProductService.save(managedProduct);
+                    });
                 }
             }
             default -> s ="Не знаю, что удалить!";

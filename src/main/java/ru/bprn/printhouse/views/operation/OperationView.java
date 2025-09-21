@@ -22,6 +22,7 @@ import ru.bprn.printhouse.views.machine.service.AbstractMachineService;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
+import ru.bprn.printhouse.views.operation.service.OperationVariableService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.OperationEditor;
 import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
@@ -41,17 +42,20 @@ public class OperationView extends SplitLayout {
     private final FormulaValidationService formulaValidationService;
     private final ProductTypeVariableService productTypeVariableService;
     private final AbstractMachineService abstractMachineService;
+    private final OperationVariableService operationVariableService;
     private OperationEditor operationEditor;
 
     public OperationView(OperationService service,
                          ru.bprn.printhouse.data.service.FormulasService formulasService,
                          TypeOfOperationService typeOfOperationService,
                          AbstractMaterialService materialService,
-                         FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
+                         FormulaValidationService formulaValidationService,
+                         ProductTypeVariableService productTypeVariableService,
                          AbstractMachineService abstractMachineService) {
         this.service = service;
         this.typeOfOperationService = typeOfOperationService;
         this.materialService = materialService;
+        this.operationVariableService = new OperationVariableService(); // Можно внедрить через @Autowired
         materialDialog = new SelectAbstractMaterialsDialog("Выберите материалы", materialService);
         this.formulaValidationService = formulaValidationService;
         this.productTypeVariableService = productTypeVariableService;
@@ -127,7 +131,9 @@ public class OperationView extends SplitLayout {
 
         var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
             operationEditor.setEnabled(true);
-            operationEditor.editor(new Operation());
+            Operation newOperation = new Operation();
+            newOperation.initializeVariables(operationVariableService);
+            operationEditor.editor(newOperation);
         });
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createTemplateButton.setTooltipText("Создать новую работу");

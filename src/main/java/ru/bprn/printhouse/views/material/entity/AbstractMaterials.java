@@ -7,9 +7,12 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
+
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
+import ru.bprn.printhouse.views.price.entity.PriceOfMaterial;
 
 import java.util.Objects;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -44,6 +47,9 @@ public abstract class AbstractMaterials {
             inverseJoinColumns = @JoinColumn(name = "abstract_machine_id", referencedColumnName = "id"),
             joinColumns = @JoinColumn(name = "abstract_material_id", referencedColumnName = "id"))
     protected Set<AbstractMachine> abstractMachines;
+
+    @OneToMany(mappedBy = "material", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PriceOfMaterial> priceHistory;
 
     @Override
     public final boolean equals(Object o) {

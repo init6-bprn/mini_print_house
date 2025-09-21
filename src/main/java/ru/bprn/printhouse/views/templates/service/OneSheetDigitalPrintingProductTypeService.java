@@ -35,20 +35,17 @@ public class OneSheetDigitalPrintingProductTypeService {
 
     public OneSheetDigitalPrintingProductType duplicate(OneSheetDigitalPrintingProductType productType) {
         var newProduct = new OneSheetDigitalPrintingProductType();
-        newProduct.setName(productType.getName());
-        newProduct.setProductSizeX(productType.getProductSizeX());
-        newProduct.setProductSizeY(productType.getProductSizeY());
-        newProduct.getSelectedMaterials().addAll(newProduct.getSelectedMaterials());
+        newProduct.setName(productType.getName() + " - Копия");
+
+        // Копируем связанные сущности
+        newProduct.getSelectedMaterials().addAll(productType.getSelectedMaterials());
         newProduct.setDefaultMaterial(productType.getDefaultMaterial());
-        newProduct.setBleed(productType.getBleed());
-        newProduct.setMaterialFormula(productType.getMaterialFormula());
-        //newProduct.setVariables(productType.getVariables());
-        // Глубокое копирование списка переменных
+
+        // Глубокое копирование списка переменных, где теперь хранятся все поля
         List<Variable> copiedVariables = productType.getVariables().stream()
-                .map(Variable::new) // Используем конструктор копирования
+                .map(Variable::new) // Используем конструктор копирования Variable
                 .collect(Collectors.toList());
         newProduct.setVariables(copiedVariables);
-        newProduct.setMultiplay(productType.isMultiplay());
 
         // Дублируем вложенные ProductOperation
         List<ProductOperation> duplicatedOperations = productType.getProductOperations().stream()

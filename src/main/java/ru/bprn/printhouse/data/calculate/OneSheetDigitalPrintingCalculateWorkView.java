@@ -9,10 +9,10 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import ru.bprn.printhouse.data.entity.DigitalPrinting;
 import ru.bprn.printhouse.views.material.entity.Material;
+import ru.bprn.printhouse.views.price.service.PriceOfMaterialService;
 import ru.bprn.printhouse.data.entity.QuantityColors;
 import ru.bprn.printhouse.data.service.CostOfPrintSizeLeafAndColorService;
 import ru.bprn.printhouse.data.service.JSONToObjectsHelper;
-import ru.bprn.printhouse.data.service.PriceOfMaterialService;
 import ru.bprn.printhouse.data.service.PrintSpeedMaterialDensityService;
 
 import javax.script.ScriptEngine;

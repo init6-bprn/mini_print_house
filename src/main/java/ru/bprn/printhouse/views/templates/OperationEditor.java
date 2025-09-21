@@ -22,6 +22,7 @@ import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -94,11 +95,12 @@ public class OperationEditor extends AbstractEditor<Operation> {
         this.binder.forField(haveMaterial).bind(Operation::isHaveMaterial, Operation::setHaveMaterial);
         this.binder.forField(selectedMaterials).bind(Operation::getListOfMaterials, Operation::setListOfMaterials);
         this.binder.forField(defaultMaterial).bind(Operation::getDefaultMaterial, Operation::setDefaultMaterial);
-        this.binder.forField(equipmentFormula).bind(Operation::getMachineTimeFormula, Operation::setMachineTimeFormula);
-        this.binder.forField(workerFormula).bind(Operation::getActionFormula, Operation::setActionFormula);
-        this.binder.forField(materialFormula).bind(Operation::getMaterialFormula, Operation::setMaterialFormula);
-        this.binder.forField(operationWasteFormula).bind(Operation::getOperationWasteFormula, Operation::setOperationWasteFormula);
-        this.binder.forField(setupWasteFormula).bind(Operation::getSetupWasteFormula, Operation::setSetupWasteFormula);
+
+        this.binder.forField(equipmentFormula).bind(stringVariableProvider("machineTimeFormula"), stringVariableSetter("machineTimeFormula"));
+        this.binder.forField(workerFormula).bind(stringVariableProvider("actionFormula"), stringVariableSetter("actionFormula"));
+        this.binder.forField(materialFormula).bind(stringVariableProvider("materialFormula"), stringVariableSetter("materialFormula"));
+        this.binder.forField(operationWasteFormula).bind(stringVariableProvider("operationWasteFormula"), stringVariableSetter("operationWasteFormula"));
+        this.binder.forField(setupWasteFormula).bind(stringVariableProvider("setupWasteFormula"), stringVariableSetter("setupWasteFormula"));
 
         selectedMaterials.addValueChangeListener(event -> {
             Set<AbstractMaterials> selected = event.getValue();
@@ -113,7 +115,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
             if (this.binder.getBean() != null) {
                 machineSelect.setValue(selector ? machineSelect.getValue() : null);
                 machineSelect.setEnabled(selector);
-                if (!selector) this.binder.getBean().setMachineTimeFormula("");
+                if (!selector) stringVariableSetter("machineTimeFormula").accept(this.binder.getBean(), "");
                 equipmentFormula.setEnabled(selector);
             }
         });
@@ -121,7 +123,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
         haveWorker.addValueChangeListener(e->{
             boolean selector = e.getValue();
             if (this.binder.getBean() != null) {
-                if (!selector) this.binder.getBean().setActionFormula("");
+                if (!selector) stringVariableSetter("actionFormula").accept(this.binder.getBean(), "");
                 workerFormula.setEnabled(selector);
             }
         });
@@ -133,7 +135,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
                 defaultMaterial.setValue(selector ? defaultMaterial.getValue() : null);
                 defaultMaterial.setEnabled(selector);
                 selectedMaterials.setEnabled(selector);
-                if (!selector) this.binder.getBean().setMaterialFormula("");
+                if (!selector) stringVariableSetter("materialFormula").accept(this.binder.getBean(), "");
             }
         });
 
@@ -204,6 +206,23 @@ public class OperationEditor extends AbstractEditor<Operation> {
         // Просто сохраняем обновленный список
         this.binder.getBean().setVariables(updatedVariables);
         System.out.println("Список переменных обновлен, всего: " + updatedVariables.size());
+    }
+
+    private Optional<Variable> getVariable(Operation operation, String key) {
+        if (operation == null || operation.getVariables() == null) {
+            return Optional.empty();
+        }
+        return operation.getVariables().stream()
+                .filter(v -> key.equals(v.getKey()))
+                .findFirst();
+    }
+
+    private com.vaadin.flow.function.ValueProvider<Operation, String> stringVariableProvider(String key) {
+        return operation -> getVariable(operation, key).map(Variable::getValue).orElse("");
+    }
+
+    private com.vaadin.flow.data.binder.Setter<Operation, String> stringVariableSetter(String key) {
+        return (operation, value) -> getVariable(operation, key).ifPresent(v -> v.setValue(value));
     }
 
 }

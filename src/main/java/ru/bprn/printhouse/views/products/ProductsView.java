@@ -13,6 +13,7 @@ import ru.bprn.printhouse.data.calculate.OneSheetDigitalPrintingCalculateWorkVie
 import ru.bprn.printhouse.data.entity.WorkFlow;
 import ru.bprn.printhouse.data.service.*;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.price.service.PriceOfMaterialService;
 
 @PageTitle("Продукты")
 @Route(value = "products", layout = MainLayout.class)

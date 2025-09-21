@@ -432,7 +432,7 @@ public class TemplatesView extends SplitLayout {
 
     private void save(Object object) {
         boolean isNew = !treeGrid.getTreeData().contains(object);
-        var note = templatesService.save(object, currentTemplate);
+        var note = templatesService.save(object, currentTemplate, isNew);
         Notification.show(note);
 
         if (isNew) {

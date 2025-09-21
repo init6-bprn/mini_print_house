@@ -48,9 +48,10 @@ public class UniversalEditorFactory {
             Consumer<Object> onSave) {
         return switch (productType) {
             case OneSheetDigitalPrintingProductType product -> new OneSheetDigitalPrintingProductTypeEditor(
-                            product, onSave, printSheetsMaterialService, formulasService, standartSizeService);
+                            product, onSave, printSheetsMaterialService, formulasService, standartSizeService,
+                            typeOfOperationService, formulaValidationService, productTypeVariableService);
             case Templates template ->  new TemplateEditor(template, onSave);
-            case ProductOperation productOperation -> new ProductOperationEditor(productOperation, onSave, operationService, abstractMaterialService, formulasService, formulaValidationService, productTypeVariableService, typeOfOperationService);
+            case ProductOperation productOperation -> new ProductOperationEditor(productOperation, onSave, abstractMaterialService);
             default -> null;
         };
     }

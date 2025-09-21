@@ -10,18 +10,13 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.data.validator.RegexpValidator;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.validator.RegexpValidator;
 import com.vaadin.flow.data.validator.StringLengthValidator;
-import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
-import ru.bprn.printhouse.views.operation.EditableTextArea;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
 import ru.bprn.printhouse.views.operation.service.OperationService;
-import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
-import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
-import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.text.NumberFormat;
@@ -33,25 +28,14 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     // UI Components
     private final H3 header = new H3();
     private final TextField nameField = new TextField("Название операции в продукте");
-    private final IntegerField sequenceField = new IntegerField("Последовательность");
-    private final NumberField effectiveWasteFactorField = new NumberField("Фактор брака");
     private final ComboBox<AbstractMaterials> selectedMaterialComboBox = new ComboBox<>("Выбранный материал");
     private final Checkbox switchOffAllowed = new Checkbox("Пользователь может отключить эту работу (uncheck - не может)", true);
-
-    // Reusing EditableTextArea for custom formulas
-    private final EditableTextArea<ProductOperation> customMachineTimeFormulaArea;
-    private final EditableTextArea<ProductOperation> customActionFormulaArea;
-    private final EditableTextArea<ProductOperation> customMaterialFormulaArea;
 
     // Main form layout
     private final FormLayout form = new FormLayout();
     
     // Services needed for populating ComboBoxes and EditableTextAreas
-    private final OperationService operationService;
     private final AbstractMaterialService materialService;
-    private final FormulasService formulasService;
-    private final ProductTypeVariableService productTypeVariableService;
-    private final TypeOfOperationService typeOfOperationService;
 
     // List to keep track of dynamically added variable editors
     private final List<Component> dynamicVariableEditors = new ArrayList<>();
@@ -60,37 +44,16 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
 
     public ProductOperationEditor(ProductOperation entity,
                                   Consumer<Object> onSave,
-                                  OperationService operationService,
-                                  AbstractMaterialService materialService,
-                                  FormulasService formulasService, FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
-                                  TypeOfOperationService typeOfOperationService) {
+                                  AbstractMaterialService materialService) {
         super(onSave);
-        this.operationService = operationService;
         this.materialService = materialService;
-        this.formulasService = formulasService;
-        this.productTypeVariableService = productTypeVariableService;
-        this.typeOfOperationService = typeOfOperationService;
 
-        selectedMaterialComboBox.setItems(materialService.findAll());
         selectedMaterialComboBox.setItemLabelGenerator(AbstractMaterials::getName);
-
-        // Initialize EditableTextAreas
-        customMachineTimeFormulaArea = new EditableTextArea<>("Формула времени оборудования", formulasService, typeOfOperationService,
-                formulaValidationService, productTypeVariableService);
-        customActionFormulaArea = new EditableTextArea<>("Формула времени работника", formulasService, typeOfOperationService,
-                formulaValidationService, productTypeVariableService);
-        customMaterialFormulaArea = new EditableTextArea<>("Формула расхода материала", formulasService, typeOfOperationService,
-                formulaValidationService, productTypeVariableService);
 
         // Bind fields
         binder.forField(nameField).bind(ProductOperation::getName, ProductOperation::setName);
-        binder.forField(sequenceField).bind(ProductOperation::getSequence, ProductOperation::setSequence);
-        binder.forField(effectiveWasteFactorField).bind(ProductOperation::getEffectiveWasteFactor, ProductOperation::setEffectiveWasteFactor);
         binder.forField(selectedMaterialComboBox).bind(ProductOperation::getSelectedMaterial, ProductOperation::setSelectedMaterial);
         binder.forField(switchOffAllowed).bind(ProductOperation::isSwitchOff, ProductOperation::setSwitchOff);
-        binder.forField(customMachineTimeFormulaArea).bind(ProductOperation::getCustomMachineTimeFormula, ProductOperation::setCustomMachineTimeFormula);
-        binder.forField(customActionFormulaArea).bind(ProductOperation::getCustomActionFormula, ProductOperation::setCustomActionFormula);
-        binder.forField(customMaterialFormulaArea).bind(ProductOperation::getCustomMaterialFormula, ProductOperation::setCustomMaterialFormula);
 
         // Add components to the layout
         add(buildForm());
@@ -122,8 +85,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         switchOffRow.add(switchOffAllowed, 6);
 
         var fieldsRow = new FormLayout.FormRow();
-        fieldsRow.add(effectiveWasteFactorField, 3);
-        fieldsRow.add(selectedMaterialComboBox, 3);
+        fieldsRow.add(selectedMaterialComboBox, 6);
 
         var variablesHeaderRow = new FormLayout.FormRow();
         variablesHeader.setVisible(false);
@@ -138,26 +100,27 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
 
     @Override
     public void edit(ProductOperation entity) {
-        super.edit(entity);
+        // Сначала нужно заполнить ComboBox данными, и только потом вызывать binder.setBean(),
+        // который находится внутри super.edit(entity).
+        if (entity != null) {
+            // Заполняем ComboBox материалами из родительской операции
+            if (entity.getOperation() != null) {
+                selectedMaterialComboBox.setItems(entity.getOperation().getListOfMaterials());
+            } else {
+                selectedMaterialComboBox.setItems(Collections.emptyList());
+            }
+        }
+
+        super.edit(entity); // Теперь binder может безопасно установить значение
+
         if (entity != null) {
             String operationName = entity.getOperation() != null ? entity.getOperation().getName() : "";
-            String productOperationName = entity.getName() != null && !entity.getName().isBlank()
-                    ? " - " + entity.getName() : "";
+            String productOperationName = entity.getName() != null && !entity.getName().isBlank() ? " - " + entity.getName() : "";
             header.setText("Операция: " + operationName + productOperationName);
         } else {
             header.setText("");
         }
         populateVariableEditors(entity);
-
-        // Передаем контекст переменных в EditableTextArea
-        List<Variable> productVariables = (entity != null && entity.getProduct() != null) ? entity.getProduct().getVariables() : new ArrayList<>();
-        List<Variable> customOperationVariables = (entity != null) ? entity.getCustomVariables() : new ArrayList<>();
-        productVariables.addAll(customOperationVariables); // Объединяем переменные продукта и кастомные переменные операции
-
-        customMachineTimeFormulaArea.setVariableContext(productVariables);
-        customActionFormulaArea.setVariableContext(productVariables);
-        customMaterialFormulaArea.setVariableContext(productVariables);
-
     }
 
     private void populateVariableEditors(ProductOperation entity) {
@@ -201,7 +164,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 ? variable.getDescription()
                 : variable.getKey();
 
-        Binder<Variable> variableBinder = new Binder<>(Variable.class);
+        Binder<Variable> variableBinder = new Binder<>();
         variableBinders.add(variableBinder);
         Component valueEditor;
 
@@ -209,7 +172,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
             case INTEGER:
                 IntegerField integerField = new IntegerField(label);
                 var intBinding = variableBinder.forField(integerField);
-
+                
                 tryParseInt(variable.getMinValue()).ifPresent(min ->
                         intBinding.withValidator(v -> v == null || v >= min, "Значение меньше минимального: " + min));
                 tryParseInt(variable.getMaxValue()).ifPresent(max ->
@@ -228,7 +191,7 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
             case DOUBLE:
                 NumberField numberField = new NumberField(label);
                 var doubleBinding = variableBinder.forField(numberField);
-
+                
                 tryParseDouble(variable.getMinValue()).ifPresent(min ->
                         doubleBinding.withValidator(v -> v == null || v >= min, "Значение меньше минимального: " + min));
                 tryParseDouble(variable.getMaxValue()).ifPresent(max ->

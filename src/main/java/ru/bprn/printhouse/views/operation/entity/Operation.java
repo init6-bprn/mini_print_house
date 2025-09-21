@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.views.operation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -12,6 +13,7 @@ import org.hibernate.type.SqlTypes;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.templates.entity.HasMateria;
+import ru.bprn.printhouse.views.operation.service.OperationVariableService;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.*;
@@ -45,11 +47,9 @@ public class Operation implements HasMateria {
     // Используемое оборудование
     @ManyToOne(fetch = FetchType.EAGER)
     private AbstractMachine abstractMachine = null;
-    private String machineTimeFormula = "";
     private boolean haveMachine = true;
 
     // Работа
-    private String actionFormula = "";
     private boolean haveAction = true;
 
     // Материал
@@ -58,14 +58,7 @@ public class Operation implements HasMateria {
 
     @ManyToOne(fetch = FetchType.EAGER)
     private AbstractMaterials defaultMaterial;
-    private String materialFormula = "";
     private boolean haveMaterial = true;
-
-    @Lob
-    private String operationWasteFormula = ""; // брак операции
-
-    @Lob
-    private String setupWasteFormula = ""; // приладка
 
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -87,6 +80,40 @@ public class Operation implements HasMateria {
     @Override
     public String getMatFormula() {
         return "";
+    }
+
+    public void initializeVariables(OperationVariableService variableService) {
+        this.setVariables(variableService.getPredefinedVariables());
+    }
+
+    @JsonIgnore
+    public String getMachineTimeFormula() {
+        return getVariableValueAsString("machineTimeFormula").orElse("");
+    }
+
+    @JsonIgnore
+    public String getActionFormula() {
+        return getVariableValueAsString("actionFormula").orElse("");
+    }
+
+    @JsonIgnore
+    public String getMaterialFormula() {
+        return getVariableValueAsString("materialFormula").orElse("");
+    }
+
+    @JsonIgnore
+    public String getOperationWasteFormula() {
+        return getVariableValueAsString("operationWasteFormula").orElse("0");
+    }
+
+    @JsonIgnore
+    public String getSetupWasteFormula() {
+        return getVariableValueAsString("setupWasteFormula").orElse("0");
+    }
+
+    private Optional<String> getVariableValueAsString(String key) {
+        if (getVariables() == null) return Optional.empty();
+        return getVariables().stream().filter(v -> key.equals(v.getKey())).map(Variable::getValue).findFirst();
     }
 
     @Override

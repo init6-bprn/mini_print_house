@@ -26,8 +26,6 @@ public class ProductTypeVariableService {
 
     private List<Variable> getOneSheetDigitalPrintingVariables() {
         List<Variable> variables = new ArrayList<>();
-        variables.add(new Variable("quantity", 1, "Количество изделий", Variable.VariableType.INTEGER, "1", "100000", "1", null));
-        variables.add(new Variable("quantityOfMainMaterial", 1, "Количество единиц основного материала", Variable.VariableType.INTEGER, "1", "100000", "1", null));
         variables.add(new Variable("productWidth", 210.0, "Ширина изделия", Variable.VariableType.DOUBLE, "35", "1000", "0.5", null));
         variables.add(new Variable("productLength", 148.5, "Длина изделия", Variable.VariableType.DOUBLE, "35", "1000", "0.5", null));
         variables.add(new Variable("bleed", 2, "Поле на подрезку", Variable.VariableType.DOUBLE, "-7", "10", "0.5", null));
@@ -42,6 +40,10 @@ public class ProductTypeVariableService {
         variables.add(new Variable("rows", 1, "Количество строк изделий на печатном листе", Variable.VariableType.INTEGER, "1", "60", "1", null));
         variables.add(new Variable("thickness", 1, "Толщина основного материала", Variable.VariableType.DOUBLE, "0.01", "1000", null, null));
         variables.add(new Variable("multiplication", "true", "Замостить", Variable.VariableType.BOOLEAN, null,null, null, null));
+        variables.add(new Variable("requiredSheets", 0, "Расчетный листаж (без брака)", Variable.VariableType.INTEGER, "0", "1000000", "1", null));
+        variables.add(new Variable("finalQuantity", 0, "Итоговый тираж (с браком)", Variable.VariableType.INTEGER, "0", "1000000", "1", null));
+        variables.add(new Variable("finalSheets", 0, "Итоговый листаж (с браком и приладкой)", Variable.VariableType.INTEGER, "0", "1000000", "1", null));
+        variables.add(new Variable("materialFormula", "", "Формула расчета материала", Variable.VariableType.STRING, null, null, null, null));
         return variables;
     }
 }

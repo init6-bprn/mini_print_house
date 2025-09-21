@@ -50,18 +50,20 @@ public class AbstractProductService {
     }
 */
         public ProductOperation addOperationToProduct(AbstractProductType product, Operation operation) {
-        ProductOperation newProductOperation = new ProductOperation(operation);
-        // Устанавливаем sequence как следующий по порядку
-        newProductOperation.setSequence(product.getProductOperations().size());
-        newProductOperation.setProduct(product);
-        product.getProductOperations().add(newProductOperation);
-        // Сохраняем родителя, чтобы сработал Cascade.ALL
-        AbstractProductType savedProduct = abstractProductTypeRepository.save(product);
-        // Находим и возвращаем сохраненный экземпляр.
-        // Так как мы добавляем операцию в конец, у нее будет самый большой sequence.
-        return savedProduct.getProductOperations().stream()
-                .max(java.util.Comparator.comparing(ProductOperation::getSequence))
-                .orElse(null); // В теории, этого никогда не должно произойти, если список не пуст
+        // Загружаем управляемую (managed) версию продукта из БД
+        Optional<AbstractProductType> managedProductOpt = abstractProductTypeRepository.findById(product.getId());
+        if (managedProductOpt.isPresent()) {
+            AbstractProductType managedProduct = managedProductOpt.get();
+            ProductOperation newProductOperation = new ProductOperation(operation);
+            newProductOperation.setProduct(managedProduct);
+            newProductOperation.setSequence(managedProduct.getProductOperations().size());
+            managedProduct.getProductOperations().add(newProductOperation);
+
+            AbstractProductType savedProduct = abstractProductTypeRepository.save(managedProduct);
+            // Возвращаем последнюю добавленную операцию из сохраненного (и теперь актуального) продукта
+            return savedProduct.getProductOperations().get(savedProduct.getProductOperations().size() - 1);
+        }
+        return null; // Возвращаем null, если родительский продукт не найден
     }
 
     public ProductOperation saveProductOperation(ProductOperation productOperation) {

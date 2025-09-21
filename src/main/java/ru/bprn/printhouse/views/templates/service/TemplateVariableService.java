@@ -28,7 +28,11 @@ public class TemplateVariableService {
                 "if (quantity <= 100) return '#'; // до рублей\n" +
                 "if (quantity <= 1000) return '#.#'; // до десятков копеек\n" +
                 "return '#.##'; // до копеек",
-                "Маска/формула округления", Variable.VariableType.STRING));
+                "Маска/формула округления", VariableType.STRING));
+        variables.add(new Variable("margin", 20.0, "Маржа, %", VariableType.DOUBLE, "0", "1000", "1", null));
+        variables.add(new Variable("tax", 6.0, "Налог, %", VariableType.DOUBLE, "0", "100", "0.1", null));
+        variables.add(new Variable("banking", 2.5, "Банковские услуги, %", VariableType.DOUBLE, "0", "100", "0.1", null));
+        variables.add(new Variable("worker_rate", 500.0, "Базовая стоимость нормо-часа", VariableType.DOUBLE, "0", "10000", "50", null));
         return variables;
     }
 }

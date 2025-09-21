@@ -10,6 +10,7 @@ import ru.bprn.printhouse.annotation.MenuItem;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 
+import java.util.Optional;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,8 +23,6 @@ import java.util.stream.Collectors;
 @Setter
 @MenuItem(name = "Однолистовая Печать", icon = VaadinIcon.PRINT, context = "product", description = "Компонент однолистовой печати")
 public class OneSheetDigitalPrintingProductType extends AbstractProductType implements HasMateria{
-
-    private String materialFormula;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private PrintSheetsMaterial defaultMaterial;
@@ -50,7 +49,11 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
     @Override
     @Transient
     public String getMatFormula() {
-        return materialFormula;
+        return getVariableValueAsString("materialFormula").orElse("");
+    }
+
+    private Optional<String> getVariableValueAsString(String key) {
+        return getVariables().stream().filter(v -> key.equals(v.getKey())).map(Variable::getValue).findFirst();
     }
 
     // Метод @PrePersist addVariable() был удален.

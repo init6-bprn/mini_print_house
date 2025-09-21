@@ -12,9 +12,10 @@ import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 import org.vaadin.crudui.form.impl.form.factory.DefaultCrudFormFactory;
 import org.vaadin.crudui.layout.impl.HorizontalSplitCrudLayout;
-import ru.bprn.printhouse.data.entity.PriceOfMaterial;
+
 import ru.bprn.printhouse.views.material.service.MaterialService;
-import ru.bprn.printhouse.data.service.PriceOfMaterialService;
+import ru.bprn.printhouse.views.price.entity.PriceOfMaterial;
+import ru.bprn.printhouse.views.price.service.PriceOfMaterialService;
 import ru.bprn.printhouse.views.MainLayout;
 
 import java.util.List;
