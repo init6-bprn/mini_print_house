@@ -23,6 +23,7 @@ import ru.bprn.printhouse.views.templates.repository.TemplatesRepository;
 import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
 import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -104,7 +105,7 @@ public class DatabaseSeeder implements ApplicationRunner {
         productOperation.setProduct(productType);
 
         // 7. Собираем все вместе
-        productType.setOperations(Set.of(productOperation));
+        productType.setProductOperations(List.of(productOperation));
         businessCardTemplate.setProductTypes(Set.of(productType));
 
         // 8. Сохраняем главный шаблон. Благодаря Cascade, все дочерние объекты сохранятся.
