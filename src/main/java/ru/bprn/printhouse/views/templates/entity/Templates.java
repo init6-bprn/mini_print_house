@@ -38,7 +38,7 @@ public class Templates{
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Variable> variables = new ArrayList<>();
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
             name = "templates_product",
             joinColumns = @JoinColumn(name = "templates_id"),

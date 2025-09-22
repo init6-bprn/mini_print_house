@@ -3,15 +3,6 @@ insert into user_roles (user_id, roles) values ('1', 'USER');
 insert into application_user (version, id, username,name,hashed_password,profile_picture) values (1, '2','admin','Emma Powerful','$2a$10$jpLNVNeA7Ar/ZQ2DKbKCm.MuT2ESe.Qop96jipKMq7RaUgCoQedV.','');
 insert into user_roles (user_id, roles) values ('2', 'USER');
 insert into user_roles (user_id, roles) values ('2', 'ADMIN');
-insert into quantity_colors (id, name) values ('1', 'Не печатаем');
-insert into quantity_colors (id, name) values ('2', 'Цветная печать');
-insert into quantity_colors (id, name) values ('3', 'Печать только черным');
-insert into quantity_colors (id, name) values ('4', 'CMYK + 1 Spot');
-insert into quantity_colors (id, name) values ('5', 'CMYK + 2 Spots');
-insert into quantity_colors (id, name) values ('6', '1 Spot');
-insert into quantity_colors (id, name) values ('7', '2 Spot');
-insert into quantity_colors (id, name) values ('8', '3 Spot');
-insert into quantity_colors (id, name) values ('9', '4 Spot');
 insert into type_of_printer (id, name) values ('1', 'Laser jet');
 insert into type_of_printer (id, name) values ('2', 'Ink jet');
 insert into type_of_printer (id, name) values ('3', 'Duplicator');
@@ -39,6 +30,4 @@ insert into variables_for_main_works(id,clazz,description,name) values ('14','Di
 insert into variables_for_main_works(id,clazz,description,name) values ('15','DigitalPrinting','Стоимость одного отпечатка на лицевой стороне','OSDP_FrontPrice');
 insert into variables_for_main_works(id,clazz,description,name) values ('16','DigitalPrinting','Стоимость одного отпечатка на оборотной стороне','OSDP_BackPrice');
 insert into variables_for_main_works(id,clazz,description,name) values ('17','DigitalPrinting','Стоимость работы по печати одного отпечатка','OSDP_EmployerPrice');
-INSERT INTO formulas (id,description,formula,name) VALUES (1,'Формула расчета однолистовой цифровой печати','quantityOfPrintSheets*(OSDP_FrontPrice+OSDP_BackPrice)','Формула расчета однолистовой цифровой печати');
-INSERT INTO formulas (id,description,formula,name) VALUES (2,'Формула расчета материала однолистовой цифровой печати','quantityOfPrintSheets*OSDP_MaterialPrice','Формула расчета материала однолистовой цифровой печати');
-INSERT INTO formulas (id,description,formula,name) VALUES (3,'Формула расчета однолистовой цифровой печати','quantityOfPrintSheets*(OSDP_FrontPrice+OSDP_BackPrice)','Guano apes');
+

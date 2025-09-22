@@ -6,6 +6,9 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import ru.bprn.printhouse.data.entity.TypeOfMaterial;
+import ru.bprn.printhouse.data.repository.TypeOfMaterialRepository;
 import ru.bprn.printhouse.views.machine.entity.DigitalPrintingMachine;
 import ru.bprn.printhouse.views.machine.repository.DigitalPrintingMachineRepository;
 import ru.bprn.printhouse.views.machine.service.MachineVariableService;
@@ -41,6 +44,8 @@ public class DatabaseSeeder implements ApplicationRunner {
     private final DigitalPrintingMachineRepository machineRepository;
     private final PrintSheetsMaterialRepository printSheetsMaterialRepository;
     private final PrintingMaterialsRepository printingMaterialsRepository;
+    private final TypeOfMaterialRepository typeOfMaterialRepository;
+    
 
     // Сервисы для инициализации переменных
     private final TemplateVariableService templateVariableService;
@@ -65,8 +70,14 @@ public class DatabaseSeeder implements ApplicationRunner {
         machineRepository.save(cpm);
 
         // 2. Создаем материалы
+        TypeOfMaterial type = new TypeOfMaterial();
+        type.setName("Бумага");
+        typeOfMaterialRepository.save(type);
+
+
         PrintSheetsMaterial paper = new PrintSheetsMaterial();
         paper.setName("Мелованная бумага 300г/м2, SRA3");
+        paper.setTypeOfMaterial(type);
         paper.setSizeX(450);
         paper.setSizeY(320);
         paper.setThickness(300);
