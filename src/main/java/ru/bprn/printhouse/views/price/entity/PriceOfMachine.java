@@ -16,6 +16,6 @@ import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 @NoArgsConstructor
 public class PriceOfMachine extends AbstractPrice {
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     private AbstractMachine machine;
 }
