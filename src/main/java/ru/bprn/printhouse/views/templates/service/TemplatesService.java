@@ -124,27 +124,26 @@ public class TemplatesService {
     public AbstractProductType duplicateProduct(AbstractProductType productType) {return this.abstractProductService.duplicateProductType(productType);}
 
     public void addProductToTemplate(Templates template, AbstractProductType productType) {
-        var temp = findById(template.getId());
-        var prod = this.abstractProductService.findAllById(productType.getId());
-        if (temp.isPresent()&& prod.isPresent()) {
-            var t = temp.get();
-            var p = prod.get();
-            t.getProductTypes().add(duplicateProduct(p));
-            repository.save(t);
-        }
+        // Находим управляемую (managed) версию родительского шаблона
+        findById(template.getId()).ifPresent(managedTemplate -> {
+            // Добавляем новый (transient) продукт в коллекцию
+            managedTemplate.getProductTypes().add(productType);
+            // Сохраняем родителя. CascadeType.ALL на коллекции позаботится о сохранении нового продукта.
+            save(managedTemplate);
+        });
     }
 
     public ProductOperation duplicateProductOperation(AbstractProductType parentProduct, ProductOperation original) {
-        if (original == null || original.getProduct() == null) return null;
-        ProductOperation newProductOperation = productOperationService.duplicate(original);
-        newProductOperation.setProduct(parentProduct);
-        // Устанавливаем sequence как следующий по порядку в списке родителя
-        newProductOperation.setSequence(parentProduct.getProductOperations().size());
-        parentProduct.getProductOperations().add(newProductOperation);
-        AbstractProductType savedParent = abstractProductService.save(parentProduct);
-        return savedParent.getProductOperations().stream()
-                .max(java.util.Comparator.comparing(ProductOperation::getSequence))
-                .orElse(null);
+        // Находим управляемую версию родительского продукта
+        return abstractProductService.findAllById(parentProduct.getId()).map(managedParent -> {
+            ProductOperation newProductOperation = productOperationService.duplicate(original);
+            newProductOperation.setProduct(managedParent);
+            newProductOperation.setSequence(managedParent.getProductOperations().size());
+            managedParent.getProductOperations().add(newProductOperation);
+            AbstractProductType savedParent = abstractProductService.save(managedParent);
+            // Возвращаем только что сохраненную операцию
+            return savedParent.getProductOperations().get(savedParent.getProductOperations().size() - 1);
+        }).orElse(null);
     }
 
     public ProductOperation addOperationToProduct(AbstractProductType product, Operation operation) {

@@ -45,7 +45,7 @@ public class ProductOperation {
         private List<Variable> customVariables = new ArrayList<>(); // Если нужно добавить/переопределить переменные
 
         // Ссылка на Product
-        @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+        @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "abstract_product_id")
         @ToString.Exclude
         private AbstractProductType product;

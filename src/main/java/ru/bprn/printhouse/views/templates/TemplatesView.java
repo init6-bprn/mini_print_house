@@ -37,14 +37,10 @@ import ru.bprn.printhouse.views.operation.entity.ProductOperation;
 import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
-import ru.bprn.printhouse.views.templates.entity.Templates;
-import ru.bprn.printhouse.views.templates.entity.TemplatesMenuItem;
+import ru.bprn.printhouse.views.templates.entity.*;
 import ru.bprn.printhouse.views.templates.service.*;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @PageTitle("Редактирование шаблонов")
@@ -53,15 +49,12 @@ import java.util.stream.Collectors;
 public class TemplatesView extends SplitLayout {
 
     private final UniversalEditorFactory universalEditorFactory;
-    private final TemplatesService templatesService;
-    private final AbstractProductService abstractProductService;
+    private final TemplatesModuleService templatesModuleService;
     private final OperationService operationService;
     private final PrintSheetsMaterialService printSheetsMaterialService;
     private final TemplatesMenuItemService menuItemService;
     private final ProductTypeVariableService productTypeVariableService;
     private final TemplateVariableService templateVariableService;
-
-    private final BeanValidationBinder<Templates> templatesBinder;
 
     private final TreeGrid<Object> treeGrid = new TreeGrid<>();
     private final TextField filterField = new TextField();
@@ -76,15 +69,14 @@ public class TemplatesView extends SplitLayout {
     private MenuItem moveUpItem;
     private MenuItem moveDownItem;
 
-    public TemplatesView(TemplatesService templatesService, AbstractProductService abstractProductService,
+    public TemplatesView(TemplatesModuleService templatesModuleService,
                          OperationService operationService, PrintSheetsMaterialService printSheetsMaterialService,
                          FormulasService formulasService, FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
                          StandartSizeService standartSizeService, TemplatesMenuItemService menuItemService, TemplateVariableService templateVariableService, TypeOfOperationService typeOfOperationService,
                          AbstractMaterialService abstractMaterialService){
 
 
-        this.templatesService = templatesService;
-        this.abstractProductService = abstractProductService;
+        this.templatesModuleService = templatesModuleService;
         this.operationService = operationService;
         this.printSheetsMaterialService = printSheetsMaterialService;
         this.menuItemService = menuItemService;
@@ -93,9 +85,6 @@ public class TemplatesView extends SplitLayout {
 
         this.universalEditorFactory = new UniversalEditorFactory(
                 printSheetsMaterialService, formulasService, productTypeVariableService, formulaValidationService, standartSizeService, typeOfOperationService, abstractMaterialService, operationService, this);
-                
-        templatesBinder = new BeanValidationBinder<>(Templates.class);
-        templatesBinder.setChangeDetectionEnabled(true);
 
         confirmDeleteDialog = new ConfirmDialog("Внимание!" , "", "Да",
                 confirmEvent -> {
@@ -366,7 +355,7 @@ public class TemplatesView extends SplitLayout {
 
     private void addOperationToMenu(SubMenu menu, Operation opTemplate) {
         menu.addItem(opTemplate.getName(), e -> {
-            ProductOperation newProductOperation = templatesService.addOperationToProduct(currentProductType, opTemplate);
+            ProductOperation newProductOperation = templatesModuleService.addOperationToProduct(currentProductType, opTemplate);
             treeGrid.getTreeData().addItem(currentProductType, newProductOperation);
             treeGrid.getDataProvider().refreshItem(currentProductType, true);
             // Выбираем новый элемент, что вызовет открытие редактора
@@ -406,7 +395,7 @@ public class TemplatesView extends SplitLayout {
             var childrenList  = new ArrayList<>(treeData.getChildren(parent));
             
             if (parent != null) {
-                templatesService.swapProductOperations(currentSelection, up);
+                templatesModuleService.swapProductOperations(currentSelection, up);
                 for (var child:childrenList) treeData.removeItem(child);
                 for (ProductOperation po : parent.getProductOperations()) treeData.addItem(parent, po);
                 treeGrid.getDataProvider().refreshItem(parent, true);
@@ -432,57 +421,33 @@ public class TemplatesView extends SplitLayout {
 
     private void save(Object object) {
         boolean isNew = !treeGrid.getTreeData().contains(object);
-        var note = templatesService.save(object, currentTemplate, isNew);
-        Notification.show(note);
+        Object parent = isNew ? (object instanceof ProductOperation ? currentProductType : currentTemplate) : treeGrid.getTreeData().getParent(object);
+
+        templatesModuleService.save(object, parent);
+        Notification.show("Сохранено");
 
         if (isNew) {
-            Object parentToRefresh = null;
-            if (object instanceof AbstractProductType) {
-                parentToRefresh = currentTemplate;
-            } else if (object instanceof ProductOperation) {
-                parentToRefresh = currentProductType;
-            }
-            treeGrid.getTreeData().addItem(parentToRefresh, object);
-            refreshAndSelect(object, parentToRefresh);
+            treeGrid.getTreeData().addItem(parent, object);
+            refreshAndSelect(object, parent);
         } else {
             // Это обновление существующего элемента
-            refreshAndSelect(object, treeGrid.getTreeData().getParent(object));
+            refreshAndSelect(object, parent);
         }
     }
 
 
     private void deleteElement(Object object, Object parent){
-        var note = templatesService.delete(object, parent);
-        Notification.show(note);
+        templatesModuleService.delete(object, parent);
+        Notification.show("Удалено");
         treeGrid.getTreeData().removeItem(object);
         refreshAndSelect(null, parent);
     }
 
     private void paste(Object obj, Object parent) {
         if (obj!=null){
-            switch (obj) {
-                case Templates template -> {
-                    Templates newTemplate = templatesService.duplicateTemplate(template); // Предполагается, что этот метод делает глубокую копию
-                    // После дублирования переменные уже должны быть скопированы, но на всякий случай
-                    if (newTemplate.getVariables().isEmpty()) newTemplate.initializeVariables(templateVariableService);
-                    addHierarchicalItemToTreeData(null, newTemplate);
-                    refreshAndSelect(newTemplate, null);
-                }
-                case AbstractProductType productType -> {
-                    AbstractProductType newProduct = templatesService.duplicateProduct(productType); // Предполагается, что этот метод делает глубокую копию
-                    templatesService.addProductToTemplate((Templates) parent, newProduct);
-                    addHierarchicalItemToTreeData(parent, newProduct);
-                    refreshAndSelect(newProduct, parent);
-                }
-                case ProductOperation productOperation -> {
-                    ProductOperation newOperation = templatesService.duplicateProductOperation((AbstractProductType) parent, productOperation);
-                    if (newOperation != null) {
-                        treeGrid.getTreeData().addItem(parent, newOperation);
-                        refreshAndSelect(newOperation, parent);
-                    }
-                }
-                default->{}
-            }
+            Object newEntity = templatesModuleService.duplicate(obj, parent);
+            addHierarchicalItemToTreeData(parent, newEntity);
+            refreshAndSelect(newEntity, parent);
         }
         else Notification.show("Сначала выделите какой-либо элемент таблицы");
     }
@@ -497,7 +462,7 @@ public class TemplatesView extends SplitLayout {
     }
 
     private void populate(String filter) {
-        treeGrid.setDataProvider(templatesService.populateGrid(filter));
+        treeGrid.setDataProvider(templatesModuleService.getTreeDataProvider(filter));
     }
 
     private void refreshAndSelect(Object itemToSelect, Object parentToRefresh) {
