@@ -37,12 +37,6 @@ public class AbstractProductService {
 
     public void delete (AbstractProductType product) {this.abstractProductTypeRepository.delete(product);}
 
-    public AbstractProductType duplicateProductType(AbstractProductType productType) {
-        return switch (productType) {
-            case OneSheetDigitalPrintingProductType product -> printingProductTypeService.duplicate(product);
-            default -> null;
-        };
-    }
 /*
     public void duplicateOperation(AbstractProductType product, Operation operation) {
         operationService.duplicate(operation).ifPresent(product.getOperationsSet()::add);

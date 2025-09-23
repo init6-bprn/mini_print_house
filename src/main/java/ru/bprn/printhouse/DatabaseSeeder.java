@@ -88,12 +88,22 @@ public class DatabaseSeeder implements ApplicationRunner {
         toner.setUnitsOfMeasurement("клик");
         printingMaterialsRepository.save(toner);
 
+        // --- Устанавливаем связи ---
+        // Связываем машину с ее расходными материалами (тонер и бумага)
+        // Важно: сначала сохраняем материалы, потом обновляем машину
+        cpm.setAbstractMaterials(Set.of(paper, toner));
+        machineRepository.save(cpm);
+
         // 3. Создаем шаблон операции "Цифровая печать"
         Operation digitalPrintOp = new Operation();
         digitalPrintOp.setName("Цифровая печать");
         digitalPrintOp.setAbstractMachine(cpm);
+
+        // Устанавливаем, что для этой конкретной операции доступны ОБА материала,
+        // которые есть у машины. Технолог мог бы выбрать и подмножество.
+        digitalPrintOp.setListOfMaterials(Set.of(paper, toner));
+        // Устанавливаем тонер как материал по умолчанию для этой операции
         digitalPrintOp.setDefaultMaterial(toner);
-        digitalPrintOp.setListOfMaterials(Set.of(toner));
         digitalPrintOp.initializeVariables(operationVariableService);
         operationRepository.save(digitalPrintOp);
 
@@ -107,7 +117,9 @@ public class DatabaseSeeder implements ApplicationRunner {
         OneSheetDigitalPrintingProductType productType = new OneSheetDigitalPrintingProductType();
         productType.setName("Основа визитки");
         productType.setDefaultMaterial(paper);
-        productType.setSelectedMaterials(Set.of(paper));
+        // Для продукта типа "Однолистовая печать" доступны только листовые материалы.
+        // В нашем случае это только 'paper'.
+        productType.setSelectedMaterials(Set.of(paper)); //
         productType.initializeVariables(productTypeVariableService);
 
         // 6. Создаем конкретную операцию для этого компонента на основе шаблона

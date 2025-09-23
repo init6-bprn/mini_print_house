@@ -11,10 +11,7 @@ import org.hibernate.proxy.HibernateProxy;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.price.entity.PriceOfMaterial;
 
-import java.util.Objects;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -46,10 +43,10 @@ public abstract class AbstractMaterials {
             name = "abstract_material_abstract_printer",
             inverseJoinColumns = @JoinColumn(name = "abstract_machine_id", referencedColumnName = "id"),
             joinColumns = @JoinColumn(name = "abstract_material_id", referencedColumnName = "id"))
-    protected Set<AbstractMachine> abstractMachines;
+    protected Set<AbstractMachine> abstractMachines = new HashSet<>();
 
     @OneToMany(mappedBy = "material", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PriceOfMaterial> priceHistory;
+    private List<PriceOfMaterial> priceHistory = new ArrayList<>();
 
     @Override
     public final boolean equals(Object o) {

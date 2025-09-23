@@ -95,34 +95,6 @@ public class TemplatesService {
         }
     }
 /* 
-    public void duplicateTemplate(Templates template){
-        duplicateTemplate(template);
-    }
-    */
-
-    public Templates duplicateTemplate(Templates template) {
-                var newTemplate = new Templates();
-        newTemplate.setDescription(template.getDescription());
-        newTemplate.setName(template.getName()+" - Дубликат");
-
-        // Глубокое копирование переменных
-        List<Variable> copiedVariables = template.getVariables().stream()
-                .map(Variable::new) // Используем конструктор копирования
-                .collect(Collectors.toList());
-        newTemplate.setVariables(copiedVariables);
-
-        Set<AbstractProductType> set = new HashSet<>();
-        for (AbstractProductType product:template.getProductTypes()) {
-            var dc = duplicateProduct(product);
-            if (dc != null) set.add(dc);
-        }
-        newTemplate.setProductTypes(set);
-        this.save(newTemplate);
-        return newTemplate;
-    }
-
-    public AbstractProductType duplicateProduct(AbstractProductType productType) {return this.abstractProductService.duplicateProductType(productType);}
-
     public void addProductToTemplate(Templates template, AbstractProductType productType) {
         // Находим управляемую (managed) версию родительского шаблона
         findById(template.getId()).ifPresent(managedTemplate -> {
@@ -132,20 +104,6 @@ public class TemplatesService {
             save(managedTemplate);
         });
     }
-
-    public ProductOperation duplicateProductOperation(AbstractProductType parentProduct, ProductOperation original) {
-        // Находим управляемую версию родительского продукта
-        return abstractProductService.findAllById(parentProduct.getId()).map(managedParent -> {
-            ProductOperation newProductOperation = productOperationService.duplicate(original);
-            newProductOperation.setProduct(managedParent);
-            newProductOperation.setSequence(managedParent.getProductOperations().size());
-            managedParent.getProductOperations().add(newProductOperation);
-            AbstractProductType savedParent = abstractProductService.save(managedParent);
-            // Возвращаем только что сохраненную операцию
-            return savedParent.getProductOperations().get(savedParent.getProductOperations().size() - 1);
-        }).orElse(null);
-    }
-
     public ProductOperation addOperationToProduct(AbstractProductType product, Operation operation) {
         return this.abstractProductService.addOperationToProduct(product, operation);
     }
@@ -173,7 +131,7 @@ public class TemplatesService {
         }
         return new TreeDataProvider<>(data);
     }
-
+*/
     public List<Templates> findAllTemplates(String stringFilter) {
         if (stringFilter == null || stringFilter.isEmpty()) {
             return repository.findAll();

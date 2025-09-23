@@ -6,6 +6,7 @@ import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.views.operation.repository.OperationRepository;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -28,12 +29,17 @@ public class OperationService {
     public Optional<Operation> duplicate(Operation bean) {
         if (bean!= null){
             var work = new Operation();
-            work.setName(bean.getName());
+            work.setName(bean.getName() + " (копия)");
             work.setHaveAction(bean.isHaveAction());
             work.setTypeOfOperation(bean.getTypeOfOperation());
+
+            work.setHaveMachine(bean.isHaveMachine());
+            work.setAbstractMachine(bean.getAbstractMachine());
+
             work.setHaveMaterial(bean.isHaveMaterial());
             work.setListOfMaterials(bean.getListOfMaterials());
             work.setDefaultMaterial(bean.getDefaultMaterial());
+            work.setVariables(new ArrayList<>(bean.getVariables())); // Глубокое копирование переменных
             return Optional.of(this.repository.save(work));
         }
         else return Optional.empty();

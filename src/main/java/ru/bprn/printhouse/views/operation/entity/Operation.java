@@ -129,7 +129,7 @@ public class Operation implements HasMateria {
 
     @Override
     public final int hashCode() {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+        return Objects.hash(id);
     }
 
     @Override

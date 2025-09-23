@@ -63,7 +63,7 @@ public class OperationView extends SplitLayout {
         this.setSizeFull();
         this.addToPrimary(addGrid());
         this.addToSecondary(operationEditor = new OperationEditor(null, this::save, typeOfOperationService, materialService,
-                formulasService, formulaValidationService, productTypeVariableService, abstractMachineService));
+                formulasService, formulaValidationService, productTypeVariableService, abstractMachineService, service));
         operationEditor.setEnabled(false);
         this.setOrientation(SplitLayout.Orientation.HORIZONTAL);
         this.setSizeFull();

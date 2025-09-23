@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
+import ru.bprn.printhouse.views.material.repository.PrintSheetsMaterialRepository;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
 import ru.bprn.printhouse.views.operation.service.ProductOperationService;
@@ -28,6 +29,7 @@ public class TemplatesModuleService {
     private final TemplatesRepository templatesRepository;
     private final AbstractProductTypeRepository abstractProductTypeRepository;
     private final ProductOperationService productOperationService;
+    private final PrintSheetsMaterialRepository printSheetsMaterialRepository;
 
     public TreeDataProvider<Object> getTreeDataProvider(String filter) {
         List<Templates> templates = (filter == null || filter.isEmpty())
@@ -45,19 +47,32 @@ public class TemplatesModuleService {
         return new TreeDataProvider<>(data);
     }
 
+    @Transactional
     public Object save(Object entity, Object parent) {
         return switch (entity) {
             case Templates t -> templatesRepository.save(t);
             case AbstractProductType pt -> {
-                if (parent instanceof Templates p) {
+                // Если ID нет, это новый продукт, который нужно добавить к родителю
+                if (pt.getId() == null && parent instanceof Templates p) {
                     Templates managedParent = templatesRepository.findById(p.getId()).orElseThrow();
                     managedParent.getProductTypes().add(pt);
                     templatesRepository.save(managedParent);
                     yield pt;
                 }
-                yield abstractProductTypeRepository.save(pt);
+                // Иначе это обновление существующего продукта
+                yield abstractProductTypeRepository.save(pt); // save() выполнит merge для существующей сущности
             }
-            case ProductOperation po -> productOperationService.save(po);
+            case ProductOperation po -> {
+                // Если ID нет, это новая операция, которую нужно добавить к родителю
+                if (po.getId() == null && parent instanceof AbstractProductType p) {
+                    // Используем перегруженный метод, который принимает уже созданный объект
+                    // и правильно его сохраняет, возвращая управляемую версию.
+                    yield addOperationToProduct(p, po);
+                }
+                // Иначе это обновление существующей операции.
+                // save() вернет обновленный управляемый экземпляр.
+                yield productOperationService.save(po);
+            }
             default -> throw new IllegalArgumentException("Unsupported entity type for saving: " + entity.getClass());
         };
     }
@@ -131,40 +146,41 @@ public class TemplatesModuleService {
             var newProduct = new OneSheetDigitalPrintingProductType();
             newProduct.setName(osdpt.getName() + " - Копия");
 
-            // 1. Собираем все уникальные материалы из оригинального продукта
-            Set<AbstractMaterials> uniqueOriginalMaterials = new HashSet<>(osdpt.getSelectedMaterials());
-            if (osdpt.getDefaultMaterial() != null) {
-                uniqueOriginalMaterials.add(osdpt.getDefaultMaterial());
-            }
-
-            Set<PrintSheetsMaterial> finalMaterials = uniqueOriginalMaterials.stream()
-                    .map(m -> (PrintSheetsMaterial) m)
+            // 1. Собираем ID материалов из оригинального (detached) продукта
+            Set<UUID> materialIds = osdpt.getSelectedMaterials().stream()
+                    .map(AbstractMaterials::getId)
                     .collect(Collectors.toSet());
-            newProduct.setSelectedMaterials(finalMaterials);
 
-            // 2. Устанавливаем defaultMaterial как ссылку на объект, который УЖЕ лежит в новой коллекции
+            UUID defaultMaterialId = null;
             if (osdpt.getDefaultMaterial() != null) {
-                finalMaterials.stream()
-                        .filter(m -> m.getId().equals(osdpt.getDefaultMaterial().getId()))
-                        .findFirst()
-                        .ifPresent(newProduct::setDefaultMaterial);
+                defaultMaterialId = osdpt.getDefaultMaterial().getId();
+                materialIds.add(defaultMaterialId);
             }
 
-            // 3. Глубокое копирование переменных
+            // 2. Загружаем управляемые (managed) экземпляры материалов из БД
+            if (!materialIds.isEmpty()) {
+                Set<PrintSheetsMaterial> managedMaterials = new HashSet<>(printSheetsMaterialRepository.findAllById(materialIds));
+                newProduct.setSelectedMaterials(managedMaterials);
+
+                // 3. Устанавливаем defaultMaterial как ссылку на управляемый объект из загруженной коллекции
+                if (defaultMaterialId != null) {
+                    UUID finalDefaultMaterialId = defaultMaterialId;
+                    managedMaterials.stream()
+                            .filter(m -> m.getId().equals(finalDefaultMaterialId))
+                            .findFirst()
+                            .ifPresent(newProduct::setDefaultMaterial);
+                }
+            }
+
+            // 4. Глубокое копирование переменных
             newProduct.setVariables(osdpt.getVariables().stream().map(Variable::new).collect(Collectors.toList()));
 
-            // 4. Дублируем операции и исправляем их ссылки на материалы
+            // 5. Дублируем операции
             List<ProductOperation> duplicatedOperations = osdpt.getProductOperations().stream()
                     .map(originalOp -> {
                         ProductOperation newOp = new ProductOperation(originalOp);
+                        // Устанавливаем связь с новым (еще не сохраненным) продуктом.
                         newOp.setProduct(newProduct);
-
-                        if (newOp.getSelectedMaterial() != null) {
-                            finalMaterials.stream()
-                                    .filter(m -> m.getId().equals(newOp.getSelectedMaterial().getId()))
-                                    .findFirst()
-                                    .ifPresent(newOp::setSelectedMaterial);
-                        }
                         return newOp;
                     })
                     .collect(Collectors.toList());
@@ -175,14 +191,25 @@ public class TemplatesModuleService {
         throw new UnsupportedOperationException("Duplication not supported for " + original.getClass().getName());
     }
 
+    // Этот метод вызывается из меню для создания операции из ШАБЛОНА
     public ProductOperation addOperationToProduct(AbstractProductType product, Operation operation) {
-        AbstractProductType managedProduct = abstractProductTypeRepository.findById(product.getId()).orElseThrow();
         ProductOperation newProductOperation = new ProductOperation(operation);
+        return addOperationToProduct(product, newProductOperation);
+    }
+
+    /**
+     * Приватный метод, который содержит основную логику добавления новой ProductOperation к родителю.
+     * Он гарантирует, что возвращается управляемый (managed) экземпляр с ID.
+     */
+    private ProductOperation addOperationToProduct(AbstractProductType product, ProductOperation newProductOperation) {
+        AbstractProductType managedProduct = abstractProductTypeRepository.findById(product.getId()).orElseThrow();
         newProductOperation.setProduct(managedProduct);
         newProductOperation.setSequence(managedProduct.getProductOperations().size());
         managedProduct.getProductOperations().add(newProductOperation);
-        abstractProductTypeRepository.save(managedProduct);
-        return newProductOperation;
+        AbstractProductType savedProduct = abstractProductTypeRepository.save(managedProduct);
+        // Возвращаем последнюю добавленную операцию из СОХРАНЕННОГО родителя.
+        // Теперь у нее есть ID и она является управляемой сущностью.
+        return savedProduct.getProductOperations().get(savedProduct.getProductOperations().size() - 1);
     }
 
     public void swapProductOperations(ProductOperation current, boolean moveUp) {

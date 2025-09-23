@@ -16,10 +16,7 @@ import ru.bprn.printhouse.views.material.entity.PrintingMaterials;
 import ru.bprn.printhouse.views.price.entity.PriceOfMachine;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -48,13 +45,13 @@ public abstract class AbstractMachine {
     protected String searchStr;
 
     @ManyToMany(fetch = FetchType.EAGER, mappedBy = "abstractMachines", targetEntity = AbstractMaterials.class)
-    private Set<AbstractMaterials> abstractMaterials;
+    private Set<AbstractMaterials> abstractMaterials = new HashSet<>();
 
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Variable> variables = new LinkedList<>();
 
     @OneToMany(mappedBy = "machine", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PriceOfMachine> priceHistory;
+    private List<PriceOfMachine> priceHistory = new ArrayList<>();
 
     public void initializeVariables(MachineVariableService service) {
         if (this.variables == null || this.variables.isEmpty()) {

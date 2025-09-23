@@ -16,7 +16,6 @@ import com.vaadin.flow.data.validator.StringLengthValidator;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
-import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.text.NumberFormat;
@@ -131,15 +130,19 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         dynamicVariableEditors.forEach(form::remove); // dynamicVariableEditors теперь хранит FormRow
         dynamicVariableEditors.clear();
 
-
-        List<Variable> variables = (entity != null && entity.getCustomVariables() != null)
+        List<Variable> allVariables = (entity != null && entity.getCustomVariables() != null)
                 ? entity.getCustomVariables()
                 : Collections.emptyList();
 
-        if (!variables.isEmpty()) {
+        // Фильтруем переменные, чтобы не показывать формулы в редакторе
+        List<Variable> displayableVariables = allVariables.stream()
+                .filter(v -> !isFormulaVariable(v.getKey()))
+                .toList();
+
+        if (!displayableVariables.isEmpty()) {
             variablesHeader.setVisible(true);
             // Создаем и добавляем новые редакторы
-            for (Variable variable : variables) { // Создаем редактор для каждой переменной
+            for (Variable variable : displayableVariables) { // Создаем редактор для каждой переменной
                 Component valueEditor = createEditorForVariable(variable);
 
                 Checkbox showCheckbox = new Checkbox("Показывать в карточке продукта?");
@@ -151,7 +154,6 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 var variableRow = new FormLayout.FormRow();
                 variableRow.add(valueEditor, 3);
                 variableRow.add(showCheckbox, 3);
-                //variableRow.setVerticalComponentAlignment(Alignment.BASELINE, valueEditor, showCheckbox);
 
                 form.add(variableRow);
                 dynamicVariableEditors.add(variableRow); // Сохраняем ссылку на FormRow для последующей очистки
@@ -274,5 +276,14 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
                 return java.util.Optional.empty();
             }
         }
+    }
+
+    private boolean isFormulaVariable(String variableName) {
+        // Ваш "костыль" - список имен переменных-формул, которые не нужно показывать.
+        return "machineTimeFormula".equals(variableName) ||
+               "actionFormula".equals(variableName) ||
+               "materialFormula".equals(variableName) ||
+               "operationWasteFormula".equals(variableName) ||
+               "setupWasteFormula".equals(variableName);
     }
 }

@@ -13,6 +13,7 @@ import ru.bprn.printhouse.views.machine.service.AbstractMachineService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
 import ru.bprn.printhouse.views.operation.EditableTextArea;
+import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
@@ -20,10 +21,7 @@ import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
 import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class OperationEditor extends AbstractEditor<Operation> {
@@ -49,12 +47,15 @@ public class OperationEditor extends AbstractEditor<Operation> {
     private final TypeOfOperationService typeOfOperationService;
     @NotNull
     private final AbstractMaterialService materialService;
+    @NotNull
+    private final OperationService operationService;
 
     public OperationEditor(Operation operation, Consumer<Object> onSave,
                            TypeOfOperationService typeOfOperationService, AbstractMaterialService materialService,
                            FormulasService formulasService, FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
-                           AbstractMachineService abstractMachineService) {
+                           AbstractMachineService abstractMachineService, OperationService operationService) { //
         super(onSave);
+        this.operationService = operationService;
         this.typeOfOperationService = typeOfOperationService;
         this.materialService = materialService;
         typeOfOperationSelect.setItems(typeOfOperationService.findAll());
@@ -74,16 +75,25 @@ public class OperationEditor extends AbstractEditor<Operation> {
         setupWasteFormula = new EditableTextArea<>("Формула приладки", formulasService,
                 typeOfOperationService, formulaValidationService, productTypeVariableService);
 
-        selectedMaterials.setItems(materialService.findAll());
         selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
 
         defaultMaterial.setItemLabelGenerator(AbstractMaterials::getName);
-        if (operation != null && operation.getListOfMaterials() != null) defaultMaterial.setItems();
 
         typeOfOperationSelect.setLabel("Тип работы:");
         machineSelect.setLabel("Выберите устройство:");
         machineSelect.setItemLabelGenerator(AbstractMachine::getName);
         machineSelect.setItems(abstractMachineService.findAll());
+
+        machineSelect.addValueChangeListener(event -> {
+            AbstractMachine selectedMachine = event.getValue();
+            if (selectedMachine != null) {
+                // Устанавливаем доступные материалы из выбранной машины
+                Set<AbstractMaterials> materials = selectedMachine.getAbstractMaterials();
+                selectedMaterials.setItems(materials);
+            } else {
+                selectedMaterials.setItems(Collections.emptySet());
+            }
+        });
 
         mapEditorView = new MapEditorView(operation != null ? operation.getVariables() : new ArrayList<>(), this::handleVariablesChange);
 
@@ -105,8 +115,10 @@ public class OperationEditor extends AbstractEditor<Operation> {
         selectedMaterials.addValueChangeListener(event -> {
             Set<AbstractMaterials> selected = event.getValue();
             defaultMaterial.setItems(selected);
-            if (selected != null && !selected.isEmpty() && !selected.contains(defaultMaterial.getValue())) {
-                defaultMaterial.clear(); // Только если новый набор не пустой
+            // Если ранее выбранный материал по умолчанию отсутствует в новом списке,
+            // или если список стал пустым, очищаем поле "Материал по умолчанию".
+            if (defaultMaterial.getValue() != null && (selected == null || !selected.contains(defaultMaterial.getValue()))) {
+                defaultMaterial.clear();
             }
         });
 
@@ -186,9 +198,18 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
     public void editor(Operation operation) {
         this.clear();
-        if (!operation.getListOfMaterials().isEmpty()) {
-            selectedMaterials.setValue(operation.getListOfMaterials());
-            defaultMaterial.setItems(operation.getListOfMaterials());
+        if (operation != null) {
+            // 1. Устанавливаем список доступных материалов ДО привязки биндера
+            if (operation.getAbstractMachine() != null) {
+                selectedMaterials.setItems(operation.getAbstractMachine().getAbstractMaterials());
+            } else {
+                selectedMaterials.setItems(Collections.emptySet());
+            }
+            // 2. Устанавливаем уже выбранные материалы
+            if (operation.getListOfMaterials() != null && !operation.getListOfMaterials().isEmpty()) {
+                selectedMaterials.setValue(operation.getListOfMaterials());
+                defaultMaterial.setItems(operation.getListOfMaterials());
+            }
         }
         edit(operation);
 

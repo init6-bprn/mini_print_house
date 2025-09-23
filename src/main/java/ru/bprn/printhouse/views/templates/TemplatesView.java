@@ -423,15 +423,18 @@ public class TemplatesView extends SplitLayout {
         boolean isNew = !treeGrid.getTreeData().contains(object);
         Object parent = isNew ? (object instanceof ProductOperation ? currentProductType : currentTemplate) : treeGrid.getTreeData().getParent(object);
 
-        templatesModuleService.save(object, parent);
+        Object savedItem = templatesModuleService.save(object, parent);
         Notification.show("Сохранено");
 
         if (isNew) {
-            treeGrid.getTreeData().addItem(parent, object);
-            refreshAndSelect(object, parent);
+            // Если это новый элемент, самый надежный способ - перезагрузить все дерево
+            populate(filterField.getValue());
+            // И выбрать только что созданный элемент
+            treeGrid.select(savedItem);
         } else {
             // Это обновление существующего элемента
-            refreshAndSelect(object, parent);
+            // Здесь refreshItem работает, т.к. элемент уже был в DataProvider
+            refreshAndSelect(savedItem, parent);
         }
     }
 
@@ -446,8 +449,10 @@ public class TemplatesView extends SplitLayout {
     private void paste(Object obj, Object parent) {
         if (obj!=null){
             Object newEntity = templatesModuleService.duplicate(obj, parent);
-            addHierarchicalItemToTreeData(parent, newEntity);
-            refreshAndSelect(newEntity, parent);
+            // После дублирования (которое сохраняет в БД), мы полностью перезагружаем грид
+            populate(filterField.getValue());
+            // И выбираем новый элемент, чтобы он появился в редакторе
+            treeGrid.select(newEntity);
         }
         else Notification.show("Сначала выделите какой-либо элемент таблицы");
     }
@@ -466,11 +471,14 @@ public class TemplatesView extends SplitLayout {
     }
 
     private void refreshAndSelect(Object itemToSelect, Object parentToRefresh) {
-        if (parentToRefresh != null) {
-            treeGrid.getDataProvider().refreshItem(parentToRefresh, true);
+        if (itemToSelect != null && parentToRefresh == null) { // Обновление корневого элемента (Templates)
+            treeGrid.getDataProvider().refreshItem(itemToSelect);
+        } else if (itemToSelect != null && parentToRefresh != null) { // Обновление дочернего элемента
+            treeGrid.getDataProvider().refreshItem(itemToSelect);
+        } else if (parentToRefresh != null) { // Удаление элемента, нужно обновить родителя
+            treeGrid.getDataProvider().refreshItem(parentToRefresh, true); // true - для рекурсивного обновления
         } else {
-            // Если родителя нет, значит, изменился корневой элемент. Обновляем всё дерево.
-            treeGrid.getDataProvider().refreshAll();
+            populate(filterField.getValue()); // Полная перезагрузка, если все остальное не подошло
         }
         if (itemToSelect != null) {
             treeGrid.select(itemToSelect);
