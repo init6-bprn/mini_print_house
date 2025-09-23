@@ -24,10 +24,11 @@ public class TemplateVariableService {
         variables.add(new Variable("quantity", 1, "Тираж по умолчанию", Variable.VariableType.INTEGER, "1", "100000", "1", null));
         variables.add(new Variable("round", false, "Математическое округление", Variable.VariableType.BOOLEAN));
         variables.add(new Variable("roundMask",
-                "// Пример гибкого округления в зависимости от тиража\n" +
-                "if (quantity <= 100) return '#'; // до рублей\n" +
-                "if (quantity <= 1000) return '#.#'; // до десятков копеек\n" +
-                "return '#.##'; // до копеек",
+                """
+                    // Пример гибкого округления в зависимости от тиража
+                    if (quantity <= 100) return '#'; // до рублей
+                    if (quantity <= 1000) return '#.#'; // до десятков копеек
+                    return '#.##'; // до копеек""",
                 "Маска/формула округления", VariableType.STRING));
         variables.add(new Variable("margin", 20.0, "Маржа, %", VariableType.DOUBLE, "0", "1000", "1", null));
         variables.add(new Variable("tax", 6.0, "Налог, %", VariableType.DOUBLE, "0", "100", "0.1", null));
