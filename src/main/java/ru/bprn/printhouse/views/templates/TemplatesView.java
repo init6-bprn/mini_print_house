@@ -257,34 +257,18 @@ public class TemplatesView extends SplitLayout {
 
         addOperationTemplatesToSubMenu(operations.getSubMenu());
 
-        menuBar.addItem(VaadinIcon.MENU.create(), "Дублировать", e->{
-            Object obj = treeGrid.asSingleSelect().getValue();
-            Object parent = this.treeGrid.getTreeData().getParent(obj);
-            paste(obj, parent);
-        });
-
         menuBar.addItem(VaadinIcon.COPY.create(), "Копировать", e->{
             objToCopy = treeGrid.asSingleSelect().getValue();
+            if (objToCopy != null) {
+                Notification.show("Скопировано: " + objToCopy.toString());
+            }
         });
         menuBar.addItem(VaadinIcon.PASTE.create(), "Вставить", e->{
-            if (objToCopy != null) {
-                Object obj = treeGrid.asSingleSelect().getValue();
-                switch (objToCopy) {
-                    case Templates templates -> {
-                        paste(objToCopy, null);
-                        objToCopy = null;
-                    }
-                    case AbstractProductType abstractProductType when obj instanceof Templates -> {
-                        paste(objToCopy, obj);
-                        objToCopy = null;
-                    }
-                    case ProductOperation productOperation when obj instanceof AbstractProductType -> {
-                        paste(objToCopy, obj);
-                        objToCopy = null;
-                    }
-                    case null, default -> Notification.show("Выберите правильный элемент для вставки скопированного");
-                }
-            }
+            handlePaste();
+        });
+
+        menuBar.addItem(VaadinIcon.MENU.create(), "Дублировать", e->{
+            handleDuplicate();
         });
 
         moveUpItem = menuBar.addItem(VaadinIcon.ARROW_UP.create(), "Выше", e -> moveSelectedItem(true));
@@ -307,8 +291,10 @@ public class TemplatesView extends SplitLayout {
         List<TemplatesMenuItem> list = menuItemService.getMenuByContext(context);
         if (list != null && !list.isEmpty())
             for (TemplatesMenuItem item : list) {
-                Object obj = EntityFactory.createEntity(item.getClassName(), productTypeVariableService);
-                menu.addItem(item.getName(), e-> addEditor(universalEditorFactory.createEditor(obj, this::save)));
+                menu.addItem(item.getName(), e-> {
+                    Object obj = EntityFactory.createEntity(item.getClassName(), productTypeVariableService, templateVariableService);
+                    addEditor(universalEditorFactory.createEditor(obj, this::save));
+                });
             }
     }
 
@@ -355,11 +341,10 @@ public class TemplatesView extends SplitLayout {
 
     private void addOperationToMenu(SubMenu menu, Operation opTemplate) {
         menu.addItem(opTemplate.getName(), e -> {
-            ProductOperation newProductOperation = templatesModuleService.addOperationToProduct(currentProductType, opTemplate);
-            treeGrid.getTreeData().addItem(currentProductType, newProductOperation);
-            treeGrid.getDataProvider().refreshItem(currentProductType, true);
-            // Выбираем новый элемент, что вызовет открытие редактора
-            treeGrid.select(newProductOperation);
+            // Создаем новый, еще не сохраненный экземпляр ProductOperation
+            ProductOperation newProductOperation = new ProductOperation(opTemplate);
+            // Открываем для него редактор. Сохранение произойдет по кнопке "Сохранить" в редакторе.
+            addEditor(universalEditorFactory.createEditor(newProductOperation, this::save));
         });
     }
 
@@ -446,6 +431,61 @@ public class TemplatesView extends SplitLayout {
         refreshAndSelect(null, parent);
     }
 
+    private void handleDuplicate() {
+        Object selected = treeGrid.asSingleSelect().getValue();
+        if (selected == null) {
+            Notification.show("Сначала выберите элемент для дублирования");
+            return;
+        }
+        Object parent = treeGrid.getTreeData().getParent(selected);
+        paste(selected, parent);
+    }
+
+    private void handlePaste() {
+        if (objToCopy == null) {
+            Notification.show("Буфер обмена пуст. Сначала скопируйте элемент.");
+            return;
+        }
+
+        Object target = treeGrid.asSingleSelect().getValue();
+        Object parentForPasting = null;
+
+        // Определяем родителя для вставки согласно правилам
+        if (objToCopy instanceof Templates) {
+            parentForPasting = null; // Шаблоны всегда в корне
+        } else if (objToCopy instanceof AbstractProductType) {
+            if (target instanceof Templates t) {
+                parentForPasting = t;
+            } else if (target instanceof AbstractProductType apt) {
+                parentForPasting = treeGrid.getTreeData().getParent(apt);
+            } else {
+                Notification.show("Компонент можно вставить только в шаблон");
+                return;
+            }
+        } else if (objToCopy instanceof ProductOperation) {
+            if (target instanceof AbstractProductType apt) {
+                parentForPasting = apt;
+            } else if (target instanceof ProductOperation po) {
+                parentForPasting = treeGrid.getTreeData().getParent(po);
+            } else {
+                Notification.show("Операцию можно вставить только в компонент продукта");
+                return;
+            }
+        }
+
+        // Проверяем, что родитель найден (для подстраховки)
+        if (objToCopy instanceof AbstractProductType && parentForPasting == null) {
+             Notification.show("Не удалось определить шаблон для вставки компонента");
+             return;
+        }
+        if (objToCopy instanceof ProductOperation && parentForPasting == null) {
+            Notification.show("Не удалось определить компонент для вставки операции");
+            return;
+        }
+
+        paste(objToCopy, parentForPasting);
+    }
+
     private void paste(Object obj, Object parent) {
         if (obj!=null){
             Object newEntity = templatesModuleService.duplicate(obj, parent);
@@ -455,15 +495,6 @@ public class TemplatesView extends SplitLayout {
             treeGrid.select(newEntity);
         }
         else Notification.show("Сначала выделите какой-либо элемент таблицы");
-    }
-
-    private void addHierarchicalItemToTreeData(Object parent, Object item) {
-        treeGrid.getTreeData().addItem(parent, item);
-        if (item instanceof Templates template && template.getProductTypes() != null) {
-            template.getProductTypes().forEach(product -> addHierarchicalItemToTreeData(template, product));
-        } else if (item instanceof AbstractProductType productType && productType.getProductOperations() != null) {
-            productType.getProductOperations().forEach(op -> addHierarchicalItemToTreeData(productType, op));
-        }
     }
 
     private void populate(String filter) {
@@ -487,17 +518,16 @@ public class TemplatesView extends SplitLayout {
 
     public static class EntityFactory {
 
-        public static Object createEntity(String fullClassName, ProductTypeVariableService variableService) {
+        public static Object createEntity(String fullClassName, ProductTypeVariableService productTypeVariableService, TemplateVariableService templateVariableService) {
             try {
                 Class<?> clazz = Class.forName(fullClassName);
                 Object entity = clazz.getDeclaredConstructor().newInstance();
                 // Если созданный объект является наследником AbstractProductType, инициализируем его переменные
                 if (entity instanceof AbstractProductType apt) {
-                    apt.initializeVariables(variableService);
+                    apt.initializeVariables(productTypeVariableService);
                 }
-                // Для Templates тоже нужна инициализация, но сервис другой.
                 if (entity instanceof Templates t) {
-                    // Как передать сюда templateVariableService?
+                    t.initializeVariables(templateVariableService);
                 }
                 return entity;
             } catch (Exception e) {
