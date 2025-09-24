@@ -127,18 +127,24 @@ public class TemplatesModuleService {
         Templates managedParent = templatesRepository.findById(parent.getId()).orElseThrow();
         AbstractProductType newProduct = createTransientProductDuplicate(original);
         managedParent.getProductTypes().add(newProduct);
-        templatesRepository.save(managedParent);
-        return newProduct;
+        Templates savedParent = templatesRepository.saveAndFlush(managedParent);
+        // Возвращаем управляемый экземпляр из сохраненного родителя
+        // Ищем по имени, так как ID может быть не самым надежным способом после flush
+        return savedParent.getProductTypes().stream()
+                .filter(p -> p.getName().equals(newProduct.getName()))
+                .findFirst()
+                .orElseThrow();
     }
 
     private ProductOperation duplicateOperation(ProductOperation original, AbstractProductType parent) {
         AbstractProductType managedParent = abstractProductTypeRepository.findById(parent.getId()).orElseThrow();
         ProductOperation newOperation = new ProductOperation(original);
         newOperation.setProduct(managedParent);
-        newOperation.setSequence(managedParent.getProductOperations().size());
-        managedParent.getProductOperations().add(newOperation);
-        abstractProductTypeRepository.save(managedParent);
-        return newOperation;
+        newOperation.setSequence(managedParent.getProductOperations().isEmpty() ? 0 : managedParent.getProductOperations().size());
+        managedParent.getProductOperations().add(newOperation); // Добавляем транзиентный объект в коллекцию
+        AbstractProductType savedParent = abstractProductTypeRepository.saveAndFlush(managedParent); // Сохраняем родителя, каскадно сохраняя операцию
+        // Возвращаем управляемый экземпляр из сохраненного родителя
+        return savedParent.getProductOperations().get(savedParent.getProductOperations().size() - 1); // Берем последний добавленный
     }
 
     private AbstractProductType createTransientProductDuplicate(AbstractProductType original) {

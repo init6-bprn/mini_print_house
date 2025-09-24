@@ -8,6 +8,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
 import ru.bprn.printhouse.annotation.MenuItem;
+import ru.bprn.printhouse.views.templates.service.Identifiable;
 import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -22,13 +24,12 @@ import java.util.Set;
 @Setter
 @Entity
 @MenuItem(name = "Печать на холсте", icon = VaadinIcon.PRINT, context = "template", description = "")
-public class Templates{
+public class Templates implements Identifiable {
 
     @Id
-    @EqualsAndHashCode.Include
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
-    protected Long id;
+    protected UUID id;
 
     @NotBlank
     protected String name = "Введите название";
@@ -67,4 +68,10 @@ public class Templates{
 
     @Override
     public String toString() {return "шаблон "+this.name;}
+
+    @Override
+    public UUID getUUIDId() {
+        return this.id;
+    
+    }
 }

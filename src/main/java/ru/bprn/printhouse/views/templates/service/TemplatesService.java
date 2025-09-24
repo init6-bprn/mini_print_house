@@ -38,7 +38,7 @@ public class TemplatesService {
 
     public void saveAndFlush(Templates templates) {this.repository.saveAndFlush(templates);}
 
-    public Optional<Templates> findById(Long id) {return this.repository.findById(id);}
+    public Optional<Templates> findById(UUID id) {return this.repository.findById(id);}
 
     public Set<AbstractProductType> getProductTypeForTemplate(Templates templates) {
         var temp = findById(templates.getId());
