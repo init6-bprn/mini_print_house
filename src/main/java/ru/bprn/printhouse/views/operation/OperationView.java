@@ -86,7 +86,7 @@ public class OperationView extends SplitLayout {
         grid.addItemClickListener(e->{
             if (e.getItem() != null) {
                 operationEditor.setEnabled(true);
-                operationEditor.editor(e.getItem());
+                operationEditor.editOperation(e.getItem());
             }
             else operationEditor.setEnabled(false);
         });
@@ -133,7 +133,7 @@ public class OperationView extends SplitLayout {
             operationEditor.setEnabled(true);
             Operation newOperation = new Operation();
             newOperation.initializeVariables(operationVariableService);
-            operationEditor.editor(newOperation);
+            operationEditor.editOperation(newOperation);
         });
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createTemplateButton.setTooltipText("Создать новую работу");

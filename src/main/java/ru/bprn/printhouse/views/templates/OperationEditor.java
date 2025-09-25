@@ -151,7 +151,7 @@ public class OperationEditor extends AbstractEditor<Operation> {
             }
         });
 
-        if (operation != null) this.edit(operation);
+        if (operation != null) this.editOperation(operation);
         add(buildForm());
         addButtons();
 
@@ -196,21 +196,32 @@ public class OperationEditor extends AbstractEditor<Operation> {
         return form;
     }
 
-    public void editor(Operation operation) {
+    public void editOperation(Operation operation) {
         this.clear();
+
         if (operation != null) {
-            // 1. Устанавливаем список доступных материалов ДО привязки биндера
-            if (operation.getAbstractMachine() != null) {
-                selectedMaterials.setItems(operation.getAbstractMachine().getAbstractMaterials());
+            AbstractMachine machine = operation.getAbstractMachine();
+            Set<AbstractMaterials> availableMaterials = (machine != null)
+                    ? machine.getAbstractMaterials()
+                    : Collections.emptySet();
+
+            // 1. Устанавливаем доступные материалы для MultiSelectComboBox
+            selectedMaterials.setItems(availableMaterials);
+
+            // 2. Устанавливаем доступные материалы для Select (материал по умолчанию)
+            // Это должны быть уже ВЫБРАННЫЕ материалы для данной операции.
+            Set<AbstractMaterials> selectedOpMaterials = operation.getListOfMaterials();
+            if (selectedOpMaterials != null && !selectedOpMaterials.isEmpty()) {
+                defaultMaterial.setItems(selectedOpMaterials);
             } else {
-                selectedMaterials.setItems(Collections.emptySet());
+                defaultMaterial.setItems(Collections.emptySet());
             }
-            // 2. Устанавливаем уже выбранные материалы
-            if (operation.getListOfMaterials() != null && !operation.getListOfMaterials().isEmpty()) {
-                selectedMaterials.setValue(operation.getListOfMaterials());
-                defaultMaterial.setItems(operation.getListOfMaterials());
-            }
+        } else {
+            // Очищаем списки, если редактируется null (например, при создании)
+            selectedMaterials.setItems(Collections.emptySet());
+            defaultMaterial.setItems(Collections.emptySet());
         }
+        // 3. Теперь, когда все списки заполнены, привязываем бин. Binder установит значения.
         edit(operation);
 
         // Передаем контекст переменных в EditableTextArea
