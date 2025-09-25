@@ -38,7 +38,7 @@ public abstract class AbstractMaterials {
 
     protected String searchStr;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE})
     @JoinTable(
             name = "abstract_material_abstract_printer",
             inverseJoinColumns = @JoinColumn(name = "abstract_machine_id", referencedColumnName = "id"),

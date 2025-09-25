@@ -67,7 +67,7 @@ public class DatabaseSeeder implements ApplicationRunner {
         DigitalPrintingMachine cpm = new DigitalPrintingMachine();
         cpm.setName("Konica Minolta C3070");
         cpm.initializeVariables(machineVariableService); // Инициализируем переменные по умолчанию
-        machineRepository.save(cpm);
+        var savedCpm = machineRepository.save(cpm);
 
         // 2. Создаем материалы
         TypeOfMaterial type = new TypeOfMaterial();
@@ -86,22 +86,26 @@ public class DatabaseSeeder implements ApplicationRunner {
         PrintingMaterials toner = new PrintingMaterials();
         toner.setName("Цветная печать CMYK");
         toner.setUnitsOfMeasurement("клик");
-        printingMaterialsRepository.save(toner);
+        toner.setSizeOfClick(244);
 
-        // --- Устанавливаем связи ---
-        // Связываем машину с ее расходными материалами (тонер и бумага)
-        // Важно: сначала сохраняем материалы, потом обновляем машину
-        cpm.setAbstractMaterials(Set.of(paper, toner));
-        machineRepository.save(cpm);
+        PrintingMaterials toner1 = new PrintingMaterials();
+        toner1.setName("Черно-белая печать Balck only");
+        toner1.setUnitsOfMeasurement("клик");
+        toner1.setSizeOfClick(244);
+
+        // Устанавливаем связь со стороны владельца (AbstractMaterials)
+        toner.setAbstractMachines(Set.of(savedCpm));
+        toner1.setAbstractMachines(Set.of(savedCpm));
+        printingMaterialsRepository.saveAll(List.of(toner, toner1));
 
         // 3. Создаем шаблон операции "Цифровая печать"
         Operation digitalPrintOp = new Operation();
         digitalPrintOp.setName("Цифровая печать");
-        digitalPrintOp.setAbstractMachine(cpm);
+        digitalPrintOp.setAbstractMachine(savedCpm);
 
         // Устанавливаем, что для этой конкретной операции доступны ОБА материала,
         // которые есть у машины. Технолог мог бы выбрать и подмножество.
-        digitalPrintOp.setListOfMaterials(Set.of(paper, toner));
+        digitalPrintOp.setListOfMaterials(Set.of(toner, toner1));
         // Устанавливаем тонер как материал по умолчанию для этой операции
         digitalPrintOp.setDefaultMaterial(toner);
         digitalPrintOp.initializeVariables(operationVariableService);
