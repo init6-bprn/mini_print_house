@@ -41,10 +41,13 @@ import java.util.function.Consumer;
         private final Checkbox multiplicationCheckbox = new Checkbox("Замостить", true);
 
         public OneSheetDigitalPrintingProductTypeEditor(OneSheetDigitalPrintingProductType entity, Consumer<Object> onSave,
+        public OneSheetDigitalPrintingProductTypeEditor(OneSheetDigitalPrintingProductType entity,
                                                         PrintSheetsMaterialService materialService, FormulasService formulasService,
                                                         StandartSizeService standartSizeService, TypeOfOperationService typeOfOperationService,
                                                         FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService) {
             super(onSave);
+                                                        FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService, TemplatesView parentView) {
+            super(parentView);
             this.entity = entity;
 
             materialFormula = new EditableTextArea<>(

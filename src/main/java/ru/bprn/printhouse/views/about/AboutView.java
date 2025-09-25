@@ -1,12 +1,9 @@
 package ru.bprn.printhouse.views.about;
 
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import ru.bprn.printhouse.views.material.entity.Material;
-import ru.bprn.printhouse.views.material.service.MaterialService;
 import ru.bprn.printhouse.views.MainLayout;
 
 @PageTitle("About")
@@ -17,13 +14,8 @@ import ru.bprn.printhouse.views.MainLayout;
 public class AboutView extends VerticalLayout {
 
 
-    public AboutView(MaterialService typeOfMaterialService) {
+    public AboutView() {
 
-        Grid<Material> grid = new Grid<>(Material.class, false);
-        grid.setItems(typeOfMaterialService.findAll());
-        grid.addColumn(Material::getName).setHeader("Name");
-
-        add(grid);
 
     }
 

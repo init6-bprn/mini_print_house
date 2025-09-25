@@ -25,7 +25,6 @@ import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
-import ru.bprn.printhouse.views.material.entity.Material;
 import ru.bprn.printhouse.views.templates.CreateFormula;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 
@@ -93,8 +92,6 @@ public class FormulasDictionary extends VerticalLayout {
             String clazz = "";
             switch (s) {
                 case "Однолистовая цифровая печать": clazz = OneSheetDigitalPrintingProductType.class.getSimpleName();
-                    break;
-                case "Материал для цифровой печати": clazz = Material.class.getSimpleName();
                     break;
             }
             list.addAll(variables.findAllClazz(clazz));

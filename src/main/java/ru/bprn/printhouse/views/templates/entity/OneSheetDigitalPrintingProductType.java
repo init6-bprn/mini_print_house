@@ -27,7 +27,7 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
     @ManyToOne(fetch = FetchType.EAGER)
     private PrintSheetsMaterial defaultMaterial;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.REFRESH, CascadeType.MERGE})
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.REFRESH}) // Оставил только одну аннотацию с правильным каскадом
     @JoinTable(
             name = "one_sheet_digital_printing_product_type___abstract_material",
             joinColumns = @JoinColumn(name = "product_type_id"),

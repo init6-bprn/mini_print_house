@@ -22,11 +22,8 @@ import org.vaadin.lineawesome.LineAwesomeIcon;
 import ru.bprn.printhouse.data.entity.User;
 import ru.bprn.printhouse.security.AuthenticatedUser;
 import ru.bprn.printhouse.views.dictionary.*;
-import ru.bprn.printhouse.views.machine.cutters.PaperCuttersView;
 import ru.bprn.printhouse.views.machine.printers.DigitalPrintingMachineView;
-import ru.bprn.printhouse.views.machine.printers.PrintersView;
 import ru.bprn.printhouse.views.material.PrintSheetMaterialView;
-import ru.bprn.printhouse.views.material.MaterialView;
 import ru.bprn.printhouse.views.price.PriceOfMachineView;
 import ru.bprn.printhouse.views.price.PriceOfMaterialView;
 import ru.bprn.printhouse.views.material.PrintingMaterialView;
@@ -83,16 +80,11 @@ public class MainLayout extends AppLayout {
         SideNav nav = new SideNav();
 
         SideNavItem dictionariesSection = new SideNavItem("Словари");
-        addNavItemIfAccessible(dictionariesSection, "Количество цветов", QuantityColorsDictionary.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Тип принтера", TypeOfPrinterDictionary.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Тип материала", TypeOfMaterialDictionary.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Плотность материала", ThicknessDictionary.class, VaadinIcon.RECORDS.create());
-        addNavItemIfAccessible(dictionariesSection, "Размер печатного листа", SizeOfPrintLeafDictionary.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Размер изделия", StandartSizeDictionary.class, VaadinIcon.RECORDS.create());
-        addNavItemIfAccessible(dictionariesSection, "Отступы", GapDictionary.class, VaadinIcon.RECORDS.create());
-        addNavItemIfAccessible(dictionariesSection, "Спуск полос", ImposeCaseDictionary.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Переменные для работ", VariablesForMainWorksDictionary.class, VaadinIcon.RECORDS.create());
-        addNavItemIfAccessible(dictionariesSection, "Стоимость материалов", PriceOfMaterialDictionary.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Цены на материалы", PriceOfMaterialView.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Цены на оборудование", PriceOfMachineView.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Словарь формул устройств", FormulasDictionary.class, VaadinIcon.RECORDS.create());
@@ -101,15 +93,12 @@ public class MainLayout extends AppLayout {
         }
 
         SideNavItem equipmentSection = new SideNavItem("Оборудование");
-        addNavItemIfAccessible(equipmentSection, "ЦПМ", PrintersView.class, LineAwesomeIcon.GLOBE_SOLID.create());
         addNavItemIfAccessible(equipmentSection, "Листовые принтеры", DigitalPrintingMachineView.class, LineAwesomeIcon.GLOBE_SOLID.create());
-        addNavItemIfAccessible(equipmentSection, "Резаки", PaperCuttersView.class, LineAwesomeIcon.GLOBE_SOLID.create());
         if (equipmentSection.getItems().stream().findAny().isPresent()) {
             nav.addItem(equipmentSection);
         }
 
         SideNavItem materialsSection = new SideNavItem("Материалы");
-        addNavItemIfAccessible(materialsSection, "Бумага для цифры", MaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create());
         addNavItemIfAccessible(materialsSection, "Краски для принтеров", PrintingMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create());
         addNavItemIfAccessible(materialsSection, "Бумага листовая", PrintSheetMaterialView.class, LineAwesomeIcon.GLOBE_SOLID.create());
         if (materialsSection.getItems().stream().findAny().isPresent()) {
@@ -117,7 +106,7 @@ public class MainLayout extends AppLayout {
         }
 
         SideNavItem templatesSection = new SideNavItem("Шаблоны");
-        addNavItemIfAccessible(templatesSection, "Новый редактор шаблонов", TemplatesView.class, LineAwesomeIcon.FILE.create());
+        addNavItemIfAccessible(templatesSection, "Редактор шаблонов", TemplatesView.class, LineAwesomeIcon.FILE.create());
         if (templatesSection.getItems().stream().findAny().isPresent()) {
             nav.addItem(templatesSection);
         }
