@@ -1,6 +1,5 @@
 package ru.bprn.printhouse.views.dictionary;
 
-
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -11,63 +10,56 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import lombok.Getter;
-import ru.bprn.printhouse.data.entity.*;
+import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.data.service.FormulasService;
-import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
-import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 import ru.bprn.printhouse.views.MainLayout;
-import ru.bprn.printhouse.views.templates.CreateFormula;
-import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
-
-import java.util.List;
+import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
+import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
+import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
+import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 
 @PageTitle("Словарь формул для расчета работ и материалов")
 @Route(value = "formulas_dictionary", layout = MainLayout.class)
 @AnonymousAllowed
 public class FormulasDictionary extends VerticalLayout {
-    private final TextField formulaField = new TextField("Формула");
-    private final BeanValidationBinder<Formulas> formulaBinder;
-    private final StringBuilder strVariables = new StringBuilder();
-    private List<VariablesForMainWorks> list;
     private final FormulasService formulasService;
-    private final VariablesForMainWorksService variables;
-    private CreateFormula formLayout;
+    private FormulasEditor editor;
     private final Grid<Formulas> grid = new Grid<>(Formulas.class, false);
     private final TextField filterField = new TextField();
-
-    @Getter
-    private Formulas formulaBean = new Formulas();
     
-    public FormulasDictionary(FormulasService formulasService, VariablesForMainWorksService variables, TypeOfOperationService worksService){
+    public FormulasDictionary(
+            FormulasService formulasService,
+            TypeOfOperationService worksService,
+            FormulaValidationService formulaValidationService,
+            ProductTypeVariableService productTypeVariableService,
+            TemplateVariableService templateVariableService
+    ) {
         this.formulasService = formulasService;
-        this.variables = variables;
 
-        formLayout = new CreateFormula(formulasService, variables, worksService);
-        var split = new SplitLayout(addGrid(), formLayout, SplitLayout.Orientation.HORIZONTAL);
+        editor = new FormulasEditor(
+                this::saveFormula,
+                worksService,
+                formulaValidationService,
+                productTypeVariableService,
+                templateVariableService
+        );
+        editor.edit(null); // Изначально редактор пуст
+
+        var split = new SplitLayout(createGridLayout(), editor, SplitLayout.Orientation.HORIZONTAL);
         split.setSizeFull();
         split.setSplitterPosition(40.0);
         this.add(split);
 
         this.setSizeFull();
-
-        formulaBinder = new BeanValidationBinder<>(Formulas.class);
-        formulaBinder.setBean(formulaBean);
-
-
-        //addDialog();
-        addComponents();
     }
 
-    private Component addGrid() {
+    private Component createGridLayout() {
         filterField.setWidth("50%");
         filterField.setPlaceholder("Поиск");
         filterField.setPrefixComponent(new Icon(VaadinIcon.SEARCH));
@@ -79,24 +71,9 @@ public class FormulasDictionary extends VerticalLayout {
         grid.addColumn(Formulas::getTypeOfOperation).setHeader("Тип работы");
         grid.setItems(formulasService.findAll());
         grid.setHeight("50%");
-        grid.addItemClickListener(formulasEvent -> {
-           formLayout.setFormulaBean(formulasEvent.getItem());
-        });
+        grid.asSingleSelect().addValueChangeListener(event -> editor.edit(event.getValue()));
+
         return new VerticalLayout(buttons(), filterField, grid);
-    }
-
-    private void addComponents(){
-
-        var selector = new Select<String>("Переменные для:", selectStringComponentValueChangeEvent -> {
-            String s = selectStringComponentValueChangeEvent.getValue();
-            String clazz = "";
-            switch (s) {
-                case "Однолистовая цифровая печать": clazz = OneSheetDigitalPrintingProductType.class.getSimpleName();
-                    break;
-            }
-            list.addAll(variables.findAllClazz(clazz));
-
-        });
     }
 
     private HorizontalLayout buttons() {
@@ -109,10 +86,7 @@ public class FormulasDictionary extends VerticalLayout {
 
         var hl = new HorizontalLayout();
 
-        var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> {
-            formulaBinder.setBean(new Formulas());
-            formulaBinder.refreshFields();
-        });
+        var createTemplateButton = new Button(VaadinIcon.PLUS.create(), event -> editor.edit(new Formulas()));
         createTemplateButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         createTemplateButton.setTooltipText("Создать новую формулу?");
 
@@ -137,14 +111,20 @@ public class FormulasDictionary extends VerticalLayout {
     }
 
     private void deleteElement() {
-        formulasService.delete(formulaBinder.getBean());
-        formulaBinder.removeBean();
-        formulaBinder.refreshFields();
+        formulasService.delete(grid.asSingleSelect().getValue());
+        editor.edit(null);
         populate(filterField.getValue().trim());
     }
 
     public void populate(String str) {
         grid.setItems(formulasService.populate(str));
+    }
 
+    private void saveFormula(Object formulaObject) {
+        Formulas formula = (Formulas) formulaObject;
+        formulasService.save(formula);
+        populate(filterField.getValue().trim());
+        grid.select(formula);
+        editor.edit(formula);
     }
 }
