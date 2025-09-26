@@ -20,6 +20,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
@@ -64,6 +65,7 @@ public class TemplatesView extends SplitLayout {
     private Object selectedRow = null;
     private final ConfirmDialog confirmDeleteDialog;
     private Object objToCopy = null;
+    private Object newUnsavedItem = null; // Поле для хранения временного, несохраненного элемента
 
     private MenuItem moveUpItem;
     private MenuItem moveDownItem;
@@ -208,20 +210,7 @@ public class TemplatesView extends SplitLayout {
         treeGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
         populate(filterField.getValue().trim());
 
-        treeGrid.asSingleSelect().addValueChangeListener(e->{
-            selectedRow = e.getValue();
-            setCurrent(selectedRow);
-            updateButtonStates(selectedRow);
-
-            if (selectedRow != null) {
-                AbstractEditor<?> editor = universalEditorFactory.createEditor(selectedRow, this::save);
-                addEditor(editor);
-            } else {
-                // Если ничего не выбрано, очищаем правую панель
-                if (this.getSecondaryComponent() != null) this.remove(this.getSecondaryComponent());
-            }
-            updateButtonStates(selectedRow);
-        });
+        treeGrid.asSingleSelect().addValueChangeListener(this::handleSelectionChange);
 
         hlay.add(vl);
         return hlay;
@@ -234,13 +223,9 @@ public class TemplatesView extends SplitLayout {
 
         var create = menuBar.addItem(VaadinIcon.PLUS.create(), "Создать");
         var createSubMenu = create.getSubMenu();
-        createSubMenu.addItem("Создать новый шаблон", e-> {
-            Templates newTemplate = new Templates();
-            newTemplate.initializeVariables(templateVariableService);
-            addEditor(universalEditorFactory.createEditor(newTemplate, this::save));
-        });
+        createSubMenu.addItem("Создать новый шаблон", e -> createNewItem(Templates.class, null));
         var components = createSubMenu.addItem("Создать новый компонент");
-        addComponentsToSubMenu(components.getSubMenu(), "product");
+        addComponentsToSubMenu(components.getSubMenu());
 
         var operations = createSubMenu.addItem("Добавить операцию в продукт", e -> {
             if (currentProductType == null) {
@@ -286,14 +271,11 @@ public class TemplatesView extends SplitLayout {
         return menuBar;
     }
 
-    private void addComponentsToSubMenu(SubMenu menu, String context) {
-        List<TemplatesMenuItem> list = menuItemService.getMenuByContext(context);
+    private void addComponentsToSubMenu(SubMenu menu) {
+        List<TemplatesMenuItem> list = menuItemService.getMenuByContext("product");
         if (list != null && !list.isEmpty())
             for (TemplatesMenuItem item : list) {
-                menu.addItem(item.getName(), e-> {
-                    Object obj = EntityFactory.createEntity(item.getClassName(), productTypeVariableService, templateVariableService);
-                    addEditor(universalEditorFactory.createEditor(obj, this::save));
-                });
+                menu.addItem(item.getName(), e -> createNewItem(item.getClassName(), currentTemplate));
             }
     }
 
@@ -340,11 +322,59 @@ public class TemplatesView extends SplitLayout {
 
     private void addOperationToMenu(SubMenu menu, Operation opTemplate) {
         menu.addItem(opTemplate.getName(), e -> {
-            // Создаем новый, еще не сохраненный экземпляр ProductOperation
-            ProductOperation newProductOperation = new ProductOperation(opTemplate);
-            // Открываем для него редактор. Сохранение произойдет по кнопке "Сохранить" в редакторе.
-            addEditor(universalEditorFactory.createEditor(newProductOperation, this::save));
+            createNewItem(ProductOperation.class, currentProductType, opTemplate);
         });
+    }
+
+    private void handleSelectionChange(AbstractField.ComponentValueChangeEvent<Grid<Object>, Object> event) {
+        // Если есть несохраненный элемент и пользователь выбрал другой элемент (или ничего),
+        // удаляем временный элемент из грида.
+        if (newUnsavedItem != null && event.getValue() != newUnsavedItem) {
+            treeGrid.getTreeData().removeItem(newUnsavedItem);
+            treeGrid.getDataProvider().refreshAll();
+            newUnsavedItem = null;
+        }
+
+        selectedRow = event.getValue();
+        setCurrent(selectedRow);
+        updateButtonStates(selectedRow);
+
+        if (selectedRow != null) {
+            // Открываем редактор только если это не наш временный элемент
+            // (для него редактор уже открыт при создании).
+            if (selectedRow != newUnsavedItem) {
+                AbstractEditor<?> editor = universalEditorFactory.createEditor(selectedRow, this::save);
+                addEditor(editor);
+            }
+        } else {
+            // Если ничего не выбрано, очищаем правую панель
+            if (this.getSecondaryComponent() != null) this.remove(this.getSecondaryComponent());
+        }
+    }
+
+    private void createNewItem(Class<?> itemClass, Object parent, Object... args) {
+        Object newItem = EntityFactory.createEntity(itemClass, productTypeVariableService, templateVariableService, args);
+        if (newItem == null) return;
+
+        // Если уже есть несохраненный элемент, удаляем его
+        if (newUnsavedItem != null) {
+            treeGrid.getTreeData().removeItem(newUnsavedItem);
+        }
+
+        // Добавляем новый элемент в грид и обновляем
+        treeGrid.getTreeData().addItem(parent, newItem);
+        treeGrid.getDataProvider().refreshAll();
+
+        // Запоминаем его как временный
+        newUnsavedItem = newItem;
+
+        // Открываем редактор и выбираем элемент в гриде
+        addEditor(universalEditorFactory.createEditor(newItem, this::save));
+        selectAndExpand(newItem);
+    }
+
+    private void createNewItem(String className, Object parent) {
+        createNewItem(EntityFactory.getClassForName(className), parent);
     }
 
     private void setCurrent(Object select) {
@@ -353,20 +383,17 @@ public class TemplatesView extends SplitLayout {
             if (temp == null) {
                 currentTemplate = (Templates) select;
                 currentProductType = null;
-            } else {
-                var other = treeGrid.getTreeData().getParent(temp);
-                if (other == null) {
-                    currentTemplate = (Templates) temp;
-                    currentProductType = (AbstractProductType) select;
-                } else {
-                    currentTemplate = (Templates) other;
-                    currentProductType = (AbstractProductType) temp;
-                }
+            } else if (temp instanceof Templates) {
+                currentTemplate = (Templates) temp;
+                currentProductType = (AbstractProductType) select;
+            } else if (temp instanceof AbstractProductType) {
+                currentTemplate = (Templates) treeGrid.getTreeData().getParent(temp);
+                currentProductType = (AbstractProductType) temp;
             }
         }
     }
 
-    private void addEditor(AbstractEditor<?> editor) {
+    private void addEditor(Component editor) {
         var obj = this.getSecondaryComponent();
         if (obj != null) this.remove(obj);
         this.addToSecondary(editor);
@@ -404,17 +431,29 @@ public class TemplatesView extends SplitLayout {
     }
 
     private void save(Object object) {
-        boolean isNew = !treeGrid.getTreeData().contains(object);
+        // Определяем, новый ли это элемент, по наличию ID.
+        boolean isNew = switch (object) {
+            case Templates t -> t.getId() == null;
+            case AbstractProductType apt -> apt.getId() == null;
+            case ProductOperation po -> po.getId() == null;
+            default -> false;
+        };
+
         Object parent = isNew ? (object instanceof ProductOperation ? currentProductType : currentTemplate) : treeGrid.getTreeData().getParent(object);
 
         Object savedItem = templatesModuleService.save(object, parent);
         Notification.show("Сохранено");
 
+        // Если мы сохраняли временный элемент, сбрасываем его
+        if (isNew && object == newUnsavedItem) {
+            newUnsavedItem = null;
+        }
+
         if (isNew) {
             // Если это новый элемент, самый надежный способ - перезагрузить все дерево
             populate(filterField.getValue());
             // И выбрать только что созданный элемент
-            treeGrid.select(savedItem);
+            selectAndExpand(savedItem);
         } else {
             // Это обновление существующего элемента
             // Здесь refreshItem работает, т.к. элемент уже был в DataProvider
@@ -423,7 +462,11 @@ public class TemplatesView extends SplitLayout {
     }
 
 
-    private void deleteElement(Object object, Object parent){
+    private void deleteElement(Object object, Object parent) {
+        // Если удаляемый элемент - это наш временный, просто сбрасываем его
+        if (object == newUnsavedItem) {
+            newUnsavedItem = null;
+        }
         templatesModuleService.delete(object, parent);
         Notification.show("Удалено");
         treeGrid.getTreeData().removeItem(object);
@@ -491,7 +534,7 @@ public class TemplatesView extends SplitLayout {
             // После дублирования (которое сохраняет в БД), мы полностью перезагружаем грид
             populate(filterField.getValue());
             // И выбираем новый элемент, чтобы он появился в редакторе
-            treeGrid.select(newEntity);
+            selectAndExpand(newEntity);
         }
         else Notification.show("Сначала выделите какой-либо элемент таблицы");
     }
@@ -511,26 +554,53 @@ public class TemplatesView extends SplitLayout {
             populate(filterField.getValue()); // Полная перезагрузка, если все остальное не подошло
         }
         if (itemToSelect != null) {
-            treeGrid.select(itemToSelect);
+            selectAndExpand(itemToSelect);
         }
+    }
+
+    private void selectAndExpand(Object item) {
+        if (item == null) return;
+        // Рекурсивно разворачиваем всех родителей
+        Object parent = treeGrid.getTreeData().getParent(item);
+        while (parent != null) {
+            treeGrid.expand(parent);
+            parent = treeGrid.getTreeData().getParent(parent);
+        }
+        treeGrid.select(item);
     }
 
     public static class EntityFactory {
 
-        public static Object createEntity(String fullClassName, ProductTypeVariableService productTypeVariableService, TemplateVariableService templateVariableService) {
+        public static Class<?> getClassForName(String className) {
             try {
-                Class<?> clazz = Class.forName(fullClassName);
-                Object entity = clazz.getDeclaredConstructor().newInstance();
-                // Если созданный объект является наследником AbstractProductType, инициализируем его переменные
+                return Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Класс не найден: " + className, e);
+            }
+        }
+
+        public static Object createEntity(Class<?> clazz, ProductTypeVariableService productTypeVariableService, TemplateVariableService templateVariableService, Object... args) {
+            try {
+                Object entity;
+                if (clazz == ProductOperation.class && args.length > 0 && args[0] instanceof Operation) {
+                    // Специальный конструктор для ProductOperation из шаблона Operation
+                    entity = new ProductOperation((Operation) args[0]);
+                } else {
+                    // Стандартный конструктор без аргументов
+                    entity = clazz.getDeclaredConstructor().newInstance();
+                }
+
+                // Инициализация переменных, если это необходимо
                 if (entity instanceof AbstractProductType apt) {
                     apt.initializeVariables(productTypeVariableService);
                 }
                 if (entity instanceof Templates t) {
                     t.initializeVariables(templateVariableService);
                 }
+
                 return entity;
             } catch (Exception e) {
-                throw new RuntimeException("Не удалось создать экземпляр " + fullClassName, e);
+                throw new RuntimeException("Не удалось создать экземпляр " + clazz.getName(), e);
             }
         }
     }

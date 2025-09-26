@@ -130,14 +130,12 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
         dynamicVariableEditors.forEach(form::remove); // dynamicVariableEditors теперь хранит FormRow
         dynamicVariableEditors.clear();
 
-        List<Variable> allVariables = (entity != null && entity.getCustomVariables() != null)
-                ? entity.getCustomVariables()
+        // Получаем переменные из ШАБЛОНА операции, так как они являются основой
+        List<Variable> displayableVariables = (entity != null && entity.getOperation() != null && entity.getOperation().getVariables() != null)
+                ? entity.getOperation().getVariables().stream()
+                    .filter(v -> !isFormulaVariable(v.getKey()))
+                    .toList()
                 : Collections.emptyList();
-
-        // Фильтруем переменные, чтобы не показывать формулы в редакторе
-        List<Variable> displayableVariables = allVariables.stream()
-                .filter(v -> !isFormulaVariable(v.getKey()))
-                .toList();
 
         if (!displayableVariables.isEmpty()) {
             variablesHeader.setVisible(true);
@@ -279,11 +277,8 @@ public class ProductOperationEditor extends AbstractEditor<ProductOperation> {
     }
 
     private boolean isFormulaVariable(String variableName) {
-        // Ваш "костыль" - список имен переменных-формул, которые не нужно показывать.
-        return "machineTimeFormula".equals(variableName) ||
-               "actionFormula".equals(variableName) ||
-               "materialFormula".equals(variableName) ||
-               "operationWasteFormula".equals(variableName) ||
-               "setupWasteFormula".equals(variableName);
+        // Универсальный фильтр: скрываем любую переменную, в ключе которой есть "Formula"
+        // Этот метод дублирует логику из MapEditorView для консистентности.
+        return variableName != null && variableName.toLowerCase().contains("formula");
     }
 }

@@ -44,7 +44,10 @@ public class MapEditorView extends VerticalLayout {
 
             // DataProvider инициализируется копией переданного списка.
             // Это будет наш единственный источник данных для Grid.
-            dataProvider = new ListDataProvider<>(variables != null ? new ArrayList<>(variables) : new ArrayList<>());
+            List<Variable> displayableVariables = (variables != null)
+                    ? variables.stream().filter(v -> !isFormulaVariable(v.getKey())).toList()
+                    : new ArrayList<>();
+            dataProvider = new ListDataProvider<>(new ArrayList<>(displayableVariables));
 
             configureGrid();
             add(createToolbar(), grid);
@@ -412,10 +415,20 @@ public class MapEditorView extends VerticalLayout {
             Collection<Variable> items = dataProvider.getItems();
             // 2. Очищаем его
             items.clear();
-            // 3. Добавляем все новые элементы
-            if (newVariables != null) items.addAll(newVariables);
-            // 4. Уведомляем Grid, что данные полностью изменились.
+            // 3. Добавляем все новые отфильтрованные элементы
+            if (newVariables != null) {
+                List<Variable> displayableVariables = newVariables.stream()
+                        .filter(v -> !isFormulaVariable(v.getKey()))
+                        .toList();
+                items.addAll(displayableVariables);
+            }
+            // 4. Уведомляем Grid, что данные изменились.
             dataProvider.refreshAll();
+        }
+
+        private boolean isFormulaVariable(String variableName) {
+            // Универсальный фильтр: скрываем любую переменную, в ключе которой есть "Formula"
+            return variableName != null && variableName.toLowerCase().contains("formula");
         }
 
     private void notifyParent() {
