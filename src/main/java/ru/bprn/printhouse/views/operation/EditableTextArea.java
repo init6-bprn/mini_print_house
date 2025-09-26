@@ -13,6 +13,7 @@ import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.FormulaDialog;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
+import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 
 import java.util.Collections;
@@ -28,17 +29,20 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
     private final TypeOfOperationService worksService;
     private final FormulaValidationService formulaValidationService;
     private final ProductTypeVariableService productTypeVariableService;
+    private final TemplateVariableService templateVariableService;
 
     private List<Variable> operationVariables = Collections.emptyList();
 
     public EditableTextArea(String label, FormulasService formulasService,
                             TypeOfOperationService worksService,
                             FormulaValidationService formulaValidationService,
-                            ProductTypeVariableService productTypeVariableService) {
+                            ProductTypeVariableService productTypeVariableService,
+                            TemplateVariableService templateVariableService) {
         this.formulasService = formulasService;
         this.worksService = worksService;
         this.formulaValidationService = formulaValidationService;
         this.productTypeVariableService = productTypeVariableService;
+        this.templateVariableService = templateVariableService;
 
         area.setLabel(label);
         area.setHeight("80px");
@@ -72,12 +76,8 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
     }
 
     private void openFormulaEditor() {
-        new FormulaEditor(getValue(), this::setValue,
-                operationVariables,
-                formulaValidationService,
-                worksService,
-                productTypeVariableService
-        ).open();
+        new FormulaEditor(getValue(), this::setValue, operationVariables,
+                formulaValidationService, worksService, productTypeVariableService, templateVariableService).open();
     }
 
     // === Реализация HasValue ===

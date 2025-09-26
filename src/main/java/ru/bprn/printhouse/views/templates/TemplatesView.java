@@ -85,7 +85,7 @@ public class TemplatesView extends SplitLayout {
         this.templateVariableService = templateVariableService;
 
         this.universalEditorFactory = new UniversalEditorFactory(
-                printSheetsMaterialService, formulasService, productTypeVariableService, formulaValidationService, standartSizeService, typeOfOperationService, abstractMaterialService, operationService, this);
+                printSheetsMaterialService, formulasService, productTypeVariableService, formulaValidationService, standartSizeService, typeOfOperationService, abstractMaterialService, templateVariableService);
 
         confirmDeleteDialog = new ConfirmDialog("Внимание!" , "", "Да",
                 confirmEvent -> {

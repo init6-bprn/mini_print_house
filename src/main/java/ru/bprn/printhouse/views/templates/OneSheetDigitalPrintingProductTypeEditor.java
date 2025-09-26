@@ -19,6 +19,7 @@ import ru.bprn.printhouse.views.material.service.PrintSheetsMaterialService;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
+import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
 
 import java.util.Optional;
@@ -43,13 +44,13 @@ import java.util.function.Consumer;
         public OneSheetDigitalPrintingProductTypeEditor(OneSheetDigitalPrintingProductType entity, Consumer<Object> onSave,
                                                         PrintSheetsMaterialService materialService, FormulasService formulasService,
                                                         StandartSizeService standartSizeService, TypeOfOperationService typeOfOperationService,
-                                                        FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService) {
+                                                        FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService, TemplateVariableService templateVariableService) {
             super(onSave);
             this.entity = entity;
 
             materialFormula = new EditableTextArea<>(
                     "Формула материала", formulasService, typeOfOperationService,
-                    formulaValidationService, productTypeVariableService
+                    formulaValidationService, productTypeVariableService, templateVariableService
             );
             materialFormula.setVariableContext(entity.getVariables());
 

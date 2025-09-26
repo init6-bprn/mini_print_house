@@ -25,6 +25,7 @@ import ru.bprn.printhouse.views.operation.service.OperationService;
 import ru.bprn.printhouse.views.operation.service.OperationVariableService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.OperationEditor;
+import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
 import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 import ru.bprn.printhouse.views.templates.SelectAbstractMaterialsDialog;
@@ -51,7 +52,8 @@ public class OperationView extends SplitLayout {
                          AbstractMaterialService materialService,
                          FormulaValidationService formulaValidationService,
                          ProductTypeVariableService productTypeVariableService,
-                         AbstractMachineService abstractMachineService) {
+                         AbstractMachineService abstractMachineService,
+                         TemplateVariableService templateVariableService) {
         this.service = service;
         this.typeOfOperationService = typeOfOperationService;
         this.materialService = materialService;
@@ -63,7 +65,7 @@ public class OperationView extends SplitLayout {
         this.setSizeFull();
         this.addToPrimary(addGrid());
         this.addToSecondary(operationEditor = new OperationEditor(null, this::save, typeOfOperationService, materialService,
-                formulasService, formulaValidationService, productTypeVariableService, abstractMachineService, service));
+                formulasService, formulaValidationService, productTypeVariableService, templateVariableService, abstractMachineService, service));
         operationEditor.setEnabled(false);
         this.setOrientation(SplitLayout.Orientation.HORIZONTAL);
         this.setSizeFull();

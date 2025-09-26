@@ -18,6 +18,7 @@ import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
+import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
@@ -52,28 +53,28 @@ public class OperationEditor extends AbstractEditor<Operation> {
 
     public OperationEditor(Operation operation, Consumer<Object> onSave,
                            TypeOfOperationService typeOfOperationService, AbstractMaterialService materialService,
-                           FormulasService formulasService, FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService,
+                           FormulasService formulasService, FormulaValidationService formulaValidationService, ProductTypeVariableService productTypeVariableService, TemplateVariableService templateVariableService,
                            AbstractMachineService abstractMachineService, OperationService operationService) { //
         super(onSave);
         this.operationService = operationService;
         this.typeOfOperationService = typeOfOperationService;
         this.materialService = materialService;
         typeOfOperationSelect.setItems(typeOfOperationService.findAll());
-
+        
         equipmentFormula = new EditableTextArea<Operation>("Формула времени оборудования", formulasService,
-                typeOfOperationService, formulaValidationService, productTypeVariableService);
+                typeOfOperationService, formulaValidationService, productTypeVariableService, templateVariableService);
 
         workerFormula = new EditableTextArea<Operation>("Формула времени работника", formulasService,
-                typeOfOperationService, formulaValidationService, productTypeVariableService);
+                typeOfOperationService, formulaValidationService, productTypeVariableService, templateVariableService);
 
         materialFormula = new EditableTextArea<Operation>("Формула расхода материала", formulasService,
-                typeOfOperationService, formulaValidationService, productTypeVariableService);
+                typeOfOperationService, formulaValidationService, productTypeVariableService, templateVariableService);
 
         operationWasteFormula = new EditableTextArea<>("Формула брака операции", formulasService,
-                typeOfOperationService, formulaValidationService, productTypeVariableService);
+                typeOfOperationService, formulaValidationService, productTypeVariableService, templateVariableService);
 
         setupWasteFormula = new EditableTextArea<>("Формула приладки", formulasService,
-                typeOfOperationService, formulaValidationService, productTypeVariableService);
+                typeOfOperationService, formulaValidationService, productTypeVariableService, templateVariableService);
 
         selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
 

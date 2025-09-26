@@ -11,16 +11,18 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
-import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
+import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 import ru.bprn.printhouse.views.templates.service.FormulaValidationService;
 import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
+import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -33,22 +35,30 @@ public class FormulaEditor extends Dialog {
 
     private final Consumer<String> consumer;
     private final FormulaValidationService validationService;
-    private final List<Variable> operationVariables;
+    private final List<Variable> contextVariables;
     private final ProductTypeVariableService productTypeVariableService;
+    private final TemplateVariableService templateVariableService;
 
     private static final List<String> MATH_FUNCTIONS = Arrays.asList(
             "Math.max(a, b)", "Math.min(a, b)", "Math.abs(a)", "Math.round(a)", "Math.ceil(a)", "Math.floor(a)", "Math.pow(a, b)"
     );
 
-    public FormulaEditor(String formula, Consumer<String> consumer,
-                         List<Variable> productVariables,
-                         FormulaValidationService validationService,
-                         TypeOfOperationService worksService,
-                         ProductTypeVariableService productTypeVariableService) {
+    /**
+     * Универсальный конструктор редактора формул.
+     * @param formula Текущее значение формулы.
+     * @param consumer Callback для сохранения результата.
+     * @param contextVariables Список переменных из текущего контекста (например, из операции). Может быть null.
+     * @param validationService Сервис валидации.
+     * @param worksService Сервис для получения типов работ.
+     * @param productTypeVariableService Сервис для получения переменных компонентов продукта.
+     * @param templateVariableService Сервис для получения переменных шаблона.
+     */
+    public FormulaEditor(String formula, Consumer<String> consumer, List<Variable> contextVariables, FormulaValidationService validationService, TypeOfOperationService worksService, ProductTypeVariableService productTypeVariableService, TemplateVariableService templateVariableService) {
         this.consumer = consumer;
-        this.operationVariables = productVariables; // productVariables is actually operationVariables here
+        this.contextVariables = contextVariables;
         this.validationService = validationService;
         this.productTypeVariableService = productTypeVariableService;
+        this.templateVariableService = templateVariableService;
 
         setHeaderTitle("Редактирование формул");
         setWidth("900px");
@@ -90,9 +100,13 @@ public class FormulaEditor extends Dialog {
     }
 
     private void createTabs() {
-        tabSheet.add("Переменные OneSheetDigitalPrintingProductType",
+        tabSheet.add("Переменные шаблона",
+                createVariableTabContent(templateVariableService.getVariablesFor(Templates.class)));
+        tabSheet.add("Переменные однолистовой печати",
                 createVariableTabContent(productTypeVariableService.getVariablesFor(OneSheetDigitalPrintingProductType.class)));
-        tabSheet.add("Переменные операции", createVariableTabContent(operationVariables));
+        if (contextVariables != null && !contextVariables.isEmpty()) {
+            tabSheet.add("Переменные контекста (операции)", createVariableTabContent(contextVariables));
+        }
         tabSheet.add("Математические функции", createMathTabContent());
         tabSheet.setSizeFull();
     }
@@ -104,12 +118,14 @@ public class FormulaEditor extends Dialog {
         Div container = new Div();
         container.addClassNames(LumoUtility.Display.FLEX, LumoUtility.FlexWrap.WRAP, LumoUtility.Gap.SMALL, LumoUtility.Padding.SMALL);
 
-        for (Variable var : variables) {
+        variables.stream()
+                .filter(v -> v.getKey() != null && !v.getKey().toLowerCase().contains("formula"))
+                .forEach(var -> {
             Button button = new Button(var.getKey(), click -> insertText(var.getKey()));
             button.setTooltipText(var.getDescription());
             button.addThemeVariants(ButtonVariant.LUMO_SMALL);
             container.add(button);
-        }
+        });
         return container;
     }
 
@@ -145,11 +161,13 @@ public class FormulaEditor extends Dialog {
     }
 
     private FormulaValidationService.ValidationResult validateFormula(String formula) {
+        List<List<Variable>> allVariableLists = new ArrayList<>();
+        allVariableLists.add(contextVariables);
+        allVariableLists.add(templateVariableService.getVariablesFor(Templates.class));
+        allVariableLists.add(productTypeVariableService.getVariablesFor(OneSheetDigitalPrintingProductType.class));
+
         //noinspection unchecked
-        return validationService.validate(formula,
-                operationVariables,
-                productTypeVariableService.getVariablesFor(OneSheetDigitalPrintingProductType.class)
-        );
+        return validationService.validate(formula, allVariableLists.toArray(new List[0]));
     }
 
     private void insertText(String text) {
