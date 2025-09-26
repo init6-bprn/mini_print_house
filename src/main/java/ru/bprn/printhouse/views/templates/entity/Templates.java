@@ -8,7 +8,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
 import ru.bprn.printhouse.annotation.MenuItem;
-import ru.bprn.printhouse.views.templates.service.Identifiable;
 import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ import java.util.UUID;
 @Setter
 @Entity
 @MenuItem(name = "Печать на холсте", icon = VaadinIcon.PRINT, context = "template", description = "")
-public class Templates implements Identifiable {
+public class Templates {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -69,9 +68,4 @@ public class Templates implements Identifiable {
     @Override
     public String toString() {return "шаблон "+this.name;}
 
-    @Override
-    public UUID getUUIDId() {
-        return this.id;
-    
-    }
 }

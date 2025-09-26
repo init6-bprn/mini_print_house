@@ -7,7 +7,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import ru.bprn.printhouse.data.entity.StandartSize;
 import ru.bprn.printhouse.data.entity.TypeOfMaterial;
+import ru.bprn.printhouse.data.repository.StandartSizeRepository;
 import ru.bprn.printhouse.data.repository.TypeOfMaterialRepository;
 import ru.bprn.printhouse.views.machine.entity.DigitalPrintingMachine;
 import ru.bprn.printhouse.views.machine.repository.DigitalPrintingMachineRepository;
@@ -45,6 +47,7 @@ public class DatabaseSeeder implements ApplicationRunner {
     private final PrintSheetsMaterialRepository printSheetsMaterialRepository;
     private final PrintingMaterialsRepository printingMaterialsRepository;
     private final TypeOfMaterialRepository typeOfMaterialRepository;
+    private final StandartSizeRepository standartSizeRepository;
     
 
     // Сервисы для инициализации переменных
@@ -61,18 +64,24 @@ public class DatabaseSeeder implements ApplicationRunner {
             return;
         }
 
+        // --- Заполняем справочник стандартных размеров ---
+        seedStandardSizes();
+
+        // --- Заполняем справочник типов материалов ---
+        seedTypeOfMaterial();
+
         // --- Создаем связанные объекты ---
 
         // 1. Создаем оборудование (ЦПМ)
         DigitalPrintingMachine cpm = new DigitalPrintingMachine();
         cpm.setName("Konica Minolta C3070");
         cpm.initializeVariables(machineVariableService); // Инициализируем переменные по умолчанию
-        var savedCpm = machineRepository.save(cpm);
+        DigitalPrintingMachine savedCpm = machineRepository.save(cpm);
 
         // 2. Создаем материалы
-        TypeOfMaterial type = new TypeOfMaterial();
-        type.setName("Бумага");
-        typeOfMaterialRepository.save(type);
+        // Находим тип "Мелованная бумага", который был создан в seed-методе.
+        TypeOfMaterial type = typeOfMaterialRepository.findByName("Coated Paper")
+                .orElseThrow(() -> new RuntimeException("Тип материала 'Coated Paper' не найден в базе данных."));
 
 
         PrintSheetsMaterial paper = new PrintSheetsMaterial();
@@ -137,5 +146,45 @@ public class DatabaseSeeder implements ApplicationRunner {
 
         // 8. Сохраняем главный шаблон. Благодаря Cascade, все дочерние объекты сохранятся.
         templatesRepository.save(businessCardTemplate);
+    }
+
+    private void seedStandardSizes() {
+        if (standartSizeRepository.count() > 0) {
+            return; // Не заполнять, если данные уже есть
+        }
+
+        List<StandartSize> sizes = List.of(
+                new StandartSize(null, "A1", 841.0, 594.0),
+                new StandartSize(null, "A2", 594.0, 420.0),
+                new StandartSize(null, "A3", 420.0, 297.0),
+                new StandartSize(null, "A4", 297.0, 210.0),
+                new StandartSize(null, "A5", 210.0, 148.5),
+                new StandartSize(null, "A6", 148.5, 105.0),
+                new StandartSize(null, "A7", 105.0, 74.0),
+                new StandartSize(null, "Визитка РФ (90x50)", 90.0, 50.0),
+                new StandartSize(null, "Визитка Евро (85x55)", 85.0, 55.0),
+                new StandartSize(null, "Открытка (150x100)", 150.0, 100.0),
+                new StandartSize(null, "Календарик (100x70)", 100.0, 70.0)
+        );
+        standartSizeRepository.saveAll(sizes);
+    }
+
+    /**
+     * Заполняет справочник типов материалов.
+     */
+    private void seedTypeOfMaterial() {
+        if (typeOfMaterialRepository.count() > 0) {
+            return; // Не заполнять, если данные уже есть
+        }
+
+        List<TypeOfMaterial> types = List.of(
+                new TypeOfMaterial(null, "Plain Paper"),
+                new TypeOfMaterial(null, "Coated Paper"),
+                new TypeOfMaterial(null, "Syntetic Paper"),
+                new TypeOfMaterial(null, "High quality Paper"),
+                new TypeOfMaterial(null, "Laser jet Film"),
+                new TypeOfMaterial(null, "Ink jet Paper")
+        );
+        typeOfMaterialRepository.saveAll(types);
     }
 }
