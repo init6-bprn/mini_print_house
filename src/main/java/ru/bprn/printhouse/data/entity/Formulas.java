@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
+import ru.bprn.printhouse.data.entity.CalculationPhase;
 
 @Entity
 @Table (name = "formulas")
@@ -29,6 +30,17 @@ public class Formulas {
     private String formula = "";
 
     private String description = "";
+
+    /**
+     * Фаза расчета, на которой должна быть выполнена формула.
+     */
+    @Enumerated(EnumType.STRING)
+    private CalculationPhase phase;
+
+    /**
+     * Приоритет выполнения внутри одной фазы (чем меньше, тем раньше).
+     */
+    private int priority;
 
     @Override
     public String toString() {

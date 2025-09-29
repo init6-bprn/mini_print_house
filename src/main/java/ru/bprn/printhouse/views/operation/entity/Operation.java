@@ -10,9 +10,11 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.SqlTypes;
+
+import ru.bprn.printhouse.data.entity.Formulas;
+import ru.bprn.printhouse.data.entity.CalculationPhase;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
-import ru.bprn.printhouse.views.templates.entity.HasMateria;
 import ru.bprn.printhouse.views.operation.service.OperationVariableService;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
@@ -24,7 +26,7 @@ import java.util.*;
 @Setter
 @Entity
 @Table(name = "operation")
-public class Operation implements HasMateria {
+public class Operation{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", nullable = false)
@@ -47,10 +49,6 @@ public class Operation implements HasMateria {
     // Используемое оборудование
     @ManyToOne(fetch = FetchType.EAGER)
     private AbstractMachine abstractMachine = null;
-    private boolean haveMachine = true;
-
-    // Работа
-    private boolean haveAction = true;
 
     // Материал
     @ManyToMany(fetch = FetchType.EAGER)
@@ -58,62 +56,83 @@ public class Operation implements HasMateria {
 
     @ManyToOne(fetch = FetchType.EAGER)
     private AbstractMaterials defaultMaterial;
-    private boolean haveMaterial = true;
 
 
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Variable> variables = new LinkedList<>();
 
-    @Transient
-    @Override
-    public AbstractMaterials getDefaultMat() {
-        return null;
+    @ManyToOne
+    private Formulas machineTimeFormulaTemplate;
+    @Column(columnDefinition = "TEXT")
+    private String machineTimeExpression = "";
+
+    @ManyToOne
+    private Formulas actionTimeFormulaTemplate;
+    @Column(columnDefinition = "TEXT")
+    private String actionTimeExpression = "";
+
+    @ManyToOne
+    private Formulas materialAmountFormulaTemplate;
+    @Column(columnDefinition = "TEXT")
+    private String materialAmountExpression = "";
+
+    @ManyToOne
+    private Formulas wasteFormulaTemplate;
+    @Column(columnDefinition = "TEXT")
+    private String wasteExpression = "";
+
+    @ManyToOne
+    private Formulas setupFormulaTemplate;
+    @Column(columnDefinition = "TEXT")
+    private String setupExpression = "";
+
+    /**
+     * Внутренний record для удобной передачи информации о формуле в сервис расчета.
+     */
+    public record FormulaInfo(String expression, CalculationPhase phase, int priority) {}
+
+    @JsonIgnore
+    public FormulaInfo getMachineTimeFormulaInfo() {
+        return createFormulaInfo(machineTimeExpression, machineTimeFormulaTemplate, CalculationPhase.TECHNICAL_CALCULATION);
     }
 
-    @Transient
-    @Override
-    public Set<AbstractMaterials> getSelectedMat() {
-        return Set.of();
+    @JsonIgnore
+    public FormulaInfo getActionTimeFormulaInfo() {
+        return createFormulaInfo(actionTimeExpression, actionTimeFormulaTemplate, CalculationPhase.TECHNICAL_CALCULATION);
     }
 
-    @Transient
-    @Override
-    public String getMatFormula() {
-        return "";
+    @JsonIgnore
+    public FormulaInfo getMaterialAmountFormulaInfo() {
+        return createFormulaInfo(materialAmountExpression, materialAmountFormulaTemplate, CalculationPhase.TECHNICAL_CALCULATION);
+    }
+
+    @JsonIgnore
+    public FormulaInfo getWasteFormulaInfo() {
+        return createFormulaInfo(wasteExpression, wasteFormulaTemplate, CalculationPhase.WASTE_CALCULATION);
+    }
+
+    @JsonIgnore
+    public FormulaInfo getSetupFormulaInfo() {
+        return createFormulaInfo(setupExpression, setupFormulaTemplate, CalculationPhase.WASTE_CALCULATION);
+    }
+
+    /**
+     * Хелпер для создания FormulaInfo. Если шаблон не задан, используются значения по умолчанию.
+     */
+    private FormulaInfo createFormulaInfo(String expression, Formulas template, CalculationPhase defaultPhase) {
+        if (expression == null || expression.isBlank()) {
+            return null; // Если выражения нет, то и информации о формуле нет
+        }
+        if (template != null) {
+            return new FormulaInfo(expression, template.getPhase(), template.getPriority());
+        } else {
+            // Возвращаем с фазой по умолчанию и средним приоритетом, если шаблон не выбран
+            return new FormulaInfo(expression, defaultPhase, 10);
+        }
     }
 
     public void initializeVariables(OperationVariableService variableService) {
         this.setVariables(variableService.getPredefinedVariables());
-    }
-
-    @JsonIgnore
-    public String getMachineTimeFormula() {
-        return getVariableValueAsString("machineTimeFormula").orElse("");
-    }
-
-    @JsonIgnore
-    public String getActionFormula() {
-        return getVariableValueAsString("actionFormula").orElse("");
-    }
-
-    @JsonIgnore
-    public String getMaterialFormula() {
-        return getVariableValueAsString("materialFormula").orElse("");
-    }
-
-    @JsonIgnore
-    public String getOperationWasteFormula() {
-        return getVariableValueAsString("operationWasteFormula").orElse("0");
-    }
-
-    @JsonIgnore
-    public String getSetupWasteFormula() {
-        return getVariableValueAsString("setupWasteFormula").orElse("0");
-    }
-
-    private Optional<String> getVariableValueAsString(String key) {
-        if (getVariables() == null) return Optional.empty();
-        return getVariables().stream().filter(v -> key.equals(v.getKey())).map(Variable::getValue).findFirst();
     }
 
     @Override

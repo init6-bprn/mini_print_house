@@ -30,16 +30,23 @@ public class OperationService {
         if (bean!= null){
             var work = new Operation();
             work.setName(bean.getName() + " (копия)");
-            work.setHaveAction(bean.isHaveAction());
             work.setTypeOfOperation(bean.getTypeOfOperation());
-
-            work.setHaveMachine(bean.isHaveMachine());
             work.setAbstractMachine(bean.getAbstractMachine());
-
-            work.setHaveMaterial(bean.isHaveMaterial());
             work.setListOfMaterials(bean.getListOfMaterials());
             work.setDefaultMaterial(bean.getDefaultMaterial());
             work.setVariables(new ArrayList<>(bean.getVariables())); // Глубокое копирование переменных
+
+            work.setMachineTimeFormulaTemplate(bean.getMachineTimeFormulaTemplate());
+            work.setMachineTimeExpression(bean.getMachineTimeExpression());
+            work.setActionTimeFormulaTemplate(bean.getActionTimeFormulaTemplate());
+            work.setActionTimeExpression(bean.getActionTimeExpression());
+            work.setMaterialAmountFormulaTemplate(bean.getMaterialAmountFormulaTemplate());
+            work.setMaterialAmountExpression(bean.getMaterialAmountExpression());
+            work.setWasteFormulaTemplate(bean.getWasteFormulaTemplate());
+            work.setWasteExpression(bean.getWasteExpression());
+            work.setSetupFormulaTemplate(bean.getSetupFormulaTemplate());
+            work.setSetupExpression(bean.getSetupExpression());
+
             return Optional.of(this.repository.save(work));
         }
         else return Optional.empty();

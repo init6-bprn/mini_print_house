@@ -3,11 +3,14 @@ package ru.bprn.printhouse.views.operation;
 import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.HasValue;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.shared.Registration;
 import ru.bprn.printhouse.data.service.FormulasService;
+import ru.bprn.printhouse.views.dictionary.FormulasEditor;
 import ru.bprn.printhouse.views.operation.service.FormulaEditor;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
 import ru.bprn.printhouse.views.templates.FormulaDialog;
@@ -23,6 +26,7 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
 
     private final TextArea area = new TextArea();
     private final Button selectButton = new Button("Выбрать");
+    private final Button createButton = new Button(VaadinIcon.PLUS.create());
     private final Button editButton = new Button("Править");
 
     private final FormulasService formulasService;
@@ -30,6 +34,7 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
     private final FormulaValidationService formulaValidationService;
     private final ProductTypeVariableService productTypeVariableService;
     private final TemplateVariableService templateVariableService;
+
 
     private List<Variable> operationVariables = Collections.emptyList();
 
@@ -46,16 +51,20 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
 
         area.setLabel(label);
         area.setHeight("80px");
+        area.setReadOnly(true); // Поле всегда только для чтения
         setupButtons();
         setupLayout();
     }
 
     private void setupButtons() {
         selectButton.addClickListener(e -> openFormulaDialog());
+        createButton.addClickListener(e -> openNewFormulaEditor());
+        createButton.setTooltipText("Создать новую формулу в справочнике");
         editButton.addClickListener(e -> openFormulaEditor());
 
         selectButton.getElement().getStyle().set("align-self", "baseline");
         editButton.getElement().getStyle().set("align-self", "baseline");
+        createButton.getElement().getStyle().set("align-self", "baseline");
         area.getElement().getStyle().set("align-self", "baseline");
     }
 
@@ -63,7 +72,8 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
         FormLayout.FormRow row = getContent();
         //FormLayout.FormRow row = new FormLayout.FormRow();
         row.add(selectButton, 1);
-        row.add(area, 4);
+        row.add(createButton, 1);
+        row.add(area, 3);
         row.add(editButton, 1);
     }
 
@@ -78,6 +88,44 @@ public class EditableTextArea<T> extends Composite<FormLayout.FormRow> implement
     private void openFormulaEditor() {
         new FormulaEditor(getValue(), this::setValue, operationVariables,
                 formulaValidationService, worksService, productTypeVariableService, templateVariableService).open();
+    }
+
+    private void openNewFormulaEditor() {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Создание новой формулы в справочнике");
+        dialog.setModal(true);
+        dialog.setDraggable(true);
+
+        FormulasEditor editor = new FormulasEditor(
+                // Этот callback будет вызван при нажатии "Save" в редакторе
+                savedObject -> {
+                    // Мы не вызываем saveFormula из FormulasDictionary, а обрабатываем все здесь.
+                    handleNewFormulaSave(savedObject, dialog);
+                },
+                worksService, formulaValidationService,
+                productTypeVariableService, templateVariableService
+        );
+        editor.edit(new ru.bprn.printhouse.data.entity.Formulas());
+        dialog.add(editor);
+        dialog.open();
+    }
+
+    /**
+     * Этот метод вызывается, когда новая формула успешно сохранена в FormulasEditor.
+     * @param savedObject Сохраненный объект Formulas.
+     */
+    private void handleNewFormulaSave(Object savedObject, Dialog dialog) {
+        if (savedObject instanceof ru.bprn.printhouse.data.entity.Formulas newFormula) {
+            if (newFormula.getName() != null && !newFormula.getName().isBlank()) {
+                formulasService.save(newFormula); // Сохраняем в базу через сервис
+                setValue(newFormula.getFormula()); // Устанавливаем текст новой формулы в наше поле
+                Notification.show("Новая формула '" + newFormula.getName() + "' создана и применена.", 3000, Notification.Position.MIDDLE);
+                dialog.close();
+            } else {
+                // Если имя пустое, просто закрываем диалог без сохранения
+                dialog.close();
+            }
+        }
     }
 
     // === Реализация HasValue ===

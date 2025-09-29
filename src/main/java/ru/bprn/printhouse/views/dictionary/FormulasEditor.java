@@ -4,10 +4,13 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import ru.bprn.printhouse.data.entity.Formulas;
+import ru.bprn.printhouse.data.entity.CalculationPhase;
 import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.views.operation.service.FormulaEditor;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
@@ -25,6 +28,8 @@ public class FormulasEditor extends AbstractEditor<Formulas> {
     private final TextArea description = new TextArea("Описание");
     private final Select<TypeOfOperation> typeOfOperationSelect = new Select<>();
     private final TextArea formulaArea = new TextArea("Формула");
+    private final Select<CalculationPhase> phaseSelect = new Select<>();
+    private final IntegerField priorityField = new IntegerField("Приоритет");
     private final Button openEditorButton = new Button("Редактор", VaadinIcon.EDIT.create());
 
     private final TypeOfOperationService typeOfOperationService;
@@ -49,7 +54,14 @@ public class FormulasEditor extends AbstractEditor<Formulas> {
         typeOfOperationSelect.setLabel("Тип работы");
         typeOfOperationSelect.setItemLabelGenerator(TypeOfOperation::getName);
 
+        phaseSelect.setLabel("Фаза расчета");
+        phaseSelect.setItems(CalculationPhase.values());
+
+        priorityField.setTooltipText("Чем меньше число, тем раньше выполнится формула внутри одной фазы");
+        priorityField.setValue(10); // Значение по умолчанию
+
         formulaArea.setHeight("100px");
+        formulaArea.setReadOnly(true); // Поле всегда только для чтения
         formulaArea.getElement().getStyle().set("align-self", "baseline");
         openEditorButton.getElement().getStyle().set("align-self", "baseline");
 
@@ -70,6 +82,8 @@ public class FormulasEditor extends AbstractEditor<Formulas> {
         binder.forField(name).asRequired("Название не может быть пустым").bind(Formulas::getName, Formulas::setName);
         binder.forField(description).bind(Formulas::getDescription, Formulas::setDescription);
         binder.forField(typeOfOperationSelect).bind(Formulas::getTypeOfOperation, Formulas::setTypeOfOperation);
+        binder.forField(phaseSelect).asRequired("Фаза расчета должна быть указана").bind(Formulas::getPhase, Formulas::setPhase);
+        binder.forField(priorityField).asRequired("Приоритет должен быть указан").bind(Formulas::getPriority, Formulas::setPriority);
         binder.forField(formulaArea).asRequired("Формула не может быть пустой").bind(Formulas::getFormula, Formulas::setFormula);
 
         add(buildForm());
@@ -102,11 +116,15 @@ public class FormulasEditor extends AbstractEditor<Formulas> {
         var row3 = new FormLayout.FormRow();
         row3.add(typeOfOperationSelect, 6);
 
-        var row4 = new FormLayout.FormRow();
-        row4.add(formulaArea, 5);
-        row4.add(openEditorButton, 1);
+        var rowPhase = new FormLayout.FormRow();
+        rowPhase.add(phaseSelect, 3);
+        rowPhase.add(priorityField, 3);
 
-        form.add(row1, row2, row3, row4);
+        var rowFormula = new FormLayout.FormRow();
+        rowFormula.add(formulaArea, 5);
+        rowFormula.add(openEditorButton, 1);
+
+        form.add(row1, row2, row3, rowPhase, rowFormula);
         return form;
     }
 

@@ -8,10 +8,12 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.converter.StringToIntegerConverter;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import lombok.Getter;
 import ru.bprn.printhouse.data.entity.Formulas;
@@ -19,6 +21,7 @@ import ru.bprn.printhouse.views.operation.entity.TypeOfOperation;
 import ru.bprn.printhouse.data.entity.VariablesForMainWorks;
 import ru.bprn.printhouse.data.service.FormulasService;
 import ru.bprn.printhouse.views.operation.service.TypeOfOperationService;
+import ru.bprn.printhouse.data.entity.CalculationPhase;
 import ru.bprn.printhouse.data.service.VariablesForMainWorksService;
 
 import javax.script.ScriptEngine;
@@ -55,6 +58,10 @@ public class CreateFormula extends VerticalLayout {
         formulaBinder.forField(name).withValidator(s -> !s.isEmpty(), "Не может быть пустым!")
                 .bind(Formulas::getName, Formulas::setName);
         formulaBinder.forField(formulaField).withValidator(s -> {
+            // Пропускаем валидацию для пустых формул, чтобы можно было сохранить шаблон
+            if (s == null || s.isBlank()) {
+                return true;
+            }
             String str = strVariables + s+ ";";
             //Notification.show(str);
             ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
@@ -66,12 +73,21 @@ public class CreateFormula extends VerticalLayout {
             return true;
         }, "Формула не верна!").bind(Formulas::getFormula, Formulas::setFormula);
 
+        var phaseSelect = new Select<CalculationPhase>();
+        phaseSelect.setLabel("Фаза расчета");
+        phaseSelect.setItems(CalculationPhase.values());
+        formulaBinder.forField(phaseSelect).asRequired().bind(Formulas::getPhase, Formulas::setPhase);
+
+        var priorityField = new IntegerField("Приоритет");
+        priorityField.setTooltipText("Чем меньше число, тем раньше выполнится формула внутри одной фазы");
+        formulaBinder.forField(priorityField).asRequired().bind(Formulas::getPriority, Formulas::setPriority);
+
         name.setWidthFull();
         formulaField.setWidthFull();
         formulaField.setClearButtonVisible(true);
         formulaField.setMaxRows(3);
 
-        this.add(selectType, name, formulaField, addVariablesButton());
+        this.add(selectType, name, new HorizontalLayout(phaseSelect, priorityField), formulaField, addVariablesButton());
 
         var saveButton = new Button("Save", buttonClickEvent -> {
             if (formulaBinder.isValid()) {

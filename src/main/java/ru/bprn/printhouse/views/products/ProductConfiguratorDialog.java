@@ -111,7 +111,7 @@ public class ProductConfiguratorDialog extends Dialog {
         operationContent.add(enabledCheckbox);
 
         // Выбор материала для операции
-        if (operation.getOperation().isHaveMaterial() && !operation.getOperation().getListOfMaterials().isEmpty()) {
+        if (!operation.getOperation().getListOfMaterials().isEmpty()) {
             ComboBox<AbstractMaterials> materialComboBox = new ComboBox<>("Материал операции");
             materialComboBox.setItems(operation.getOperation().getListOfMaterials());
             materialComboBox.setItemLabelGenerator(AbstractMaterials::getName);
