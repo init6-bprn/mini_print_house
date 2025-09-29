@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.price;
+package ru.bprn.printhouse.views.products;
 
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -8,11 +8,11 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.vaadin.crudui.crud.impl.GridCrud;
 import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 
-import ru.bprn.printhouse.views.price.entity.PriceOfMachine;
+import ru.bprn.printhouse.views.products.entity.PriceOfMachine;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.machine.service.AbstractMachineService;
-import ru.bprn.printhouse.views.price.service.PriceOfMachineService;
+import ru.bprn.printhouse.views.products.service.PriceOfMachineService;
 
 @PageTitle("Цены на оборудование (амортизация)")
 @Route(value = "price-of-machine", layout = MainLayout.class)

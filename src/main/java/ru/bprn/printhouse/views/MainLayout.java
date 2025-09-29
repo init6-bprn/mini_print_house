@@ -23,9 +23,9 @@ import ru.bprn.printhouse.data.entity.User;
 import ru.bprn.printhouse.security.AuthenticatedUser;
 import ru.bprn.printhouse.views.dictionary.*;
 import ru.bprn.printhouse.views.machine.printers.DigitalPrintingMachineView;
+import ru.bprn.printhouse.views.products.PriceOfMachineView;
+import ru.bprn.printhouse.views.products.PriceOfMaterialView;
 import ru.bprn.printhouse.views.material.PrintSheetMaterialView;
-import ru.bprn.printhouse.views.price.PriceOfMachineView;
-import ru.bprn.printhouse.views.price.PriceOfMaterialView;
 import ru.bprn.printhouse.views.material.PrintingMaterialView;
 import ru.bprn.printhouse.views.operation.OperationView;
 import ru.bprn.printhouse.views.operation.TypeOfOperationView;
@@ -85,8 +85,6 @@ public class MainLayout extends AppLayout {
         addNavItemIfAccessible(dictionariesSection, "Плотность материала", ThicknessDictionary.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Размер изделия", StandartSizeDictionary.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Переменные для работ", VariablesForMainWorksDictionary.class, VaadinIcon.RECORDS.create());
-        addNavItemIfAccessible(dictionariesSection, "Цены на материалы", PriceOfMaterialView.class, VaadinIcon.RECORDS.create());
-        addNavItemIfAccessible(dictionariesSection, "Цены на оборудование", PriceOfMachineView.class, VaadinIcon.RECORDS.create());
         addNavItemIfAccessible(dictionariesSection, "Словарь формул устройств", FormulasDictionary.class, VaadinIcon.RECORDS.create());
         if (dictionariesSection.getItems().stream().findAny().isPresent()) {
             nav.addItem(dictionariesSection);
@@ -113,6 +111,8 @@ public class MainLayout extends AppLayout {
 
         SideNavItem productsSection = new SideNavItem("Продукты");
         addNavItemIfAccessible(productsSection, "Каталог продукции", ProductCatalogView.class, LineAwesomeIcon.BOOK_SOLID.create());
+        addNavItemIfAccessible(productsSection, "Цены на материалы", PriceOfMaterialView.class, VaadinIcon.RECORDS.create());
+        addNavItemIfAccessible(productsSection, "Цены на оборудование", PriceOfMachineView.class, VaadinIcon.RECORDS.create());
         if (productsSection.getItems().stream().findAny().isPresent()) {
             nav.addItem(productsSection);
         }

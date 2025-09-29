@@ -13,7 +13,7 @@ import org.hibernate.type.SqlTypes;
 import ru.bprn.printhouse.views.machine.service.MachineVariableService;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintingMaterials;
-import ru.bprn.printhouse.views.price.entity.PriceOfMachine;
+import ru.bprn.printhouse.views.products.entity.PriceOfMachine;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
 import java.util.*;

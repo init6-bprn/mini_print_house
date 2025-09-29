@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.price.entity;
+package ru.bprn.printhouse.views.products.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

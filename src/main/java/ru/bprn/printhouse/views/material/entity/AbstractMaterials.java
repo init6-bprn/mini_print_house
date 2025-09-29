@@ -9,7 +9,7 @@ import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
 
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
-import ru.bprn.printhouse.views.price.entity.PriceOfMaterial;
+import ru.bprn.printhouse.views.products.entity.PriceOfMaterial;
 
 import java.util.*;
 

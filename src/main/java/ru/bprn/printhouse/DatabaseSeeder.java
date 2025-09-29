@@ -22,12 +22,17 @@ import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
 import ru.bprn.printhouse.views.operation.repository.OperationRepository;
 import ru.bprn.printhouse.views.operation.service.OperationVariableService;
+import ru.bprn.printhouse.views.products.entity.PriceOfMachine;
+import ru.bprn.printhouse.views.products.entity.PriceOfMaterial;
+import ru.bprn.printhouse.views.products.repository.PriceOfMachineRepository;
+import ru.bprn.printhouse.views.products.repository.PriceOfMaterialRepository;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.repository.TemplatesRepository;
 import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
 import ru.bprn.printhouse.views.templates.service.TemplateVariableService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -48,6 +53,8 @@ public class DatabaseSeeder implements ApplicationRunner {
     private final PrintingMaterialsRepository printingMaterialsRepository;
     private final TypeOfMaterialRepository typeOfMaterialRepository;
     private final StandartSizeRepository standartSizeRepository;
+    private final PriceOfMachineRepository priceOfMachineRepository;
+    private final PriceOfMaterialRepository priceOfMaterialRepository;
     
 
     // Сервисы для инициализации переменных
@@ -78,6 +85,13 @@ public class DatabaseSeeder implements ApplicationRunner {
         cpm.initializeVariables(machineVariableService); // Инициализируем переменные по умолчанию
         DigitalPrintingMachine savedCpm = machineRepository.save(cpm);
 
+        // Устанавливаем цену для созданной машины
+        PriceOfMachine cpmPrice = new PriceOfMachine();
+        cpmPrice.setMachine(savedCpm);
+        cpmPrice.setPrice(1500.0); // Стоимость нормо-часа
+        cpmPrice.setEffectiveDate(LocalDateTime.now().minusDays(1)); // Устанавливаем вчерашней датой для гарантии актуальности
+        priceOfMachineRepository.save(cpmPrice);
+
         // 2. Создаем материалы
         // Находим тип "Мелованная бумага", который был создан в seed-методе.
         TypeOfMaterial type = typeOfMaterialRepository.findByName("Coated Paper")
@@ -90,7 +104,14 @@ public class DatabaseSeeder implements ApplicationRunner {
         paper.setSizeX(450);
         paper.setSizeY(320);
         paper.setThickness(300);
-        printSheetsMaterialRepository.save(paper);
+        PrintSheetsMaterial savedPaper = printSheetsMaterialRepository.save(paper);
+
+        // Устанавливаем цену для бумаги
+        PriceOfMaterial paperPrice = new PriceOfMaterial();
+        paperPrice.setMaterial(savedPaper);
+        paperPrice.setPrice(15.5); // Цена за лист
+        paperPrice.setEffectiveDate(LocalDateTime.now().minusDays(1));
+        priceOfMaterialRepository.save(paperPrice);
 
         PrintingMaterials toner = new PrintingMaterials();
         toner.setName("Цветная печать CMYK");
@@ -105,7 +126,20 @@ public class DatabaseSeeder implements ApplicationRunner {
         // Устанавливаем связь со стороны владельца (AbstractMaterials)
         toner.setAbstractMachines(Set.of(savedCpm));
         toner1.setAbstractMachines(Set.of(savedCpm));
-        printingMaterialsRepository.saveAll(List.of(toner, toner1));
+        List<PrintingMaterials> savedToners = printingMaterialsRepository.saveAll(List.of(toner, toner1));
+
+        // Устанавливаем цены для кликов
+        PriceOfMaterial colorClickPrice = new PriceOfMaterial();
+        colorClickPrice.setMaterial(savedToners.get(0));
+        colorClickPrice.setPrice(12.0); // Цена за цветной клик
+        colorClickPrice.setEffectiveDate(LocalDateTime.now().minusDays(1));
+
+        PriceOfMaterial bwClickPrice = new PriceOfMaterial();
+        bwClickPrice.setMaterial(savedToners.get(1));
+        bwClickPrice.setPrice(1.2); // Цена за ч/б клик
+        bwClickPrice.setEffectiveDate(LocalDateTime.now().minusDays(1));
+
+        priceOfMaterialRepository.saveAll(List.of(colorClickPrice, bwClickPrice));
 
         // 3. Создаем шаблон операции "Цифровая печать"
         Operation digitalPrintOp = new Operation();
@@ -114,9 +148,9 @@ public class DatabaseSeeder implements ApplicationRunner {
 
         // Устанавливаем, что для этой конкретной операции доступны ОБА материала,
         // которые есть у машины. Технолог мог бы выбрать и подмножество.
-        digitalPrintOp.setListOfMaterials(Set.of(toner, toner1));
+        digitalPrintOp.setListOfMaterials(Set.copyOf(savedToners));
         // Устанавливаем тонер как материал по умолчанию для этой операции
-        digitalPrintOp.setDefaultMaterial(toner);
+        digitalPrintOp.setDefaultMaterial(savedToners.get(0));
         digitalPrintOp.initializeVariables(operationVariableService);
         operationRepository.save(digitalPrintOp);
 
@@ -129,10 +163,10 @@ public class DatabaseSeeder implements ApplicationRunner {
         // 5. Создаем компонент продукта "Однолистовая печать" для визитки
         OneSheetDigitalPrintingProductType productType = new OneSheetDigitalPrintingProductType();
         productType.setName("Основа визитки");
-        productType.setDefaultMaterial(paper);
+        productType.setDefaultMaterial(savedPaper);
         // Для продукта типа "Однолистовая печать" доступны только листовые материалы.
         // В нашем случае это только 'paper'.
-        productType.setSelectedMaterials(Set.of(paper)); //
+        productType.setSelectedMaterials(Set.of(savedPaper)); //
         productType.initializeVariables(productTypeVariableService);
 
         // 6. Создаем конкретную операцию для этого компонента на основе шаблона

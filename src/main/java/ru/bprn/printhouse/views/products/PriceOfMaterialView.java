@@ -1,4 +1,4 @@
-package ru.bprn.printhouse.views.price;
+package ru.bprn.printhouse.views.products;
 
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -11,8 +11,8 @@ import org.vaadin.crudui.form.impl.field.provider.ComboBoxProvider;
 import ru.bprn.printhouse.views.MainLayout;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.service.AbstractMaterialService;
-import ru.bprn.printhouse.views.price.entity.PriceOfMaterial;
-import ru.bprn.printhouse.views.price.service.PriceOfMaterialService;
+import ru.bprn.printhouse.views.products.entity.PriceOfMaterial;
+import ru.bprn.printhouse.views.products.service.PriceOfMaterialService;
 
 @PageTitle("Цены на материалы")
 @Route(value = "price-of-material", layout = MainLayout.class)
