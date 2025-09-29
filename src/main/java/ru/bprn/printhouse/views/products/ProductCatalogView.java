@@ -9,22 +9,23 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
-import ru.bprn.printhouse.views.templates.service.TemplatesService;
+import ru.bprn.printhouse.views.templates.service.TemplatesModuleService;
 
 import java.util.List;
 
 @PageTitle("Каталог продукции")
 @Route(value = "catalog", layout = MainLayout.class)
 @AnonymousAllowed
-public class ProductCatalogView extends VerticalLayout {
+public class ProductCatalogView extends VerticalLayout { //TODO: Заменить на более подходящий Layout
 
-    private final TemplatesService templatesService;
+    private final TemplatesModuleService templatesModuleService;
     private final TextField searchField = new TextField();
     private final FlexLayout productContainer = new FlexLayout();
 
-    public ProductCatalogView(TemplatesService templatesService) {
-        this.templatesService = templatesService;
+    public ProductCatalogView(TemplatesModuleService templatesModuleService) {
+        this.templatesModuleService = templatesModuleService;
 
         setSizeFull();
         setPadding(false);
@@ -52,10 +53,12 @@ public class ProductCatalogView extends VerticalLayout {
 
     private void loadProducts(String filter) {
         productContainer.removeAll();
-        List<Templates> templates = templatesService.findAllTemplates(filter);
+        List<Templates> templates = templatesModuleService.findAllTemplates(filter);
 
         for (Templates template : templates) {
-            productContainer.add(new ProductCard(template));
+            for (AbstractProductType productType : template.getProductTypes()) {
+                productContainer.add(new ProductCard(template, productType));
+            }
         }
     }
 }

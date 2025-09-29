@@ -117,58 +117,6 @@
 
         Такой подход позволяет при повторном заказе использовать ту же технологическую цепочку, но подставлять актуальные на данный момент цены.
 
-
-        **Часть 1: Подготовка и расчет листажа (Количество основного материала)**
-
-        1.  **Сбор глобального контекста**:
-            *   `quantity`: Тираж из конфигурации.
-            *   `productWidth`, `productLength`, `bleed`: Размеры изделия и вылеты из `OneSheetDigitalPrintingProductType`.
-            *   `selectedMainMaterial`: Основной материал (бумага), выбранный пользователем.
-
-        2.  **Проверка совместимости оборудования**:
-            *   Собираются все `ProductOperation` для данного компонента.
-            *   Для каждой операции определяется используемое оборудование (`AbstractMachine`).
-            *   Находятся максимальные поддерживаемые машинами размеры материала (`max_machine_width`, `max_machine_length`).
-            *   Проверяется, что `selectedMainMaterial.width <= max_machine_width` и `selectedMainMaterial.length <= max_machine_length`. Если нет, расчет невозможен.
-
-        3.  **Расчет рабочей области печатного листа**:
-            *   Берется размер листа `selectedMainMaterial`.
-            *   Из всех задействованных машин (`AbstractMachine`) собираются переменные непечатных полей (`gap_top`, `gap_bottom`, `gap_left`, `gap_right`).
-            *   Находятся **максимальные** значения для каждого из четырех отступов.
-            *   `workableAreaWidth = selectedMainMaterial.width - max_gap_left - max_gap_right`
-            *   `workableAreaLength = selectedMainMaterial.length - max_gap_up - max_gap_down`
-
-        4.  **Расчет раскладки (если `multiplication = true`)**:
-            *   `productWidthBeforeCut = productWidth + bleed * 2`
-            *   `productLengthBeforeCut = productLength + bleed * 2`
-            *   Вычисляется, сколько изделий (`productWidthBeforeCut`, `productLengthBeforeCut`) можно разместить на `workableArea`. Это `quantityProductsOnMainMaterial`.
-            *   Вспомогательные переменные `rows` и `columns` также заполняются.
-            * (если `multiplication = false`) `quantityProductsOnMainMaterial = 1` `rows` и `columns` равны 1
-
-        5.  **Расчет начального листажа**:
-            *   `requiredSheets = ceil(quantity / quantityProductsOnMainMaterial)`
-
-        6.  **Расчет брака и приладки**:
-            *   Создаются аккумуляторы: `totalOperationWasteSheets`, `totalOperationWasteQuantity`, `maxSetupWasteSheets`, `maxSetupWasteQuantity`.
-            *   Для каждой `ProductOperation` вычисляются формулы `customOperationWasteFormula` и `customSetupWasteFormula`. Эти формулы могут возвращать значение для увеличения листажа или тиража.
-            *   Брак **суммируется**: `totalOperationWasteSheets += result_from_formula`, `totalOperationWasteQuantity += result_from_formula`.
-            *   Приладка **выбирается максимальная**: `maxSetupWasteSheets = max(maxSetupWasteSheets, result_from_formula)`, `maxSetupWasteQuantity = max(maxSetupWasteQuantity, result_from_formula)`.
-
-        7.  **Расчет итогового тиража и листажа**:
-            *   `finalQuantity = quantity + totalOperationWasteQuantity + maxSetupWasteQuantity`
-            *   `finalSheets = requiredSheets + totalOperationWasteSheets + maxSetupWasteSheets`
-
-        8.  **Финальная корректировка листажа**:
-            *   Проверяется условие: `finalQuantity <= finalSheets * quantityProductsOnMainMaterial`.
-            *   Если условие не выполняется, `finalSheets = ceil(finalQuantity / quantityProductsOnMainMaterial))` 
-
-        **Часть 2: Техническая калькуляция операций (Расчет времен и количеств)**
-
-        9.  **Расчет физических величин для каждой операции**:
-            *   Для каждой `ProductOperation` в контекст скриптового движка передаются все рассчитанные ранее переменные (`finalQuantity`, `finalSheets` и т.д.).
-            *   Вычисляются формулы `customMachineTimeFormula`, `customActionFormula`, `customMaterialFormula`.
-            *   Результаты (время работы станка в секундах, время работы работника в секундах, количество материала операции в единицах) сохраняются для следующего этапа.
-
         **Часть 3: Экономический расчет (Применение цен и расчет итоговой стоимости)**
 
         10. **Сбор актуальных цен и расчет себестоимости (`primeCost`)**:

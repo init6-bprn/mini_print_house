@@ -27,13 +27,15 @@ import java.util.Optional;
 public class ProductConfiguratorDialog extends Dialog {
 
     private final Templates template;
+    private final AbstractProductType productType;
     private final VerticalLayout content = new VerticalLayout();
     private final IntegerField quantityField = new IntegerField("Тираж");
 
-    public ProductConfiguratorDialog(Templates template) {
+    public ProductConfiguratorDialog(Templates template, AbstractProductType productType) {
         this.template = template;
+        this.productType = productType;
 
-        setHeaderTitle("Настройка продукта: " + template.getName());
+        setHeaderTitle("Настройка продукта: " + productType.getName());
         setWidth("600px");
         setDraggable(true);
         setResizable(true);
@@ -45,9 +47,7 @@ public class ProductConfiguratorDialog extends Dialog {
         content.add(quantityField);
 
         // Создаем секции для каждого компонента продукта (AbstractProductType)
-        for (AbstractProductType productType : template.getProductTypes()) {
-            content.add(createProductTypeSection(productType));
-        }
+        content.add(createProductTypeSection(this.productType));
 
         add(content);
         configureFooter();
@@ -169,8 +169,8 @@ public class ProductConfiguratorDialog extends Dialog {
         addToCartButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
         addToCartButton.addClickListener(e -> {
             // TODO: Реализовать логику добавления в корзину
-            Notification.show(String.format("Добавлено в корзину: %s, %d шт. (с кастомной конфигурацией)",
-                    template.getName(), quantityField.getValue()));
+            Notification.show(String.format("Добавлено в корзину: %s, %d шт. (с кастомной конфигурацией)", //TODO: Заменить на productType.getName()
+                    productType.getName(), quantityField.getValue()));
             close();
         });
 

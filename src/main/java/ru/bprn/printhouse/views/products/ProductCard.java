@@ -10,14 +10,15 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
-import ru.bprn.printhouse.views.products.ProductConfiguratorDialog;
-import ru.bprn.printhouse.views.templates.entity.Variable;
+import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
+import ru.bprn.printhouse.views.templates.entity.Variable;
+
 import java.util.Optional;
 
 public class ProductCard extends VerticalLayout {
 
-    public ProductCard(Templates template) {
+    public ProductCard(Templates template, AbstractProductType productType) {
         setWidth("340px");
         getStyle()
                 .set("border", "1px solid var(--lumo-contrast-20pct)")
@@ -29,7 +30,7 @@ public class ProductCard extends VerticalLayout {
         productImage.setWidthFull();
 
         // 2. Название
-        H3 name = new H3(template.getName());
+        H3 name = new H3(productType.getName());
         name.getStyle().set("margin-top", "0.5em").set("margin-bottom", "0.2em");
 
         // 3. Описание
@@ -52,7 +53,7 @@ public class ProductCard extends VerticalLayout {
         addToCartButton.setWidth("45%");
         addToCartButton.addClickListener(e -> {
             // Здесь будет логика добавления в корзину с конфигурацией по умолчанию
-            Notification.show(String.format("Добавлено в корзину: %s, %d шт.", template.getName(), quantityField.getValue()));
+            Notification.show(String.format("Добавлено в корзину: %s, %d шт.", productType.getName(), quantityField.getValue()));
         });
 
         HorizontalLayout quickOrderLayout = new HorizontalLayout(quantityField, addToCartButton);
@@ -64,7 +65,7 @@ public class ProductCard extends VerticalLayout {
         configureButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
         configureButton.setWidthFull();
         configureButton.addClickListener(e -> {
-            ProductConfiguratorDialog dialog = new ProductConfiguratorDialog(template);
+            ProductConfiguratorDialog dialog = new ProductConfiguratorDialog(template, productType);
             dialog.open();
         });
 

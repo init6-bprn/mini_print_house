@@ -47,6 +47,12 @@ public class TemplatesModuleService {
         return new TreeDataProvider<>(data);
     }
 
+    public List<Templates> findAllTemplates(String filter) {
+        return (filter == null || filter.isEmpty())
+                ? templatesRepository.findAll()
+                : templatesRepository.search(filter).stream().toList();
+    }
+
     @Transactional
     public Object save(Object entity, Object parent) {
         return switch (entity) {
