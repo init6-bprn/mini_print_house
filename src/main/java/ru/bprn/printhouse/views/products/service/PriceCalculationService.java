@@ -40,8 +40,6 @@ public class PriceCalculationService {
         // Итерируем по каждому компоненту продукта (например, "Обложка", "Внутренний блок")
         for (AbstractProductType productType : template.getProductTypes()) {
             CalculationResult componentResult = calculateForProductType(productType, globalContext);
-            // TODO: Агрегировать результаты от каждого компонента в finalResult
-            // Сейчас для простоты возвращаем результат первого компонента
             return componentResult;
         }
 
