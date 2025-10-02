@@ -7,6 +7,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import ru.bprn.printhouse.data.entity.CalculationPhase;
+import ru.bprn.printhouse.data.entity.Formulas;
+import ru.bprn.printhouse.data.repository.FormulasRepository;
 import ru.bprn.printhouse.data.entity.StandartSize;
 import ru.bprn.printhouse.data.entity.TypeOfMaterial;
 import ru.bprn.printhouse.data.repository.StandartSizeRepository;
@@ -55,6 +58,7 @@ public class DatabaseSeeder implements ApplicationRunner {
     private final StandartSizeRepository standartSizeRepository;
     private final PriceOfMachineRepository priceOfMachineRepository;
     private final PriceOfMaterialRepository priceOfMaterialRepository;
+    private final FormulasRepository formulasRepository;
     
 
     // Сервисы для инициализации переменных
@@ -152,6 +156,80 @@ public class DatabaseSeeder implements ApplicationRunner {
         // Устанавливаем тонер как материал по умолчанию для этой операции
         digitalPrintOp.setDefaultMaterial(savedToners.get(0));
         digitalPrintOp.initializeVariables(operationVariableService);
+        
+        // Создаем и сохраняем шаблонные формулы
+        String wasteFormulaExpression = """
+                // Добавляем 1% от тиража на брак, но не менее 3-х изделий.
+                finalQuantity += Math.max(3, Math.ceil(quantity * 0.01))""";
+        Formulas wasteFormulaTemplate = new Formulas();
+        wasteFormulaTemplate.setName("Стандартный брак для ЦПМ (1% > 3шт)");
+        wasteFormulaTemplate.setDescription("Добавляет 1% от тиража на брак, но не менее 3-х изделий.");
+        wasteFormulaTemplate.setFormula(wasteFormulaExpression);
+        wasteFormulaTemplate.setPhase(CalculationPhase.WASTE_CALCULATION);
+        wasteFormulaTemplate.setPriority(10);
+        Formulas savedWasteTemplate = formulasRepository.save(wasteFormulaTemplate);
+
+        String setupFormulaExpression = """
+                // Приладка требует 10 листов.
+                def setupEquivalent = 10 * quantityProductsOnMainMaterial;
+                maxSetupWasteEquivalent = Math.max(maxSetupWasteEquivalent, setupEquivalent)""";
+        Formulas setupFormulaTemplate = new Formulas();
+        setupFormulaTemplate.setName("Стандартная приладка для ЦПМ (10 листов)");
+        setupFormulaTemplate.setDescription("Устанавливает приладку в 10 листов и пересчитывает ее в эквивалент изделий.");
+        setupFormulaTemplate.setFormula(setupFormulaExpression);
+        setupFormulaTemplate.setPhase(CalculationPhase.WASTE_CALCULATION);
+        setupFormulaTemplate.setPriority(20); // Приоритет выше, чтобы выполнялась после брака
+        Formulas savedSetupTemplate = formulasRepository.save(setupFormulaTemplate);
+
+        // Устанавливаем в операцию и выражения, и ссылки на шаблоны
+        digitalPrintOp.setWasteExpression(wasteFormulaExpression);
+        digitalPrintOp.setWasteFormulaTemplate(savedWasteTemplate);
+
+        digitalPrintOp.setSetupExpression(setupFormulaExpression);
+        digitalPrintOp.setSetupFormulaTemplate(savedSetupTemplate);
+        
+        // Создаем и сохраняем шаблонные формулы для расчета времени и расхода
+        String machineTimeExpr = """
+                // Время работы машины = (листаж / скорость) * 3600 секунд.
+                // Примем скорость для Konica Minolta C3070 равной 3960 листов/час (66 л/мин).
+                return (finalSheets / 3960.0) * 3600""";
+        Formulas machineTimeTemplate = new Formulas();
+        machineTimeTemplate.setName("Время работы ЦПМ");
+        machineTimeTemplate.setDescription("Расчет времени работы ЦПМ на основе скорости и итогового листажа.");
+        machineTimeTemplate.setFormula(machineTimeExpr);
+        machineTimeTemplate.setPhase(CalculationPhase.TECHNICAL_CALCULATION);
+        machineTimeTemplate.setPriority(10);
+        Formulas savedMachineTimeTemplate = formulasRepository.save(machineTimeTemplate);
+
+        String actionTimeExpr = """
+                // Время работы оператора = 5 минут на подготовку + 2 минуты на каждую 1000 листов
+                return 300 + (finalSheets / 1000) * 120""";
+        Formulas actionTimeTemplate = new Formulas();
+        actionTimeTemplate.setName("Время работы оператора ЦПМ");
+        actionTimeTemplate.setDescription("Расчет времени ручной работы оператора.");
+        actionTimeTemplate.setFormula(actionTimeExpr);
+        actionTimeTemplate.setPhase(CalculationPhase.TECHNICAL_CALCULATION);
+        actionTimeTemplate.setPriority(20);
+        Formulas savedActionTimeTemplate = formulasRepository.save(actionTimeTemplate);
+
+        String materialAmountExpr = """
+                // Расход кликов равен количеству листов
+                return finalSheets""";
+        Formulas materialAmountTemplate = new Formulas();
+        materialAmountTemplate.setName("Расход кликов ЦПМ");
+        materialAmountTemplate.setDescription("Расход материала (кликов) равен итоговому листажу.");
+        materialAmountTemplate.setFormula(materialAmountExpr);
+        materialAmountTemplate.setPhase(CalculationPhase.TECHNICAL_CALCULATION);
+        materialAmountTemplate.setPriority(30);
+        Formulas savedMaterialAmountTemplate = formulasRepository.save(materialAmountTemplate);
+
+        digitalPrintOp.setMachineTimeExpression(machineTimeExpr);
+        digitalPrintOp.setMachineTimeFormulaTemplate(savedMachineTimeTemplate);
+        digitalPrintOp.setActionTimeExpression(actionTimeExpr);
+        digitalPrintOp.setActionTimeFormulaTemplate(savedActionTimeTemplate);
+        digitalPrintOp.setMaterialAmountExpression(materialAmountExpr);
+        digitalPrintOp.setMaterialAmountFormulaTemplate(savedMaterialAmountTemplate);
+
         operationRepository.save(digitalPrintOp);
 
         // 4. Создаем главный шаблон продукта "Визитка"

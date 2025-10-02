@@ -10,15 +10,29 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.data.value.ValueChangeMode;
+import ru.bprn.printhouse.views.products.service.CalculationReport;
+import ru.bprn.printhouse.views.products.service.PriceCalculationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
+import java.text.NumberFormat;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 public class ProductCard extends VerticalLayout {
 
-    public ProductCard(Templates template, AbstractProductType productType) {
+    private final Templates template;
+    private final PriceCalculationService priceCalculationService;
+    private final Span priceLabel = new Span();
+
+    public ProductCard(Templates template, AbstractProductType productType, PriceCalculationService priceCalculationService) {
+        this.template = template;
+        this.priceCalculationService = priceCalculationService;
+
         setWidth("340px");
         getStyle()
                 .set("border", "1px solid var(--lumo-contrast-20pct)")
@@ -37,6 +51,12 @@ public class ProductCard extends VerticalLayout {
         Span description = new Span(template.getDescription() != null ? template.getDescription() : "Описание отсутствует");
         description.getStyle().set("font-size", "var(--lumo-font-size-s)").set("color", "var(--lumo-secondary-text-color)");
 
+        // 3.5 Цена
+        priceLabel.getStyle()
+                .set("font-size", "var(--lumo-font-size-xl)")
+                .set("font-weight", "600")
+                .set("margin", "0.5em 0");
+
         // 4. Блок быстрого заказа
         IntegerField quantityField = new IntegerField();
         quantityField.setWidth("50%");
@@ -49,6 +69,9 @@ public class ProductCard extends VerticalLayout {
             tryParseInt(quantityVar.getMaxValue()).ifPresent(quantityField::setMax);
             tryParseInt(quantityVar.getStep()).ifPresent(quantityField::setStep);
         });
+        quantityField.setValueChangeMode(ValueChangeMode.LAZY);
+        quantityField.addValueChangeListener(e -> updatePrice(quantityField.getValue()));
+
         Button addToCartButton = new Button("Купить", VaadinIcon.CART.create());
         addToCartButton.setWidth("45%");
         addToCartButton.addClickListener(e -> {
@@ -65,12 +88,32 @@ public class ProductCard extends VerticalLayout {
         configureButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SUCCESS);
         configureButton.setWidthFull();
         configureButton.addClickListener(e -> {
-            ProductConfiguratorDialog dialog = new ProductConfiguratorDialog(template, productType);
+            ProductConfiguratorDialog dialog = new ProductConfiguratorDialog(template, productType, priceCalculationService);
             dialog.open();
         });
 
-        add(productImage, name, description, quickOrderLayout, configureButton);
+        add(productImage, name, description, priceLabel, quickOrderLayout, configureButton);
         setSpacing(false);
+
+        // Первоначальный расчет цены
+        updatePrice(quantityField.getValue());
+    }
+
+    private void updatePrice(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            priceLabel.setText("Введите тираж");
+            return;
+        }
+
+        Map<String, Object> userInputs = new HashMap<>();
+        userInputs.put("quantity", quantity);
+
+        CalculationReport report = priceCalculationService.calculateTotalPrice(template, userInputs);
+        System.out.println(report.getDescription()); // <-- Раскомментируйте для вывода отчета в консоль
+        double priceInRubles = report.getTotalPriceInKopecks() / 100.0;
+
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("ru", "RU"));
+        priceLabel.setText(currencyFormat.format(priceInRubles));
     }
 
     private Optional<Variable> getVariable(Templates template, String key) {

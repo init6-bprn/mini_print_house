@@ -1,184 +1,308 @@
 package ru.bprn.printhouse.views.products.service;
 
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
+import com.vaadin.flow.component.notification.Notification;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import ru.bprn.printhouse.data.entity.CalculationPhase;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 import ru.bprn.printhouse.views.operation.entity.Operation;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
+import ru.bprn.printhouse.views.products.entity.PriceOfMachine;
+import ru.bprn.printhouse.views.products.entity.PriceOfMaterial;
+import ru.bprn.printhouse.views.products.repository.PriceOfMachineRepository;
+import ru.bprn.printhouse.views.products.repository.PriceOfMaterialRepository;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
+import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Stream;
 
 @Service
 @AllArgsConstructor
 public class PriceCalculationService {
 
-    private final PriceOfMaterialService priceOfMaterialService;
-    private final PriceOfMachineService priceOfMachineService;
+    private static final Logger log = LoggerFactory.getLogger(PriceCalculationService.class);
+
+    private final PriceOfMaterialRepository priceOfMaterialRepository;
+    private final PriceOfMachineRepository priceOfMachineRepository;
+    private final SecureGroovyService secureGroovyService;
 
     /**
-     * Рассчитывает техническую калькуляцию для шаблона на основе пользовательской конфигурации.
+     * Главный метод для расчета итоговой стоимости продукта по шаблону.
      *
-     * @param template      Шаблон продукта.
-     * @param configuration Карта с пользовательскими настройками (тираж, выбранные материалы, значения переменных).
-     * @return Список результатов калькуляции для каждого компонента продукта.
+     * @param template   Шаблон продукта.
+     * @param userInputs Карта с пользовательскими настройками (как минимум, "quantity").
+     * @return Итоговая стоимость в копейках.
      */
-    public CalculationResult calculate(Templates template, Map<String, Object> configuration) {
-        CalculationResult finalResult = new CalculationResult();
-        Map<String, Object> globalContext = buildInitialContext(template, configuration);
+    public CalculationReport calculateTotalPrice(Templates template, Map<String, Object> userInputs) {
+        StringBuilder reportBuilder = new StringBuilder();
+        Map<String, Object> globalContext = buildInitialContext(template, userInputs);
+        reportBuilder.append("--- Начало расчета ---\n");
+        reportBuilder.append("Глобальный контекст: ").append(globalContext).append("\n");
 
-        // Итерируем по каждому компоненту продукта (например, "Обложка", "Внутренний блок")
+        long totalPrimeCost = 0L; // Общая себестоимость в копейках
+
+        // Шаг 2: Расчет каждого компонента
         for (AbstractProductType productType : template.getProductTypes()) {
-            CalculationResult componentResult = calculateForProductType(productType, globalContext);
-            return componentResult;
+            totalPrimeCost += calculateComponentPrimeCost(productType, globalContext, reportBuilder);
         }
+        reportBuilder.append("\nОбщая себестоимость всех компонентов: ").append(totalPrimeCost / 100.0).append(" руб.\n");
 
-        return finalResult;
-    }
+        // Шаг 6: Расчет итоговой отпускной цены
+        double margin = ((Number) globalContext.getOrDefault("margin", 0.0)).doubleValue();
+        double tax = ((Number) globalContext.getOrDefault("tax", 0.0)).doubleValue();
+        double banking = ((Number) globalContext.getOrDefault("banking", 0.0)).doubleValue();
 
-    private CalculationResult calculateForProductType(AbstractProductType productType, Map<String, Object> globalContext) {
-        CalculationResult result = new CalculationResult();
-        Map<String, Object> context = new HashMap<>(globalContext);
+        double sellingPrice = totalPrimeCost;
+        sellingPrice *= (1 + margin / 100);
+        reportBuilder.append("После наценки (").append(margin).append("%): ").append(String.format("%.2f", sellingPrice / 100.0)).append(" руб.\n");
+        sellingPrice *= (1 + tax / 100);
+        reportBuilder.append("После налога (").append(tax).append("%): ").append(String.format("%.2f", sellingPrice / 100.0)).append(" руб.\n");
+        sellingPrice *= (1 + banking / 100);
+        reportBuilder.append("После банковской комиссии (").append(banking).append("%): ").append(String.format("%.2f", sellingPrice / 100.0)).append(" руб.\n");
 
-        // 1. Сбор контекста и формул
-        addVariablesToContext(context, productType.getVariables());
-        // TODO: Добавить переменные из пользовательской конфигурации для этого productType
+        // Шаг 7: Округление
+        int quantity = ((Number) globalContext.get("quantity")).intValue();
+        double pricePerOne = sellingPrice / quantity;
 
-        List<Operation.FormulaInfo> formulas = collectAndSortFormulas(productType);
+        // Сначала получаем и ВЫПОЛНЯЕМ формулу, чтобы получить маску
+        String roundMaskFormula = (String) globalContext.getOrDefault("roundMask", "'#.##'"); // По умолчанию - строка '#.##'
+        String actualRoundMask = (String) evaluate(globalContext, roundMaskFormula);
+        if (actualRoundMask == null || actualRoundMask.isBlank()) actualRoundMask = "#.##"; // Защита от пустой маски
+        reportBuilder.append("Маска округления: '").append(actualRoundMask).append("'\n");
 
-        // 2. Поэтапное выполнение формул
-        executeFormulas(formulas, context, result);
-        if (result.hasErrors()) return result;
+        // Теперь используем полученную маску для форматирования
+        DecimalFormat df = new DecimalFormat(actualRoundMask);
+        double roundedPricePerOne = Double.parseDouble(df.format(pricePerOne).replace(',', '.'));
+        reportBuilder.append("Цена за единицу до округления: ").append(String.format("%.4f", pricePerOne / 100.0)).append(" руб.\n");
+        reportBuilder.append("Цена за единицу после округления: ").append(roundedPricePerOne / 100.0).append(" руб.\n");
 
-        // 3. Заполнение CalculationResult из контекста
-        populateResultFromContext(result, context, productType);
+        long finalPrice = (long) (roundedPricePerOne * quantity);
+        reportBuilder.append("Итоговая отпускная цена (за весь тираж): ").append(finalPrice / 100.0).append(" руб.\n");
+        reportBuilder.append("--- Конец расчета ---\n");
 
-        // 4. Экономический расчет
-        calculateCost(result, context);
-
-        return result;
+        return new CalculationReport(finalPrice, reportBuilder.toString());
     }
 
     /**
-     * Шаг 1: Собирает первоначальный контекст из шаблона и пользовательского ввода.
+     * Шаг 1: Инициализация глобального контекста расчета.
      */
-    private Map<String, Object> buildInitialContext(Templates template, Map<String, Object> configuration) {
+    private Map<String, Object> buildInitialContext(Templates template, Map<String, Object> userInputs) {
         Map<String, Object> context = new HashMap<>();
         addVariablesToContext(context, template.getVariables());
-        context.putAll(configuration); // Пользовательский ввод имеет наивысший приоритет
-        // Инициализация аккумуляторов
-        context.put("totalCost", BigDecimal.ZERO);
-        context.put("totalWeight", 0.0);
+        context.putAll(userInputs); // Пользовательский ввод переопределяет значения по умолчанию
         return context;
     }
 
     /**
-     * Шаг 2: Рекурсивно собирает и сортирует все формулы.
+     * Рассчитывает себестоимость одного компонента продукта.
      */
-    private List<Operation.FormulaInfo> collectAndSortFormulas(AbstractProductType productType) {
-        Stream<Operation.FormulaInfo> productFormulas = productType.getFormulas().stream()
-                .map(f -> new Operation.FormulaInfo(f.getExpression(), CalculationPhase.PREPARATION, 0)); //TODO: Заменить на данные из Formula
+    private long calculateComponentPrimeCost(AbstractProductType productType, Map<String, Object> globalContext, StringBuilder reportBuilder) {
+        reportBuilder.append("\n--- Расчет компонента: ").append(productType.getName()).append(" ---\n");
+        Map<String, Object> context = new HashMap<>(globalContext);
+        addVariablesToContext(context, productType.getVariables());
+        reportBuilder.append("  Контекст компонента: ").append(context).append("\n");
 
-        Stream<Operation.FormulaInfo> operationFormulas = productType.getProductOperations().stream()
-                .filter(po -> !po.isSwitchOff())
-                .flatMap(po -> po.getOperation().getAllFormulaInfo().stream());
+        // Шаг 2.4: Выполнение формулы настройки (раскладка и т.д.)
+        if (productType instanceof OneSheetDigitalPrintingProductType one) {
+            setupContext(one, context);
+            getVariable(one, "setupFormula")
+                    .map(Variable::getValue)
+                    .ifPresent(formula -> {
+                        reportBuilder.append("  Выполнение setupFormula...\n");
+                        evaluate(context, formula);
+                    });
+        }
+        reportBuilder.append("  После setupFormula: quantityProductsOnMainMaterial=").append(context.get("quantityProductsOnMainMaterial"))
+                .append(", requiredSheets=").append(context.get("requiredSheets")).append("\n");
 
-        return Stream.concat(productFormulas, operationFormulas)
-                .filter(Objects::nonNull)
-                .sorted(Comparator.comparing(Operation.FormulaInfo::phase).thenComparingInt(Operation.FormulaInfo::priority))
-                .toList();
-    }
+        // Инициализируем finalSheets базовым значением перед расчетом брака
+        context.put("finalSheets", context.get("requiredSheets"));
+        reportBuilder.append("  Инициализация finalSheets: ").append(context.get("finalSheets")).append("\n");
 
-    /**
-     * Шаг 3: Выполняет отсортированный список формул, обновляя контекст.
-     */
-    private void executeFormulas(List<Operation.FormulaInfo> formulas, Map<String, Object> context, CalculationResult result) {
-        Binding binding = new Binding(context);
-        GroovyShell shell = new GroovyShell(binding);
+        // Инициализируем finalQuantity базовым тиражом перед расчетом брака
+        context.put("finalQuantity", context.get("quantity"));
+        reportBuilder.append("  Инициализация finalQuantity: ").append(context.get("finalQuantity")).append("\n");
 
-        for (Operation.FormulaInfo formula : formulas) {
-            try {
-                Object formulaResult = shell.evaluate(formula.expression());
-                // Если у формулы есть ключ, добавляем результат в контекст
-                // TODO: Добавить ключ в FormulaInfo
-                // if (formula.key() != null) {
-                //     context.put(formula.key(), formulaResult);
-                // }
-            } catch (Exception e) {
-                result.addError("Ошибка при выполнении формулы '" + formula.expression() + "': " + e.getMessage());
-                // Прерываем расчет, если одна из формул неверна
-                return;
+
+        // Шаг 3: Расчет брака и приладки
+        for (ProductOperation operation : productType.getProductOperations()) {
+            if (operation.isSwitchOff()) continue;
+            reportBuilder.append("  Операция '").append(operation.getOperation().getName()).append("':\n");
+            reportBuilder.append("    Выполнение wasteExpression...\n");
+            evaluate(context, operation.getOperation().getWasteExpression());
+            reportBuilder.append("    Выполнение setupExpression...\n");
+            evaluate(context, operation.getOperation().getSetupExpression());
+        }
+        reportBuilder.append("  После расчета брака и приладки: finalQuantity=").append(context.get("finalQuantity"))
+                .append(", maxSetupWasteEquivalent=").append(context.get("maxSetupWasteEquivalent")).append("\n");
+
+        // Шаг 4: Финальная корректировка листажа
+        getVariable(productType, "finalAdjustmentFormula")
+                .map(Variable::getValue)
+                .ifPresent(formula -> {
+                    reportBuilder.append("  Выполнение finalAdjustmentFormula...\n");
+                    evaluate(context, formula);
+                });
+        reportBuilder.append("  После финальной корректировки: finalQuantity=").append(context.get("finalQuantity"))
+                .append(", finalSheets=").append(context.get("finalSheets")).append("\n");
+
+        // Шаг 5: Расчет себестоимости компонента
+        long componentPrimeCost = 0L;
+
+        // 5.1 Стоимость основного материала
+        AbstractMaterials mainMaterial = productType.getDefaultMaterial();
+        if (mainMaterial != null) {
+            double finalSheets = ((Number) context.getOrDefault("finalSheets", 0.0)).doubleValue();
+            reportBuilder.append("  Стоимость основного материала (").append(mainMaterial.getName()).append("): ").append(finalSheets).append(" листов\n");
+            long materialPriceInKopecks = getMaterialPriceInKopecks(mainMaterial);
+            componentPrimeCost += (long) (finalSheets * materialPriceInKopecks);
+        }
+
+        // 5.2 Стоимость операций
+        for (ProductOperation productOperation : productType.getProductOperations()) {
+            if (productOperation.isSwitchOff()) continue;
+
+            Operation opTemplate = productOperation.getOperation();
+            reportBuilder.append("  Стоимость операции '").append(opTemplate.getName()).append("':\n");
+            Map<String, Object> opContext = buildOperationContext(context, productOperation);
+
+            // Стоимость работы оборудования
+            if (isNotBlank(opTemplate.getMachineTimeExpression())) {
+                double machineTime = (double) evaluate(opContext, opTemplate.getMachineTimeExpression());
+                reportBuilder.append("    Время машины: ").append(String.format("%.2f", machineTime)).append(" сек.\n");
+                long machinePricePerHour = getMachinePriceInKopecks(opTemplate.getAbstractMachine());
+                componentPrimeCost += (long) ((machineTime / 3600) * machinePricePerHour);
             }
-        }
-    }
 
-    /**
-     * Шаг 4: Заполняет объект CalculationResult данными из контекста после расчетов.
-     */
-    private void populateResultFromContext(CalculationResult result, Map<String, Object> context, AbstractProductType productType) {
-        // Основной материал
-        if (productType instanceof PrintSheetsMaterial psm) { //TODO: Исправить на HasMateria
-            result.setMainMaterial(psm);
-        }
+            // Стоимость ручной работы
+            if (isNotBlank(opTemplate.getActionTimeExpression())) {
+                double actionTime = (double) evaluate(opContext, opTemplate.getActionTimeExpression());
+                reportBuilder.append("    Время ручной работы: ").append(String.format("%.2f", actionTime)).append(" сек.\n");
+                double workerRateRub = ((Number) context.getOrDefault("worker_rate", 0.0)).doubleValue();
+                long workerRateKopecks = (long) (workerRateRub * 100);
+                componentPrimeCost += (long) ((actionTime / 3600) * workerRateKopecks);
+            }
 
-        result.setFinalSheets(((Number) context.getOrDefault("finalSheets", 0)).intValue());
-
-        // Результаты по операциям
-        for (ProductOperation po : productType.getProductOperations()) {
-            // TODO: После добавления ключей в FormulaInfo, извлекать результаты по ключам
-            // Например: double machineTime = ((Number) context.getOrDefault("machineTime_" + po.getId(), 0)).doubleValue();
-            result.addOperationResult(po.getId(), 0, 0, 0, po.getSelectedMaterial());
-        }
-    }
-
-    /**
-     * Шаг 5: Рассчитывает итоговую стоимость на основе технологических результатов и цен.
-     */
-    private void calculateCost(CalculationResult result, Map<String, Object> context) {
-        BigDecimal primeCost = BigDecimal.ZERO;
-
-        // Стоимость основного материала
-        if (result.getMainMaterial() != null) {
-            BigDecimal materialPrice = priceOfMaterialService.getActualPriceFor(result.getMainMaterial());
-            primeCost = primeCost.add(materialPrice.multiply(BigDecimal.valueOf(result.getFinalSheets())));
-        }
-
-        // Стоимость операций
-        for (CalculationResult.OperationResult opResult : result.getOperationResults()) {
             // Стоимость расходного материала операции
-            if (opResult.getOperationMaterial() != null) {
-                BigDecimal opMaterialPrice = priceOfMaterialService.getActualPriceFor(opResult.getOperationMaterial());
-                primeCost = primeCost.add(opMaterialPrice.multiply(BigDecimal.valueOf(opResult.getMaterialAmount())));
+            if (isNotBlank(opTemplate.getMaterialAmountExpression())) {
+                double materialAmount = (double) evaluate(opContext, opTemplate.getMaterialAmountExpression());
+                reportBuilder.append("    Расход материала операции: ").append(String.format("%.2f", materialAmount)).append("\n");
+                AbstractMaterials opMaterial = productOperation.getSelectedMaterial();
+                if (opMaterial != null && materialAmount > 0) {
+                    long opMaterialPrice = getMaterialPriceInKopecks(opMaterial);
+                    componentPrimeCost += (long) (materialAmount * opMaterialPrice);
+                }
             }
-            // TODO: Добавить расчет стоимости работы оборудования и сотрудника
         }
-
-        // Применение глобальных наценок
-        BigDecimal margin = BigDecimal.valueOf(((Number) context.getOrDefault("margin", 0.0)).doubleValue());
-        BigDecimal tax = BigDecimal.valueOf(((Number) context.getOrDefault("tax", 0.0)).doubleValue());
-
-        BigDecimal finalPrice = primeCost.multiply(BigDecimal.ONE.add(margin.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)));
-        finalPrice = finalPrice.multiply(BigDecimal.ONE.add(tax.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)));
-
-        result.setTotalPrice(finalPrice);
+        reportBuilder.append("  Итоговая себестоимость компонента: ").append(componentPrimeCost / 100.0).append(" руб.\n");
+        return componentPrimeCost;
     }
 
     // --- Вспомогательные методы ---
+
+    private Object evaluate(Map<String, Object> context, String formula) {
+        if (!isNotBlank(formula)) return null;
+        try {
+            Object result = secureGroovyService.evaluate(context, formula);
+            // Если формула ничего не возвращает (например, просто изменяет контекст),
+            // то возвращаем null, чтобы избежать ошибок приведения типов.
+            if (result == null) return null;
+            if (result instanceof Number) return ((Number) result).doubleValue();
+            return result;
+        } catch (Exception e) {
+            // Ловим любую ошибку при выполнении скрипта, чтобы приложение не падало.
+            log.error("Ошибка выполнения формулы: '{}'", formula.trim(), e);
+            Notification.show("Ошибка в формуле: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+            // Возвращаем 0.0, чтобы избежать NullPointerException в коде, который ожидает число.
+            return 0.0;
+        }
+    }
 
     private void addVariablesToContext(Map<String, Object> context, List<Variable> variables) {
         if (variables == null) {
             return;
         }
         variables.forEach(v -> context.put(v.getKey(), v.getValueAsObject()));
+    }
+
+    private Map<String, Object> buildOperationContext(Map<String, Object> parentContext, ProductOperation po) {
+        Map<String, Object> opContext = new HashMap<>(parentContext);
+        addVariablesToContext(opContext, po.getOperation().getAbstractMachine().getVariables());
+        addVariablesToContext(opContext, po.getOperation().getVariables());
+        addVariablesToContext(opContext, po.getCustomVariables());
+        return opContext;
+    }
+
+    private long getMaterialPriceInKopecks(AbstractMaterials material) {
+        return priceOfMaterialRepository
+                .findFirstByMaterialAndEffectiveDateBeforeOrderByEffectiveDateDesc(material, LocalDateTime.now())
+                .map(PriceOfMaterial::getPrice)
+                .map(price -> (long) (price * 100))
+                .orElse(0L);
+    }
+
+    private long getMachinePriceInKopecks(AbstractMachine machine) {
+        return priceOfMachineRepository
+                .findFirstByMachineAndEffectiveDateBeforeOrderByEffectiveDateDesc(machine, LocalDateTime.now())
+                .map(PriceOfMachine::getPrice)
+                .map(price -> (long) (price * 100))
+                .orElse(0L);
+    }
+
+    private Optional<Variable> getVariable(AbstractProductType productType, String key) {
+        return productType.getVariables().stream().filter(v -> key.equals(v.getKey())).findFirst();
+    }
+
+    private boolean isNotBlank(String str) {
+        return str != null && !str.isBlank();
+    }
+
+    // Этот метод остается как временное решение для подготовки контекста
+    private void setupContext(OneSheetDigitalPrintingProductType one, Map<String, Object> context) {
+        PrintSheetsMaterial material = one.getDefaultMaterial();
+        if (material == null) return;
+
+        int materialWidth = material.getSizeX();
+        int materialLength = material.getSizeY();
+
+        context.put("mainMaterialWidth", (double) materialWidth);
+        context.put("mainMaterialLength", (double) materialLength);
+
+        List<AbstractMachine> machines = one.getProductOperations().stream()
+                .map(ProductOperation::getOperation)
+                .filter(Objects::nonNull)
+                .map(Operation::getAbstractMachine)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        double maxGapTop = 0.0, maxGapBottom = 0.0, maxGapLeft = 0.0, maxGapRight = 0.0;
+        
+        for (AbstractMachine machine : machines) {
+            for (Variable var : machine.getVariables()) {
+                Object value = var.getValueAsObject();
+                if (value instanceof Number num) {
+                    switch (var.getKey()) {
+                        case "gap_top"    -> maxGapTop = Math.max(maxGapTop, num.doubleValue());
+                        case "gap_bottom" -> maxGapBottom = Math.max(maxGapBottom, num.doubleValue());
+                        case "gap_left"   -> maxGapLeft = Math.max(maxGapLeft, num.doubleValue());
+                        case "gap_right"  -> maxGapRight = Math.max(maxGapRight, num.doubleValue());
+                    }
+                }
+            }
+        }
+
+        double workableWidth = materialWidth - maxGapLeft - maxGapRight;
+        double workableLength = materialLength - maxGapTop - maxGapBottom;
+
+        context.put("mainMaterialWorkAreaWidth", workableWidth);
+        context.put("mainMaterialWorkAreaLength", workableLength);
     }
 }

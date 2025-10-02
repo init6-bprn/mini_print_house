@@ -172,7 +172,7 @@ public class TemplatesModuleService {
             // 2. Загружаем управляемые (managed) экземпляры материалов из БД
             if (!materialIds.isEmpty()) {
                 Set<PrintSheetsMaterial> managedMaterials = new HashSet<>(printSheetsMaterialRepository.findAllById(materialIds));
-                newProduct.setSelectedMaterials(managedMaterials);
+                newProduct.setSelectedMaterials(new HashSet<>(managedMaterials));
 
                 // 3. Устанавливаем defaultMaterial как ссылку на управляемый объект из загруженной коллекции
                 if (defaultMaterialId != null) {

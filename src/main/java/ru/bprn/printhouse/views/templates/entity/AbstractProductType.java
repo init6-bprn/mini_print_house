@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
+import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 
 import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -18,7 +19,7 @@ import java.util.*;
 @DiscriminatorColumn(name = "product_type", length = 100)
 @Getter
 @Setter
-public class AbstractProductType {
+public abstract class AbstractProductType {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -43,6 +44,15 @@ public class AbstractProductType {
         this.setVariables(variableService.getVariablesFor(this.getClass()));
     }
 
+    /**
+     * Возвращает основной материал, используемый в данном компоненте продукта.
+     */
+    public abstract AbstractMaterials getDefaultMaterial();
+
+    /**
+     * Возвращает набор всех доступных для выбора материалов для данного компонента.
+     */
+    public abstract Set<AbstractMaterials> getSelectedMaterials();
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

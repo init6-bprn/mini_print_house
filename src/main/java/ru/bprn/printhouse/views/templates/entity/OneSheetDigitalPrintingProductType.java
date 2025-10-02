@@ -21,8 +21,9 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Getter
 @Setter
-@MenuItem(name = "Однолистовая Печать", icon = VaadinIcon.PRINT, context = "product", description = "Компонент однолистовой печати")
-public class OneSheetDigitalPrintingProductType extends AbstractProductType implements HasMateria{
+@MenuItem(name = "Однолистовая Печать", icon = VaadinIcon.PRINT, context = "product", description = "Компонент однолистовой печати") 
+
+public class OneSheetDigitalPrintingProductType extends AbstractProductType {
 
     @ManyToOne(fetch = FetchType.EAGER)
     private PrintSheetsMaterial defaultMaterial;
@@ -34,26 +35,34 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType impl
             inverseJoinColumns = @JoinColumn(name = "material_id"))
     private Set<PrintSheetsMaterial> selectedMaterials = new HashSet<>();
 
+    /**
+     * Возвращает основной материал (бумагу) для этого компонента.
+     * Реализует абстрактный метод из родителя.
+     */
     @Override
-    @Transient
-    public AbstractMaterials getDefaultMat() {
+    public PrintSheetsMaterial getDefaultMaterial() {
         return this.defaultMaterial;
     }
 
-    @Transient
     @Override
-    public Set<AbstractMaterials> getSelectedMat() {
-        return this.selectedMaterials.stream().map(m -> (AbstractMaterials) m).collect(Collectors.toSet());
+    public Set<AbstractMaterials> getSelectedMaterials() {
+        // Возвращаем копию, чтобы избежать прямого изменения коллекции
+        return new HashSet<>(this.selectedMaterials);
     }
 
-    @Override
-    @Transient
-    public String getMatFormula() {
-        return getVariableValueAsString("materialFormula").orElse("");
-    }
-
-    private Optional<String> getVariableValueAsString(String key) {
-        return getVariables().stream().filter(v -> key.equals(v.getKey())).map(Variable::getValue).findFirst();
+    /**
+     * Кастомный сеттер для `selectedMaterials`, который принимает более общий тип Set&lt;AbstractMaterials&gt;
+     * и выполняет приведение типов. Это упрощает привязку данных в UI.
+     * @param materials Набор материалов общего типа.
+     */
+    public void setSelectedMaterials(Set<AbstractMaterials> materials) {
+        if (materials == null) {
+            this.selectedMaterials = new HashSet<>();
+        } else {
+            this.selectedMaterials = materials.stream()
+                    .map(m -> (PrintSheetsMaterial) m)
+                    .collect(Collectors.toSet());
+        }
     }
 
     // Метод @PrePersist addVariable() был удален.

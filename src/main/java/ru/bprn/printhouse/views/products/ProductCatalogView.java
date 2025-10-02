@@ -9,6 +9,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import ru.bprn.printhouse.views.MainLayout;
+import ru.bprn.printhouse.views.products.service.PriceCalculationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.service.TemplatesModuleService;
@@ -21,11 +22,13 @@ import java.util.List;
 public class ProductCatalogView extends VerticalLayout { //TODO: Заменить на более подходящий Layout
 
     private final TemplatesModuleService templatesModuleService;
+    private final PriceCalculationService priceCalculationService;
     private final TextField searchField = new TextField();
     private final FlexLayout productContainer = new FlexLayout();
 
-    public ProductCatalogView(TemplatesModuleService templatesModuleService) {
+    public ProductCatalogView(TemplatesModuleService templatesModuleService, PriceCalculationService priceCalculationService) {
         this.templatesModuleService = templatesModuleService;
+        this.priceCalculationService = priceCalculationService;
 
         setSizeFull();
         setPadding(false);
@@ -57,7 +60,7 @@ public class ProductCatalogView extends VerticalLayout { //TODO: Заменит�
 
         for (Templates template : templates) {
             for (AbstractProductType productType : template.getProductTypes()) {
-                productContainer.add(new ProductCard(template, productType));
+                productContainer.add(new ProductCard(template, productType, priceCalculationService));
             }
         }
     }

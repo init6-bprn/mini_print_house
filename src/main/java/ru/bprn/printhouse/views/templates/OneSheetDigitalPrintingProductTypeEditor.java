@@ -7,6 +7,7 @@ import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.NumberField;
+import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.data.entity.Formulas;
 import ru.bprn.printhouse.data.entity.StandartSize;
 import ru.bprn.printhouse.data.service.FormulasService;
@@ -25,6 +26,7 @@ import ru.bprn.printhouse.views.templates.service.ProductTypeVariableService;
 import java.util.Optional;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.function.Consumer;
 
     public class OneSheetDigitalPrintingProductTypeEditor extends AbstractEditor<OneSheetDigitalPrintingProductType> {
@@ -35,8 +37,8 @@ import java.util.function.Consumer;
 
         private final EditableTextArea<OneSheetDigitalPrintingProductType> materialFormula;
         private final com.vaadin.flow.component.textfield.TextField nameField = new com.vaadin.flow.component.textfield.TextField("Название цепочки работ");
-        private final Select<PrintSheetsMaterial> defaultMaterial = new Select<>("Материал по умолчанию", e->{});
-        private final MultiSelectComboBox<PrintSheetsMaterial> selectedMaterials = new MultiSelectComboBox<>("Выбранные материалы");
+        private final Select<AbstractMaterials> defaultMaterial = new Select<>("Материал по умолчанию", e->{});
+        private final MultiSelectComboBox<AbstractMaterials> selectedMaterials = new MultiSelectComboBox<>("Выбранные материалы");
         private final ComboBox<StandartSize> standartSize = new ComboBox<>("Выберите размер изделия");
         private final OneSheetDigitalPrintingProductType entity;
         private final Checkbox multiplicationCheckbox = new Checkbox("Замостить", true);
@@ -59,10 +61,10 @@ import java.util.function.Consumer;
             sizeY.setMin(0.1);
             bleed.setMin(0.0);
 
-            selectedMaterials.setItems(materialService.findAll());
-            selectedMaterials.setItemLabelGenerator(PrintSheetsMaterial::getName);
+            selectedMaterials.setItems(materialService.findAll().stream().map(m -> (AbstractMaterials)m).toList());
+            selectedMaterials.setItemLabelGenerator(AbstractMaterials::getName);
 
-            defaultMaterial.setItemLabelGenerator(PrintSheetsMaterial::getName);
+            defaultMaterial.setItemLabelGenerator(AbstractMaterials::getName);
             if (this.entity.getSelectedMaterials() != null) defaultMaterial.setItems(this.entity.getSelectedMaterials());
 
             standartSize.setItemLabelGenerator(StandartSize::getName);
@@ -79,7 +81,7 @@ import java.util.function.Consumer;
             binder.forField(bleed).bind(doubleVariableProvider("bleed"), doubleVariableSetter("bleed"));
             binder.forField(materialFormula).bind(stringVariableProvider("materialFormula"), stringVariableSetter("materialFormula"));
             binder.forField(selectedMaterials).bind(OneSheetDigitalPrintingProductType::getSelectedMaterials, OneSheetDigitalPrintingProductType::setSelectedMaterials);
-            binder.forField(defaultMaterial).bind(OneSheetDigitalPrintingProductType::getDefaultMaterial, OneSheetDigitalPrintingProductType::setDefaultMaterial);
+            binder.forField(defaultMaterial).bind(OneSheetDigitalPrintingProductType::getDefaultMaterial, (product, material) -> product.setDefaultMaterial((PrintSheetsMaterial) material));
             binder.forField(standartSize).bind(productType ->{
                 return standartSize.getListDataView().getItems()
                         .filter(f-> f.getLength().equals(doubleVariableProvider("productWidth").apply(productType))
@@ -100,7 +102,7 @@ import java.util.function.Consumer;
             binder.forField(multiplicationCheckbox).bind(booleanVariableProvider("multiplication"), booleanVariableSetter("multiplication"));
 
             selectedMaterials.addValueChangeListener(event -> {
-                Set<PrintSheetsMaterial> selected = event.getValue();
+                Set<AbstractMaterials> selected = event.getValue();
                 defaultMaterial.setItems(selected);
                 if (selected != null && !selected.isEmpty() && !selected.contains(defaultMaterial.getValue())) {
                     defaultMaterial.clear(); // Только если новый набор не пустой

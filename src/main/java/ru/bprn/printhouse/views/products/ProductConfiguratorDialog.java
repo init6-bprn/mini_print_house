@@ -8,32 +8,48 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
+import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
+import ru.bprn.printhouse.views.products.service.CalculationReport;
+import ru.bprn.printhouse.views.products.service.PriceCalculationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 public class ProductConfiguratorDialog extends Dialog {
 
     private final Templates template;
     private final AbstractProductType productType;
+    private final PriceCalculationService priceCalculationService;
     private final VerticalLayout content = new VerticalLayout();
     private final IntegerField quantityField = new IntegerField("Тираж");
+    private final Span priceLabel = new Span();
 
-    public ProductConfiguratorDialog(Templates template, AbstractProductType productType) {
+    // Хранилище для компонентов, которые влияют на цену
+    private final List<Component> priceInfluencingComponents = new ArrayList<>();
+
+    public ProductConfiguratorDialog(Templates template, AbstractProductType productType, PriceCalculationService priceCalculationService) {
         this.template = template;
         this.productType = productType;
+        this.priceCalculationService = priceCalculationService;
 
         setHeaderTitle("Настройка продукта: " + productType.getName());
         setWidth("600px");
@@ -51,11 +67,15 @@ public class ProductConfiguratorDialog extends Dialog {
 
         add(content);
         configureFooter();
+
+        // Первоначальный расчет цены
+        updatePrice();
     }
 
     private void configureQuantityField() {
         quantityField.setWidthFull();
         quantityField.setStepButtonsVisible(true);
+        quantityField.setValueChangeMode(ValueChangeMode.LAZY);
 
         getVariable(template, "quantity").ifPresent(quantityVar -> {
             tryParseInt(quantityVar.getValue()).ifPresent(quantityField::setValue);
@@ -63,6 +83,9 @@ public class ProductConfiguratorDialog extends Dialog {
             tryParseInt(quantityVar.getMaxValue()).ifPresent(quantityField::setMax);
             tryParseInt(quantityVar.getStep()).ifPresent(quantityField::setStep);
         });
+
+        quantityField.addValueChangeListener(e -> updatePrice());
+        priceInfluencingComponents.add(quantityField);
     }
 
     private Component createProductTypeSection(AbstractProductType productType) {
@@ -76,13 +99,22 @@ public class ProductConfiguratorDialog extends Dialog {
 
         sectionLayout.add(new H3(productType.getName()));
 
-        // Добавляем выбор основного материала, если это применимо
-        if (productType instanceof OneSheetDigitalPrintingProductType osdpt) {
+        // Добавляем выбор основного материала (бумаги)
+        if (productType.getDefaultMaterial() != null || !productType.getSelectedMaterials().isEmpty()) {
             ComboBox<AbstractMaterials> materialComboBox = new ComboBox<>("Основной материал");
-            materialComboBox.setItems(osdpt.getSelectedMat());
+            materialComboBox.setItems(productType.getSelectedMaterials());
             materialComboBox.setItemLabelGenerator(AbstractMaterials::getName);
-            materialComboBox.setValue(osdpt.getDefaultMat());
+            materialComboBox.setValue(productType.getDefaultMaterial());
             materialComboBox.setWidthFull();
+
+            materialComboBox.addValueChangeListener(event -> {
+                // Обновляем сам объект productType перед пересчетом
+                if (productType instanceof OneSheetDigitalPrintingProductType osdpt) {
+                    osdpt.setDefaultMaterial((PrintSheetsMaterial) event.getValue());
+                }
+                updatePrice();
+            });
+            priceInfluencingComponents.add(materialComboBox);
             sectionLayout.add(materialComboBox);
         }
 
@@ -107,16 +139,22 @@ public class ProductConfiguratorDialog extends Dialog {
         operationContent.setSpacing(true);
 
         // Чекбокс для включения/отключения операции
-        Checkbox enabledCheckbox = new Checkbox("Включить операцию", !operation.isSwitchOff());
+        Checkbox enabledCheckbox = new Checkbox("Выполнять эту операцию", !operation.isSwitchOff());
+        enabledCheckbox.addValueChangeListener(event -> operation.setSwitchOff(!event.getValue()));
+        enabledCheckbox.addValueChangeListener(e -> updatePrice());
         operationContent.add(enabledCheckbox);
 
-        // Выбор материала для операции
+        // Добавляем выбор материала для операции (например, цветности печати)
         if (!operation.getOperation().getListOfMaterials().isEmpty()) {
             ComboBox<AbstractMaterials> materialComboBox = new ComboBox<>("Материал операции");
             materialComboBox.setItems(operation.getOperation().getListOfMaterials());
             materialComboBox.setItemLabelGenerator(AbstractMaterials::getName);
             materialComboBox.setValue(operation.getSelectedMaterial());
             materialComboBox.setWidthFull();
+
+            materialComboBox.addValueChangeListener(event -> operation.setSelectedMaterial(event.getValue()));
+            materialComboBox.addValueChangeListener(e -> updatePrice());
+            priceInfluencingComponents.add(materialComboBox);
             operationContent.add(materialComboBox);
         }
 
@@ -127,7 +165,9 @@ public class ProductConfiguratorDialog extends Dialog {
 
         if (!visibleVariables.isEmpty()) {
             for (Variable var : visibleVariables) {
-                operationContent.add(createVariableEditor(var));
+                Component editor = createVariableEditor(var);
+                operationContent.add(editor);
+                priceInfluencingComponents.add(editor);
             }
         }
 
@@ -142,23 +182,46 @@ public class ProductConfiguratorDialog extends Dialog {
 
         return switch (variable.getType()) {
             case INTEGER -> {
-                IntegerField field = new IntegerField(label);
+                var field = new IntegerField(label);
+                field.setId(variable.getKey()); // Устанавливаем ID
+                field.setValueChangeMode(ValueChangeMode.LAZY);
                 field.setValue((Integer) variable.getValueAsObject());
+                field.addValueChangeListener(e -> {
+                    variable.setValue(e.getValue()); // Обновляем значение в объекте Variable
+                    updatePrice();
+                });
                 yield field;
             }
             case DOUBLE -> {
-                NumberField field = new NumberField(label);
+                var field = new NumberField(label);
+                field.setId(variable.getKey()); // Устанавливаем ID
+                field.setValueChangeMode(ValueChangeMode.LAZY);
                 field.setValue((Double) variable.getValueAsObject());
+                field.addValueChangeListener(e -> {
+                    variable.setValue(e.getValue()); // Обновляем значение в объекте Variable
+                    updatePrice();
+                });
                 yield field;
             }
             case BOOLEAN -> {
-                Checkbox field = new Checkbox(label);
+                var field = new Checkbox(label);
+                field.setId(variable.getKey()); // Устанавливаем ID
                 field.setValue((Boolean) variable.getValueAsObject());
+                field.addValueChangeListener(e -> {
+                    variable.setValue(e.getValue()); // Обновляем значение в объекте Variable
+                    updatePrice();
+                });
                 yield field;
             }
             default -> { // STRING
-                TextField field = new TextField(label);
+                var field = new TextField(label);
+                field.setId(variable.getKey()); // Устанавливаем ID
+                field.setValueChangeMode(ValueChangeMode.LAZY);
                 field.setValue((String) variable.getValueAsObject());
+                field.addValueChangeListener(e -> {
+                    variable.setValue(e.getValue()); // Обновляем значение в объекте Variable
+                    updatePrice();
+                });
                 yield field;
             }
         };
@@ -176,7 +239,51 @@ public class ProductConfiguratorDialog extends Dialog {
 
         Button cancelButton = new Button("Отмена", e -> close());
 
-        getFooter().add(cancelButton, addToCartButton);
+        priceLabel.getStyle()
+                .set("font-size", "var(--lumo-font-size-l)")
+                .set("font-weight", "600")
+                .set("margin-right", "auto"); // Прижимаем цену влево
+
+        getFooter().add(priceLabel, cancelButton, addToCartButton);
+    }
+
+    private void updatePrice() {
+        Map<String, Object> userInputs = new HashMap<>();
+
+        // Собираем все значения из полей
+        for (Component component : priceInfluencingComponents) {
+            component.getId().ifPresent(id -> {
+                switch (component) {
+                    case IntegerField field -> userInputs.put(id, field.getValue());
+                    case NumberField field -> userInputs.put(id, field.getValue());
+                    case Checkbox field -> userInputs.put(id, field.getValue());
+                    case TextField field -> userInputs.put(id, field.getValue());
+                    case ComboBox field -> {
+                        if ("mainMaterial".equals(id)) {
+                            // Особая логика для основного материала
+                        } else if ("operationMaterial".equals(id)) {
+                            // Особая логика для материала операции
+                        }
+                    }
+                    default -> {}
+                }
+            });
+        }
+
+        Integer quantity = (Integer) userInputs.get("quantity");
+        if (quantity == null || quantity <= 0) {
+            priceLabel.setText("Введите тираж");
+            return;
+        }
+
+        // Вызываем сервис расчета
+        CalculationReport report = priceCalculationService.calculateTotalPrice(template, userInputs);
+        // System.out.println(report.getDescription()); // Для отладки
+
+        // Отображаем результат
+        double priceInRubles = report.getTotalPriceInKopecks() / 100.0;
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("ru", "RU"));
+        priceLabel.setText("Итого: " + currencyFormat.format(priceInRubles));
     }
 
     private Optional<Variable> getVariable(Templates template, String key) {

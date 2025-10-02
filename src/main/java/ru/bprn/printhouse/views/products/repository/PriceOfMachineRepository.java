@@ -6,6 +6,7 @@ import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.products.entity.PriceOfMachine;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,4 +16,7 @@ public interface PriceOfMachineRepository extends JpaRepository<PriceOfMachine, 
     Optional<PriceOfMachine> findTopByMachineAndEffectiveDateLessThanEqualOrderByEffectiveDateDesc(AbstractMachine machine, LocalDate date);
 
     List<PriceOfMachine> findByMachine(AbstractMachine machine);
+
+    Optional<PriceOfMachine> findFirstByMachineAndEffectiveDateBeforeOrderByEffectiveDateDesc(
+            AbstractMachine abstractMachine, LocalDateTime now);
 }

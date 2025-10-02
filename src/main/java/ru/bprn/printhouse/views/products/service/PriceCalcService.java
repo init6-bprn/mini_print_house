@@ -1,16 +1,25 @@
 package ru.bprn.printhouse.views.products.service;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.time.LocalDateTime;
 
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.operation.entity.Operation;
+import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
+import ru.bprn.printhouse.views.products.entity.PriceOfMachine;
+import ru.bprn.printhouse.views.products.entity.PriceOfMaterial;
+import ru.bprn.printhouse.views.products.repository.PriceOfMachineRepository;
+import ru.bprn.printhouse.views.products.repository.PriceOfMaterialRepository;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
@@ -19,38 +28,131 @@ import java.util.Optional;
 
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
+@Service
+@AllArgsConstructor
 public class PriceCalcService {
-private Templates template;
-private Map<String, Object> globalContext;
-private Map<String, Object> context;
+    private final PriceOfMaterialRepository priceOfMaterialRepository;
+    private final PriceOfMachineRepository priceOfMachineRepository;
 
 
-    public PriceCalcService(Templates template){
-        this.template = template;
-        this.globalContext = addContext(template);
-        calculateProductType(template.getProductTypes());
+    public void calculate(Templates template){
+        Map<String, Object> globalContext = addContext(template);
+        calculateProductType(template.getProductTypes(), globalContext);
     }
 
-    public void calculateProductType(Set<AbstractProductType> productTypes){
-        Map<String, Object> productTypeContext = new HashMap<>();
+    public void calculateProductType(Set<AbstractProductType> productTypes, Map<String, Object> globalContext){
+        
         for (AbstractProductType productType : productTypes) {
+            // У каждого продукта - свой контекст, заполняем динамическими переменными
+            Map<String, Object> productTypeContext = new HashMap<>();
+            productTypeContext.putAll(globalContext);
+            productTypeContext.putAll(addContext(productType));
             switch (productType) {
-                case OneSheetDigitalPrintingProductType one -> setUpContext(one);
-           
+                case OneSheetDigitalPrintingProductType one -> {
+                    // Первоначальный расчет переменных
+                    setupContext(one);
+                    // С применением формулы
+                    getVariable(one, "setupFormula")
+                            .map(Variable::getValue)
+                            .ifPresent(formula -> calculateOperation(productTypeContext, formula));
+                }
+                case null, default -> {}
+            }
+            for (ProductOperation operation : productType.getProductOperations()) {
+                // У каждой операции - свой контекст)
+                Map<String, Object> operationContext = new HashMap<>();
+                operationContext.putAll(productTypeContext);
+                operationContext.putAll(addContext(operation));
+
+                // 3.2 Выполнение формулы брака, взятой напрямую из Operation
+                String operationWasteFormula = operation.getOperation().getWasteExpression();
+                if (operationWasteFormula != null && !operationWasteFormula.isBlank()) {
+                    calculateOperation(operationContext, operationWasteFormula);
+                }
+
+                // 3.3 Выполнение формулы приладки, взятой напрямую из Operation
+                String setupWasteFormula = operation.getOperation().getSetupExpression();
+                if (setupWasteFormula != null && !setupWasteFormula.isBlank()) {
+                    calculateOperation(operationContext, setupWasteFormula);
+                }
+
+                // Обновляем значения в productTypeContext из operationContext, чтобы они были доступны следующей операции
+                productTypeContext.put("finalQuantity", operationContext.get("finalQuantity"));
+                productTypeContext.put("maxSetupWasteEquivalent", operationContext.get("maxSetupWasteEquivalent"));
+                productTypeContext.put("finalSheets", operationContext.get("finalSheets"));
+            }
+            // Шаг 4. Финальная корректировка листажа с помощью формулы
+            switch (productType) {
+                case OneSheetDigitalPrintingProductType one -> getVariable(one, "finalAdjustmentFormula")
+                        .map(Variable::getValue)
+                        .ifPresent(formula -> calculateOperation(productTypeContext, formula));
                 case null, default -> {}
             }
 
-            productTypeContext.putAll(globalContext);
-            productTypeContext.putAll(addContext(productType));
-            
-            calculateOperation(productTypeContext);
-           
+            // Шаг 5.1 Расчет стоимости основного материала
+            AbstractMaterials mainMaterial = productType.getDefaultMaterial();
+            if (mainMaterial != null) {
+                double finalSheets = ((Number) productTypeContext.getOrDefault("finalSheets", 0.0)).doubleValue();
+                Optional<PriceOfMaterial> priceOpt = priceOfMaterialRepository
+                        .findFirstByMaterialAndEffectiveDateBeforeOrderByEffectiveDateDesc(mainMaterial, LocalDateTime.now());
+
+                if (priceOpt.isPresent()) {
+                    double materialCost = finalSheets * priceOpt.get().getPrice();
+                    productTypeContext.put("componentPrimeCost", materialCost);
+                }
+            }
+
+            // Шаг 5.2 Расчет стоимости операций
+            for (ProductOperation productOperation : productType.getProductOperations()) {
+                if (productOperation.isSwitchOff()) continue; // Пропускаем отключенные
+
+                Operation operationTemplate = productOperation.getOperation();
+                double componentPrimeCost = ((Number) productTypeContext.get("componentPrimeCost")).doubleValue();
+
+                // Создаем временный контекст для выполнения формул
+                Map<String, Object> operationCostContext = new HashMap<>(productTypeContext);
+                operationCostContext.putAll(addContext(operationTemplate.getAbstractMachine()));
+                operationCostContext.putAll(addContext(operationTemplate));
+                operationCostContext.putAll(addContext(productOperation));
+
+                // Стоимость работы оборудования
+                if (operationTemplate.getMachineTimeExpression() != null && !operationTemplate.getMachineTimeExpression().isBlank()) {
+                    double machineTime = (double) calculateOperation(operationCostContext, operationTemplate.getMachineTimeExpression());
+                    Optional<PriceOfMachine> machinePriceOpt = priceOfMachineRepository.findFirstByMachineAndEffectiveDateBeforeOrderByEffectiveDateDesc(operationTemplate.getAbstractMachine(), LocalDateTime.now());
+                    if (machinePriceOpt.isPresent()) {
+                        double machineCostPerHour = machinePriceOpt.get().getPrice();
+                        componentPrimeCost += (machineTime / 3600) * machineCostPerHour;
+                    }
+                }
+
+                // Стоимость ручной работы
+                if (operationTemplate.getActionTimeExpression() != null && !operationTemplate.getActionTimeExpression().isBlank()) {
+                    double actionTime = (double) calculateOperation(operationCostContext, operationTemplate.getActionTimeExpression());
+                    double workerRate = ((Number) productTypeContext.getOrDefault("worker_rate", 0.0)).doubleValue();
+                    componentPrimeCost += (actionTime / 3600) * workerRate;
+                }
+
+                // Стоимость расходного материала операции
+                if (operationTemplate.getMaterialAmountExpression() != null && !operationTemplate.getMaterialAmountExpression().isBlank()) {
+                    double materialAmount = (double) calculateOperation(operationCostContext, operationTemplate.getMaterialAmountExpression());
+                    AbstractMaterials operationMaterial = productOperation.getSelectedMaterial();
+                    if (operationMaterial != null && materialAmount > 0) {
+                        Optional<PriceOfMaterial> opMaterialPriceOpt = priceOfMaterialRepository.findFirstByMaterialAndEffectiveDateBeforeOrderByEffectiveDateDesc(operationMaterial, LocalDateTime.now());
+                        if (opMaterialPriceOpt.isPresent()) {
+                            componentPrimeCost += materialAmount * opMaterialPriceOpt.get().getPrice();
+                        }
+                    }
+                }
+                productTypeContext.put("componentPrimeCost", componentPrimeCost); // Обновляем себестоимость в основном контексте
+            }
         }
     }
 
-    private void calculateOperation(Map<String, Object> context){
+    private Object calculateOperation(Map<String, Object> context, String formula){
         GroovyShell shell = new GroovyShell(new Binding(context));
-
+        Object result = shell.evaluate(formula);
+        if (result instanceof Number) return ((Number) result).doubleValue();
+        return result;
     }
 
     private Map<String, Object> addContext(Object object) {
@@ -60,6 +162,7 @@ private Map<String, Object> context;
             case AbstractProductType p -> addVariablesToContext(p.getVariables());
             case ProductOperation po -> addVariablesToContext(po.getCustomVariables());
             case AbstractMachine m -> addVariablesToContext(m.getVariables());
+            case Operation o -> addVariablesToContext(o.getVariables());
             case null, default -> new HashMap<>();
         };
     }
@@ -74,7 +177,7 @@ private Map<String, Object> context;
          
     }
 
-    private void setUpContext(OneSheetDigitalPrintingProductType one) {
+    private void setupContext(OneSheetDigitalPrintingProductType one) {
         // --- Шаг 0: Получаем размеры основного материала и записываем их в переменные ---
         PrintSheetsMaterial material = one.getDefaultMaterial();
         if (material == null) {
@@ -88,8 +191,6 @@ private Map<String, Object> context;
         // Обновляем динамические переменные в самом объекте продукта
         getVariable(one, "mainMaterialWidth").ifPresent(v -> v.setValue(materialWidth));
         getVariable(one, "mainMaterialLength").ifPresent(v -> v.setValue(materialLength));
-
-        System.out.println("Материал '" + material.getName() + "' имеет размеры: " + materialWidth + "x" + materialLength);
 
         // --- Шаг 1: Собираем все уникальные машины из операций ---
         List<AbstractMachine> machines = one.getProductOperations().stream()
@@ -129,15 +230,10 @@ private Map<String, Object> context;
             }
         }
 
-        System.out.println("Ограничения оборудования: мин. размеры листа (ширина x длина): " + minMachineWidth + " x " + minMachineLength);
-        System.out.println("Максимальные непечатные поля (T/B/L/R): " + maxGapTop + "/" + maxGapBottom + "/" + maxGapLeft + "/" + maxGapRight);
-
-
         // --- Шаг 4: Проверяем совместимость материала с оборудованием ---
         if (materialWidth > minMachineWidth || materialLength > minMachineLength) {
-            System.out.println("ПРЕДУПРЕЖДЕНИЕ: Размер материала (" + materialWidth + "x" + materialLength
-                    + ") больше, чем минимально поддерживаемый машинами (" + minMachineWidth + "x" + minMachineLength + ").");
             // TODO: Добавить логику обработки несовместимости
+            return;
         }
 
         // --- Шаг 5: Вычисляем и сохраняем рабочую область ---
@@ -146,8 +242,6 @@ private Map<String, Object> context;
 
         getVariable(one, "mainMaterialWorkAreaWidth").ifPresent(v -> v.setValue(workableWidth));
         getVariable(one, "mainMaterialWorkAreaLength").ifPresent(v -> v.setValue(workableLength));
-
-        System.out.println("Расчетная рабочая область листа: " + workableWidth + "x" + workableLength);
     }
 
     private Optional<Variable> getVariable(AbstractProductType productType, String key) {

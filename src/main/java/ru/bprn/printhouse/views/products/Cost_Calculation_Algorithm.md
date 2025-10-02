@@ -188,23 +188,20 @@
 ```groovy
 // --- Шаг 1: Рассчитываем полный размер изделия с учетом вылетов ---
 // Вылеты добавляются с двух сторон, поэтому умножаем на 2.
-def itemWidth = productWidth + (bleed * 2)
-def itemLength = productLength + (bleed * 2)
-
 // Обновляем переменные размера изделия до обрезки
-productWidthBeforeCut = itemWidth
-productLengthBeforeCut = itemLength
+productWidthBeforeCut = productWidth + (bleed * 2)
+productLengthBeforeCut = productLength + (bleed * 2)
 
 // --- Шаг 2: Рассчитываем количество для книжной ориентации (без поворота) ---
 // (int) - это целочисленное деление, отбрасывающее остаток
-def cols_v = (int)(mainMaterialWorkAreaWidth / itemWidth)
-def rows_v = (int)(mainMaterialWorkAreaLength / itemLength)
+def cols_v = (int)(mainMaterialWorkAreaWidth / productWidthBeforeCut)
+def rows_v = (int)(mainMaterialWorkAreaLength / productLengthBeforeCut)
 def total_v = cols_v * rows_v
 
 // --- Шаг 3: Рассчитываем количество для альбомной ориентации (с поворотом на 90 градусов) ---
 // Меняем местами ширину и длину изделия
-def cols_h = (int)(mainMaterialWorkAreaWidth / itemLength)
-def rows_h = (int)(mainMaterialWorkAreaLength / itemWidth)
+def cols_h = (int)(mainMaterialWorkAreaWidth / productLengthBeforeCut)
+def rows_h = (int)(mainMaterialWorkAreaLength / productWidthBeforeCut)
 def total_h = cols_h * rows_h
 
 // --- Шаг 4: Выбираем лучший вариант и сохраняем результаты ---
@@ -223,9 +220,9 @@ if (total_v >= total_h) {
 // --- Шаг 5: Рассчитываем базовый листаж (без учета брака) ---
 // Используем Math.ceil для округления в большую сторону.
 if (quantityProductsOnMainMaterial > 0) {
-    baseSheets = Math.ceil(quantity / quantityProductsOnMainMaterial)
+    requiredSheets = Math.ceil(quantity / quantityProductsOnMainMaterial)
 } else {
-    baseSheets = Double.POSITIVE_INFINITY // Индикатор ошибки: изделие не помещается на лист
+    requiredSheets = Double.POSITIVE_INFINITY // Индикатор ошибки: изделие не помещается на лист
 }
 
 return
