@@ -141,8 +141,10 @@ public class ProductConfiguratorDialog extends Dialog {
 
         // Чекбокс для включения/отключения операции
         Checkbox enabledCheckbox = new Checkbox("Выполнять эту операцию", !operation.isSwitchOff());
-        enabledCheckbox.addValueChangeListener(event -> operation.setSwitchOff(!event.getValue()));
-        enabledCheckbox.addValueChangeListener(e -> updatePrice());
+        enabledCheckbox.addValueChangeListener(event -> {
+            operation.setSwitchOff(!event.getValue()); // Сначала обновляем состояние объекта
+            updatePrice();                             // Затем запускаем пересчет
+        });
         operationContent.add(enabledCheckbox);
 
         // Добавляем выбор материала для операции (например, цветности печати)
