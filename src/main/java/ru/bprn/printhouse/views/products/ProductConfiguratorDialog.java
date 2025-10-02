@@ -76,6 +76,7 @@ public class ProductConfiguratorDialog extends Dialog {
         quantityField.setWidthFull();
         quantityField.setStepButtonsVisible(true);
         quantityField.setValueChangeMode(ValueChangeMode.LAZY);
+        quantityField.setId("quantity"); // Устанавливаем ID для поля тиража
 
         getVariable(template, "quantity").ifPresent(quantityVar -> {
             tryParseInt(quantityVar.getValue()).ifPresent(quantityField::setValue);
