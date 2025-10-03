@@ -42,6 +42,8 @@ public class ProductConfiguratorDialog extends Dialog {
     private final VerticalLayout content = new VerticalLayout();
     private final IntegerField quantityField = new IntegerField("Тираж");
     private final Span priceLabel = new Span();
+    private final Span weightLabel = new Span();
+    private final Span timeLabel = new Span();
 
     // Хранилище для компонентов, которые влияют на цену
     private final List<Component> priceInfluencingComponents = new ArrayList<>();
@@ -69,7 +71,7 @@ public class ProductConfiguratorDialog extends Dialog {
         configureFooter();
 
         // Первоначальный расчет цены
-        updatePrice();
+        updateCalculationResults();
     }
 
     private void configureQuantityField() {
@@ -85,7 +87,7 @@ public class ProductConfiguratorDialog extends Dialog {
             tryParseInt(quantityVar.getStep()).ifPresent(quantityField::setStep);
         });
 
-        quantityField.addValueChangeListener(e -> updatePrice());
+        quantityField.addValueChangeListener(e -> updateCalculationResults());
         priceInfluencingComponents.add(quantityField);
     }
 
@@ -113,7 +115,7 @@ public class ProductConfiguratorDialog extends Dialog {
                 if (productType instanceof OneSheetDigitalPrintingProductType osdpt) {
                     osdpt.setDefaultMaterial((PrintSheetsMaterial) event.getValue());
                 }
-                updatePrice();
+                updateCalculationResults();
             });
             priceInfluencingComponents.add(materialComboBox);
             sectionLayout.add(materialComboBox);
@@ -143,7 +145,7 @@ public class ProductConfiguratorDialog extends Dialog {
         Checkbox enabledCheckbox = new Checkbox("Выполнять эту операцию", !operation.isSwitchOff());
         enabledCheckbox.addValueChangeListener(event -> {
             operation.setSwitchOff(!event.getValue()); // Сначала обновляем состояние объекта
-            updatePrice();                             // Затем запускаем пересчет
+            updateCalculationResults();                             // Затем запускаем пересчет
         });
         operationContent.add(enabledCheckbox);
 
@@ -156,7 +158,7 @@ public class ProductConfiguratorDialog extends Dialog {
             materialComboBox.setWidthFull();
 
             materialComboBox.addValueChangeListener(event -> operation.setSelectedMaterial(event.getValue()));
-            materialComboBox.addValueChangeListener(e -> updatePrice());
+            materialComboBox.addValueChangeListener(e -> updateCalculationResults());
             priceInfluencingComponents.add(materialComboBox);
             operationContent.add(materialComboBox);
         }
@@ -191,7 +193,7 @@ public class ProductConfiguratorDialog extends Dialog {
                 field.setValue((Integer) variable.getValueAsObject());
                 field.addValueChangeListener(e -> {
                     variable.setValue(e.getValue()); // Обновляем значение в объекте Variable
-                    updatePrice();
+                    updateCalculationResults();
                 });
                 yield field;
             }
@@ -202,7 +204,7 @@ public class ProductConfiguratorDialog extends Dialog {
                 field.setValue((Double) variable.getValueAsObject());
                 field.addValueChangeListener(e -> {
                     variable.setValue(e.getValue()); // Обновляем значение в объекте Variable
-                    updatePrice();
+                    updateCalculationResults();
                 });
                 yield field;
             }
@@ -212,7 +214,7 @@ public class ProductConfiguratorDialog extends Dialog {
                 field.setValue((Boolean) variable.getValueAsObject());
                 field.addValueChangeListener(e -> {
                     variable.setValue(e.getValue()); // Обновляем значение в объекте Variable
-                    updatePrice();
+                    updateCalculationResults();
                 });
                 yield field;
             }
@@ -223,7 +225,7 @@ public class ProductConfiguratorDialog extends Dialog {
                 field.setValue((String) variable.getValueAsObject());
                 field.addValueChangeListener(e -> {
                     variable.setValue(e.getValue()); // Обновляем значение в объекте Variable
-                    updatePrice();
+                    updateCalculationResults();
                 });
                 yield field;
             }
@@ -242,15 +244,28 @@ public class ProductConfiguratorDialog extends Dialog {
 
         Button cancelButton = new Button("Отмена", e -> close());
 
+        // Контейнер для всех результатов расчета
+        VerticalLayout resultsLayout = new VerticalLayout(priceLabel, weightLabel, timeLabel);
+        resultsLayout.setSpacing(false);
+        resultsLayout.setPadding(false);
+        resultsLayout.getStyle().set("margin-right", "auto"); // Прижимаем влево
+
         priceLabel.getStyle()
                 .set("font-size", "var(--lumo-font-size-l)")
-                .set("font-weight", "600")
-                .set("margin-right", "auto"); // Прижимаем цену влево
+                .set("font-weight", "600");
 
-        getFooter().add(priceLabel, cancelButton, addToCartButton);
+        weightLabel.getStyle()
+                .set("font-size", "var(--lumo-font-size-s)")
+                .set("color", "var(--lumo-secondary-text-color)");
+
+        timeLabel.getStyle()
+                .set("font-size", "var(--lumo-font-size-s)")
+                .set("color", "var(--lumo-secondary-text-color)");
+
+        getFooter().add(resultsLayout, cancelButton, addToCartButton);
     }
 
-    private void updatePrice() {
+    private void updateCalculationResults() {
         Map<String, Object> userInputs = new HashMap<>();
 
         // Собираем все значения из полей
@@ -276,20 +291,43 @@ public class ProductConfiguratorDialog extends Dialog {
         Integer quantity = (Integer) userInputs.get("quantity");
         if (quantity == null || quantity <= 0) {
             priceLabel.setText("Введите тираж");
+            weightLabel.setText(null);
+            timeLabel.setText(null);
             return;
         }
 
         // Вызываем сервис расчета
         CalculationReport report = priceCalculationService.calculateTotalPrice(template, userInputs);
-        // System.out.println(report.getDescription()); // Для отладки
+        // System.out.println(report.getReport()); // Для отладки
 
-        // Отображаем результат
-        double priceInRubles = report.getTotalPriceInKopecks() / 100.0;
+        // Отображаем цену
+        double priceInRubles = report.getFinalPrice() / 100.0;
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("ru", "RU"));
         priceLabel.setText("Итого: " + currencyFormat.format(priceInRubles));
+
+        // Отображаем вес
+        double weightInGrams = report.getTotalWeight();
+        if (weightInGrams > 0) {
+            if (weightInGrams < 1000) {
+                weightLabel.setText(String.format("Вес: %.0f гр.", weightInGrams));
+            } else {
+                weightLabel.setText(String.format("Вес: %.2f кг.", weightInGrams / 1000.0));
+            }
+        } else {
+            weightLabel.setText(null);
+        }
+
+        // Отображаем время
+        double timeInSeconds = report.getTotalManufacturingTime();
+        if (timeInSeconds > 0) {
+            timeLabel.setText("Время: " + formatSeconds(timeInSeconds));
+        } else {
+            timeLabel.setText(null);
+        }
     }
 
-    private Optional<Variable> getVariable(Templates template, String key) {
+    // --- Вспомогательные методы ---
+    private Optional<Variable> getVariable(Templates t, String key) {
         if (template == null || template.getVariables() == null) {
             return Optional.empty();
         }
@@ -307,5 +345,21 @@ public class ProductConfiguratorDialog extends Dialog {
         } catch (NumberFormatException e) {
             return Optional.empty();
         }
+    }
+
+    private String formatSeconds(double totalSeconds) {
+        if (totalSeconds < 1) return "< 1 сек.";
+
+        long seconds = (long) totalSeconds;
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long remainingSeconds = seconds % 60;
+
+        StringBuilder sb = new StringBuilder();
+        if (hours > 0) sb.append(hours).append("ч ");
+        if (minutes > 0) sb.append(minutes).append("м ");
+        if (remainingSeconds > 0 || sb.length() == 0) sb.append(remainingSeconds).append("с");
+
+        return sb.toString().trim();
     }
 }

@@ -109,8 +109,8 @@ public class ProductCard extends VerticalLayout {
         userInputs.put("quantity", quantity);
 
         CalculationReport report = priceCalculationService.calculateTotalPrice(template, userInputs);
-        System.out.println(report.getDescription()); // <-- Раскомментируйте для вывода отчета в консоль
-        double priceInRubles = report.getTotalPriceInKopecks() / 100.0;
+        // System.out.println(report.getReport()); // <-- Раскомментируйте для вывода отчета в консоль
+        double priceInRubles = report.getFinalPrice() / 100.0;
 
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("ru", "RU"));
         priceLabel.setText(currencyFormat.format(priceInRubles));

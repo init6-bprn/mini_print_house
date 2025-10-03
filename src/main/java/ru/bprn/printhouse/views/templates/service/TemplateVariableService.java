@@ -34,6 +34,13 @@ public class TemplateVariableService {
         variables.add(new Variable("tax", 6.0, "Налог, %", VariableType.DOUBLE, "0", "100", "0.1", null));
         variables.add(new Variable("banking", 2.5, "Банковские услуги, %", VariableType.DOUBLE, "0", "100", "0.1", null));
         variables.add(new Variable("worker_rate", 500.0, "Базовая стоимость нормо-часа", VariableType.DOUBLE, "0", "10000", "50", null));
+
+        // Системные переменные-аккумуляторы. Не показываем их в UI.
+        var totalWeight = new Variable("totalWeight", 0.0, "Глобальный аккумулятор веса (гр)", VariableType.DOUBLE);
+        totalWeight.setShow(false);
+        var totalTime = new Variable("totalManufacturingTime", 0.0, "Глобальный аккумулятор времени (сек)", VariableType.DOUBLE);
+        totalTime.setShow(false);
+        variables.addAll(List.of(totalWeight, totalTime));
         return variables;
     }
 }

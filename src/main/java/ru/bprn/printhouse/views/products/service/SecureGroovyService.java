@@ -1,6 +1,7 @@
 package ru.bprn.printhouse.views.products.service;
 
 import groovy.lang.Binding;
+import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import org.codehaus.groovy.control.CompilerConfiguration;
@@ -16,6 +17,7 @@ import java.util.Map;
 @Service
 public class SecureGroovyService {
 
+    private final CompilerConfiguration sandboxedConfig;
     private final GroovyShell sandboxedShell;
 
     public SecureGroovyService() {
@@ -46,7 +48,8 @@ public class SecureGroovyService {
         config.addCompilationCustomizers(customizer);
 
         // 3. Создаем GroovyShell с этой безопасной конфигурацией
-        this.sandboxedShell = new GroovyShell(config);
+        this.sandboxedConfig = config;
+        this.sandboxedShell = new GroovyShell(this.sandboxedConfig);
     }
 
     /**
@@ -60,5 +63,12 @@ public class SecureGroovyService {
         Script script = sandboxedShell.parse(formula);
         script.setBinding(binding);
         return script.run();
+    }
+
+    /**
+     * Возвращает безопасную конфигурацию компилятора для использования в других сервисах (например, для валидации).
+     */
+    public CompilerConfiguration getSandboxedConfig() {
+        return sandboxedConfig;
     }
 }

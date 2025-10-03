@@ -2,12 +2,17 @@ package ru.bprn.printhouse.views.products.service;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
+/**
+ * Объект, содержащий полные результаты расчета стоимости продукта.
+ */
 @Getter
-@Setter
 @AllArgsConstructor
 public class CalculationReport {
-    private long totalPriceInKopecks;
-    private String description;
+
+    private final long finalPrice; // Итоговая цена в копейках
+    private final double totalWeight; // Общий вес в граммах
+    private final double totalManufacturingTime; // Общее чистое время изготовления в секундах
+    private final String report; // Детальный текстовый отчет о ходе расчета
+
 }

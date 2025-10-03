@@ -2,6 +2,7 @@ package ru.bprn.printhouse.views.templates.service;
 
 import com.vaadin.flow.data.provider.hierarchy.TreeData;
 import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
+import com.vaadin.flow.component.notification.Notification;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +10,7 @@ import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 import ru.bprn.printhouse.views.material.repository.PrintSheetsMaterialRepository;
 import ru.bprn.printhouse.views.operation.entity.Operation;
+import ru.bprn.printhouse.views.machine.entity.AbstractMachine;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
 import ru.bprn.printhouse.views.operation.service.ProductOperationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
@@ -58,26 +60,31 @@ public class TemplatesModuleService {
         return switch (entity) {
             case Templates t -> templatesRepository.save(t);
             case AbstractProductType pt -> {
-                // Если ID нет, это новый продукт, который нужно добавить к родителю
-                if (pt.getId() == null && parent instanceof Templates p) {
+                if (!validateProductType(pt)) {
+                    yield null; // Валидация не пройдена, не сохраняем
+                }
+
+                if (pt.getId() == null && parent instanceof Templates p) { // Новый продукт
                     Templates managedParent = templatesRepository.findById(p.getId()).orElseThrow();
                     managedParent.getProductTypes().add(pt);
                     templatesRepository.save(managedParent);
                     yield pt;
+                } else { // Обновление существующего
+                    yield abstractProductTypeRepository.save(pt);
                 }
-                // Иначе это обновление существующего продукта
-                yield abstractProductTypeRepository.save(pt); // save() выполнит merge для существующей сущности
             }
             case ProductOperation po -> {
-                // Если ID нет, это новая операция, которую нужно добавить к родителю
-                if (po.getId() == null && parent instanceof AbstractProductType p) {
-                    // Используем перегруженный метод, который принимает уже созданный объект
-                    // и правильно его сохраняет, возвращая управляемую версию.
-                    yield addOperationToProduct(p, po);
+                if (parent instanceof AbstractProductType p) {
+                    if (!validateProductType(p)) {
+                        yield null; // Валидация родителя не пройдена, не сохраняем операцию
+                    }
                 }
-                // Иначе это обновление существующей операции.
-                // save() вернет обновленный управляемый экземпляр.
-                yield productOperationService.save(po);
+
+                if (po.getId() == null && parent instanceof AbstractProductType p) { // Новая операция
+                    yield addOperationToProduct(p, po);
+                } else { // Обновление существующей
+                    yield productOperationService.save(po);
+                }
             }
             default -> throw new IllegalArgumentException("Unsupported entity type for saving: " + entity.getClass());
         };
@@ -239,5 +246,57 @@ public class TemplatesModuleService {
             operations.get(i).setSequence(i);
         }
         abstractProductTypeRepository.save(product);
+    }
+
+    /**
+     * Проверяет совместимость основного материала компонента со всем оборудованием,
+     * задействованным в его операциях.
+     * @param productType Компонент продукта для проверки.
+     * @throws IllegalStateException если материал несовместим.
+     */
+    private boolean validateProductType(AbstractProductType productType) {
+        if (!(productType instanceof OneSheetDigitalPrintingProductType osdpt)) {
+            return true; // Проверка актуальна только для листовых продуктов
+        }
+
+        PrintSheetsMaterial material = osdpt.getDefaultMaterial();
+        if (material == null) {
+            return true; // Нет материала - нечего проверять
+        }
+
+        List<AbstractMachine> machines = osdpt.getProductOperations().stream()
+                .map(ProductOperation::getOperation)
+                .filter(Objects::nonNull)
+                .map(Operation::getAbstractMachine)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (machines.isEmpty()) {
+            return true; // Нет машин - нечего проверять
+        }
+
+        double minMachineMaxWidth = Double.MAX_VALUE;
+        double minMachineMaxLength = Double.MAX_VALUE;
+
+        for (AbstractMachine machine : machines) {
+            for (Variable var : machine.getVariables()) {
+                Object value = var.getValueAsObject();
+                if (value instanceof Number num) {
+                    if ("max_width".equals(var.getKey())) minMachineMaxWidth = Math.min(minMachineMaxWidth, num.doubleValue());
+                    if ("max_length".equals(var.getKey())) minMachineMaxLength = Math.min(minMachineMaxLength, num.doubleValue());
+                }
+            }
+        }
+
+        boolean fitsPortrait = (material.getSizeX() <= minMachineMaxWidth && material.getSizeY() <= minMachineMaxLength);
+        boolean fitsLandscape = (material.getSizeY() <= minMachineMaxWidth && material.getSizeX() <= minMachineMaxLength);
+
+        if (!fitsPortrait && !fitsLandscape) {
+            String errorMessage = String.format("Материал '%s' (%d x %d мм) несовместим с оборудованием (мин. проход: %.0f x %.0f мм)", material.getName(), material.getSizeX(), material.getSizeY(), minMachineMaxWidth, minMachineMaxLength);
+            Notification.show(errorMessage, 5000, Notification.Position.MIDDLE);
+            return false;
+        }
+        return true;
     }
 }

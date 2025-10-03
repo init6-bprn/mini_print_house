@@ -1,5 +1,6 @@
 package ru.bprn.printhouse.views.templates.service;
 
+import lombok.AllArgsConstructor;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.CompilationFailedException;
@@ -7,6 +8,7 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
 import org.springframework.stereotype.Service;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
@@ -18,6 +20,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 @Service
+@AllArgsConstructor
 public class FormulaValidationService {
 
     // Список глобально доступных переменных/классов.
@@ -25,6 +28,9 @@ public class FormulaValidationService {
     private static final Set<String> PREDEFINED_VARIABLES = Set.of(
             "Math", "BigDecimal", "RoundingMode"
     );
+
+    // Инжектируем сервис с безопасной конфигурацией
+    private final ru.bprn.printhouse.views.products.service.SecureGroovyService secureGroovyService;
 
     public ValidationResult validate(String formula, List<Variable>... availableVariableLists) {
         if (formula == null || formula.isBlank()) {
@@ -44,8 +50,8 @@ public class FormulaValidationService {
         // 2. Проверяем синтаксис и собираем используемые переменные
         Set<String> usedVariableNames = new HashSet<>();
         try {
-            CompilerConfiguration config = new CompilerConfiguration();
-            CompilationUnit unit = new CompilationUnit(config);
+            // Используем ту же безопасную конфигурацию, что и при исполнении!
+            CompilationUnit unit = new CompilationUnit(secureGroovyService.getSandboxedConfig());
             SourceUnit su = unit.addSource("formula.groovy", formula);
 
             // Компилируем до фазы, когда построено AST (Abstract Syntax Tree)
@@ -65,8 +71,12 @@ public class FormulaValidationService {
 
         } catch (CompilationFailedException e) {
             // Ошибка синтаксиса
-            String errorMessage = e.getMessage().lines().findFirst().orElse("Синтаксическая ошибка в формуле");
-            return ValidationResult.failure("Синтаксическая ошибка: " + errorMessage);
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("is blacklisted")) {
+                return ValidationResult.failure("Ошибка безопасности: " + errorMessage);
+            } else {
+                return ValidationResult.failure("Синтаксическая ошибка: " + errorMessage.lines().findFirst().orElse(errorMessage));
+            }
         } catch (Exception e) {
             return ValidationResult.failure("Неожиданная ошибка при анализе формулы: " + e.getMessage());
         }

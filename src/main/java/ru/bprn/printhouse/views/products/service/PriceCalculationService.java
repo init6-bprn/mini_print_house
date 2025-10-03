@@ -19,7 +19,6 @@ import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductT
 import ru.bprn.printhouse.views.templates.entity.Templates;
 import ru.bprn.printhouse.views.templates.entity.Variable;
 
-import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -69,7 +68,8 @@ public class PriceCalculationService {
 
         // Шаг 7: Округление
         int quantity = ((Number) globalContext.get("quantity")).intValue();
-        double pricePerOne = sellingPrice / quantity;
+        // Цена за единицу в КОПЕЙКАХ
+        double pricePerOneKopecks = sellingPrice / quantity;
 
         // Сначала получаем и ВЫПОЛНЯЕМ формулу, чтобы получить маску
         String roundMaskFormula = (String) globalContext.getOrDefault("roundMask", "'#.##'"); // По умолчанию - строка '#.##'
@@ -77,17 +77,22 @@ public class PriceCalculationService {
         if (actualRoundMask == null || actualRoundMask.isBlank()) actualRoundMask = "#.##"; // Защита от пустой маски
         reportBuilder.append("Маска округления: '").append(actualRoundMask).append("'\n");
 
-        // Теперь используем полученную маску для форматирования
-        DecimalFormat df = new DecimalFormat(actualRoundMask);
-        double roundedPricePerOne = Double.parseDouble(df.format(pricePerOne).replace(',', '.'));
-        reportBuilder.append("Цена за единицу до округления: ").append(String.format("%.4f", pricePerOne / 100.0)).append(" руб.\n");
-        reportBuilder.append("Цена за единицу после округления: ").append(roundedPricePerOne / 100.0).append(" руб.\n");
+        double roundedPricePerOneKopecks = roundUpByMask(pricePerOneKopecks, actualRoundMask);
+        reportBuilder.append("Цена за единицу до округления: ").append(String.format("%.4f", pricePerOneKopecks / 100.0)).append(" руб.\n");
+        reportBuilder.append("Цена за единицу после округления (ceil): ").append(String.format("%.2f", roundedPricePerOneKopecks / 100.0)).append(" руб.\n");
 
-        long finalPrice = (long) (roundedPricePerOne * quantity);
+        long finalPrice = (long) (roundedPricePerOneKopecks * quantity);
         reportBuilder.append("Итоговая отпускная цена (за весь тираж): ").append(finalPrice / 100.0).append(" руб.\n");
         reportBuilder.append("--- Конец расчета ---\n");
 
-        return new CalculationReport(finalPrice, reportBuilder.toString());
+        // Извлекаем итоговые физические параметры из глобального контекста
+        double finalTotalWeight = ((Number) globalContext.get("totalWeight")).doubleValue();
+        double finalTotalManufacturingTime = ((Number) globalContext.get("totalManufacturingTime")).doubleValue();
+
+        reportBuilder.append("\nИтоговый вес: ").append(String.format("%.2f", finalTotalWeight)).append(" гр.\n");
+        reportBuilder.append("Итоговое время изготовления: ").append(String.format("%.2f", finalTotalManufacturingTime)).append(" сек.\n");
+
+        return new CalculationReport(finalPrice, finalTotalWeight, finalTotalManufacturingTime, reportBuilder.toString());
     }
 
     /**
@@ -162,6 +167,16 @@ public class PriceCalculationService {
             double finalSheets = ((Number) context.getOrDefault("finalSheets", 0.0)).doubleValue();
             reportBuilder.append("  Стоимость основного материала (").append(mainMaterial.getName()).append("): ").append(finalSheets).append(" листов\n");
             long materialPriceInKopecks = getMaterialPriceInKopecks(mainMaterial);
+
+            // Расчет веса основного материала
+            if (mainMaterial instanceof PrintSheetsMaterial psm) {
+                double sheetAreaM2 = (double) psm.getSizeX() * psm.getSizeY() / 1_000_000; // Площадь листа в м2
+                double materialDensity = psm.getThickness(); // Плотность в г/м2
+                double singleSheetWeight = sheetAreaM2 * materialDensity;
+                double componentWeight = finalSheets * singleSheetWeight;
+                globalContext.put("totalWeight", ((Number)globalContext.get("totalWeight")).doubleValue() + componentWeight);
+                reportBuilder.append("    Вес компонента: ").append(String.format("%.2f", componentWeight)).append(" гр.\n");
+            }
             componentPrimeCost += (long) (finalSheets * materialPriceInKopecks);
         }
 
@@ -173,9 +188,12 @@ public class PriceCalculationService {
             reportBuilder.append("  Стоимость операции '").append(opTemplate.getName()).append("':\n");
             Map<String, Object> opContext = buildOperationContext(context, productOperation);
 
+            double machineTime = 0.0;
+            double actionTime = 0.0;
+
             // Стоимость работы оборудования
             if (isNotBlank(opTemplate.getMachineTimeExpression())) {
-                double machineTime = (double) evaluate(opContext, opTemplate.getMachineTimeExpression());
+                machineTime = (double) evaluate(opContext, opTemplate.getMachineTimeExpression());
                 reportBuilder.append("    Время машины: ").append(String.format("%.2f", machineTime)).append(" сек.\n");
                 long machinePricePerHour = getMachinePriceInKopecks(opTemplate.getAbstractMachine());
                 componentPrimeCost += (long) ((machineTime / 3600) * machinePricePerHour);
@@ -183,12 +201,17 @@ public class PriceCalculationService {
 
             // Стоимость ручной работы
             if (isNotBlank(opTemplate.getActionTimeExpression())) {
-                double actionTime = (double) evaluate(opContext, opTemplate.getActionTimeExpression());
+                actionTime = (double) evaluate(opContext, opTemplate.getActionTimeExpression());
                 reportBuilder.append("    Время ручной работы: ").append(String.format("%.2f", actionTime)).append(" сек.\n");
                 double workerRateRub = ((Number) context.getOrDefault("worker_rate", 0.0)).doubleValue();
                 long workerRateKopecks = (long) (workerRateRub * 100);
                 componentPrimeCost += (long) ((actionTime / 3600) * workerRateKopecks);
             }
+
+            // Расчет и суммирование чистого времени операции
+            double operationTime = Math.max(machineTime, actionTime);
+            globalContext.put("totalManufacturingTime", ((Number)globalContext.get("totalManufacturingTime")).doubleValue() + operationTime);
+            reportBuilder.append("    Чистое время операции (max): ").append(String.format("%.2f", operationTime)).append(" сек.\n");
 
             // Стоимость расходного материала операции
             if (isNotBlank(opTemplate.getMaterialAmountExpression())) {
@@ -267,7 +290,12 @@ public class PriceCalculationService {
     // Этот метод остается как временное решение для подготовки контекста
     private void setupContext(OneSheetDigitalPrintingProductType one, Map<String, Object> context) {
         PrintSheetsMaterial material = one.getDefaultMaterial();
-        if (material == null) return;
+        if (material == null) {
+            // Если материала нет, расчет невозможен. Прерываем с ошибкой.
+            String errorMsg = "Для компонента '" + one.getName() + "' не выбран основной материал.";
+            log.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
+        }
 
         int materialWidth = material.getSizeX();
         int materialLength = material.getSizeY();
@@ -284,12 +312,16 @@ public class PriceCalculationService {
                 .toList();
 
         double maxGapTop = 0.0, maxGapBottom = 0.0, maxGapLeft = 0.0, maxGapRight = 0.0;
+        double minMachineMaxWidth = Double.MAX_VALUE;
+        double minMachineMaxLength = Double.MAX_VALUE;
         
         for (AbstractMachine machine : machines) {
             for (Variable var : machine.getVariables()) {
                 Object value = var.getValueAsObject();
                 if (value instanceof Number num) {
                     switch (var.getKey()) {
+                        case "max_width"  -> minMachineMaxWidth = Math.min(minMachineMaxWidth, num.doubleValue());
+                        case "max_length" -> minMachineMaxLength = Math.min(minMachineMaxLength, num.doubleValue());
                         case "gap_top"    -> maxGapTop = Math.max(maxGapTop, num.doubleValue());
                         case "gap_bottom" -> maxGapBottom = Math.max(maxGapBottom, num.doubleValue());
                         case "gap_left"   -> maxGapLeft = Math.max(maxGapLeft, num.doubleValue());
@@ -299,10 +331,47 @@ public class PriceCalculationService {
             }
         }
 
+        // Проверка совместимости материала с оборудованием
+        boolean fitsPortrait = (materialWidth <= minMachineMaxWidth && materialLength <= minMachineMaxLength);
+        boolean fitsLandscape = (materialLength <= minMachineMaxWidth && materialWidth <= minMachineMaxLength);
+
+        if (!machines.isEmpty() && !fitsPortrait && !fitsLandscape) {
+            String errorMessage = String.format(
+                    "Материал '%s' (%d x %d мм) несовместим с оборудованием. " +
+                    "Минимальные размеры оборудования в цепочке: %.0f x %.0f мм.",
+                    material.getName(), materialWidth, materialLength,
+                    minMachineMaxWidth, minMachineMaxLength
+            );
+            log.error(errorMessage);
+            throw new IllegalStateException(errorMessage); // Прерываем расчет
+        }
+
         double workableWidth = materialWidth - maxGapLeft - maxGapRight;
         double workableLength = materialLength - maxGapTop - maxGapBottom;
 
         context.put("mainMaterialWorkAreaWidth", workableWidth);
         context.put("mainMaterialWorkAreaLength", workableLength);
+    }
+
+    /**
+     * Округляет значение в копейках ВВЕРХ (ceil) в соответствии с маской.
+     * @param kopecks Сумма в копейках.
+     * @param mask Маска округления ('#', '#.#', '#.##').
+     * @return Округленная сумма в копейках.
+     */
+    private double roundUpByMask(double kopecks, String mask) {
+        return switch (mask) {
+            // Округление до целых рублей (до 100 копеек)
+            case "#" -> Math.ceil(kopecks / 100.0) * 100.0;
+
+            // Округление до десятков копеек (до 10 копеек)
+            case "#.#" -> Math.ceil(kopecks / 10.0) * 10.0;
+
+            // Округление до целых копеек
+            case "#.##" -> Math.ceil(kopecks);
+
+            // По умолчанию - округление до копеек
+            default -> Math.ceil(kopecks);
+        };
     }
 }
