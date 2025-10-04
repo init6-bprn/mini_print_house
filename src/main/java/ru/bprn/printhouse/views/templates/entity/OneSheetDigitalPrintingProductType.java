@@ -10,8 +10,8 @@ import ru.bprn.printhouse.annotation.MenuItem;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 
-import java.util.Optional;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -65,9 +65,59 @@ public class OneSheetDigitalPrintingProductType extends AbstractProductType {
         }
     }
 
-    // Метод @PrePersist addVariable() был удален.
-    // Теперь инициализация переменных происходит через
-    // AbstractProductType.initializeVariables()
-    // при создании нового объекта в TemplatesView.EntityFactory.
-    
+    @Override
+    public void calculateLayoutSpecifics(Map<String, Object> context) {
+        // Здесь находится вся логика расчета раскладки для листовой печати.
+
+        double productWidth = (double) context.get("productWidthBeforeCut");
+        double productLength = (double) context.get("productLengthBeforeCut");
+        double workableSheetWidth = (double) context.get("workableSheetWidth");
+        double workableSheetLength = (double) context.get("workableSheetLength");
+
+        int cols_v = (int) (workableSheetWidth / productWidth);
+        int rows_v = (int) (workableSheetLength / productLength);
+        int total_v = cols_v * rows_v;
+
+        int cols_h = (int) (workableSheetWidth / productLength);
+        int rows_h = (int) (workableSheetLength / productWidth);
+        int total_h = cols_h * rows_h;
+
+        int quantityOnSheet;
+        int rows = 0;
+        int columns = 0;
+
+        if (total_v >= total_h) {
+            quantityOnSheet = total_v;
+            rows = rows_v;
+            columns = cols_v;   
+        } else {
+            quantityOnSheet = total_h;
+            rows = rows_h;
+            columns = cols_h;
+        }
+
+        // Обогащаем контекст новыми, готовыми к использованию переменными
+        context.put("quantityProductsOnMainMaterial", quantityOnSheet);
+        context.put("rows", rows);
+        context.put("columns", columns);
+
+
+        if (quantityOnSheet > 0) {
+            int quantity = (int) context.get("quantity");
+            double baseSheets = Math.ceil((double) quantity / quantityOnSheet);
+            context.put("baseSheets", baseSheets);
+
+            // Расчет веса одного изделия в граммах
+            if (this.getDefaultMaterial() != null) {
+                double itemAreaM2 = (productWidth * productLength) / 1_000_000.0; // Площадь изделия в м2
+                double density = this.getDefaultMaterial().getThickness(); // Плотность в г/м2
+                context.put("mass", itemAreaM2 * density);
+            } else {
+                context.put("mass", 0.0);
+            }
+        } else {
+            context.put("baseSheets", Double.POSITIVE_INFINITY);
+            context.put("mass", 0.0);
+        }
+    }
 }

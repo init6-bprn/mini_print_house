@@ -53,6 +53,16 @@ public abstract class AbstractProductType {
      * Возвращает набор всех доступных для выбора материалов для данного компонента.
      */
     public abstract Set<AbstractMaterials> getSelectedMaterials();
+
+    /**
+     * Рассчитывает ключевые производственные параметры, специфичные для данного типа продукта,
+     * и помещает их в контекст. Этот метод является "стратегией" раскладки.
+     *
+     * @param context Карта с контекстом расчета, которая будет обогащена новыми переменными.
+     *                Ожидается, что в контексте уже есть 'workableSheetWidth', 'productWidth' и т.д.
+     */
+    public abstract void calculateLayoutSpecifics(Map<String, Object> context);
+    
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

@@ -11,7 +11,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import ru.bprn.printhouse.views.products.service.CalculationReport;
+import ru.bprn.printhouse.views.products.entity.FinalCalculation;
 import ru.bprn.printhouse.views.products.service.PriceCalculationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.Templates;
@@ -108,9 +108,15 @@ public class ProductCard extends VerticalLayout {
         Map<String, Object> userInputs = new HashMap<>();
         userInputs.put("quantity", quantity);
 
-        CalculationReport report = priceCalculationService.calculateTotalPrice(template, userInputs);
-        // System.out.println(report.getReport()); // <-- Раскомментируйте для вывода отчета в консоль
-        double priceInRubles = report.getFinalPrice() / 100.0;
+        FinalCalculation calculation = priceCalculationService.calculate(template, userInputs);
+
+        if (calculation.hasErrors()) {
+            priceLabel.setText("Ошибка расчета");
+            Notification.show(calculation.getErrors().get(0), 5000, Notification.Position.MIDDLE);
+            return;
+        }
+
+        double priceInRubles = calculation.getFinalPrice() / 100.0;
 
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("ru", "RU"));
         priceLabel.setText(currencyFormat.format(priceInRubles));

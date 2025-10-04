@@ -16,10 +16,10 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import ru.bprn.printhouse.views.products.entity.FinalCalculation;
 import ru.bprn.printhouse.views.material.entity.AbstractMaterials;
 import ru.bprn.printhouse.views.material.entity.PrintSheetsMaterial;
 import ru.bprn.printhouse.views.operation.entity.ProductOperation;
-import ru.bprn.printhouse.views.products.service.CalculationReport;
 import ru.bprn.printhouse.views.products.service.PriceCalculationService;
 import ru.bprn.printhouse.views.templates.entity.AbstractProductType;
 import ru.bprn.printhouse.views.templates.entity.OneSheetDigitalPrintingProductType;
@@ -266,59 +266,48 @@ public class ProductConfiguratorDialog extends Dialog {
     }
 
     private void updateCalculationResults() {
-        Map<String, Object> userInputs = new HashMap<>();
+        // Все изменения в полях уже применены к объектам `template`, `productType` и `operation`
+        // благодаря слушателям `addValueChangeListener`.
+        // Поэтому нам нужно передать в сервис только тираж.
 
-        // Собираем все значения из полей
-        for (Component component : priceInfluencingComponents) {
-            component.getId().ifPresent(id -> {
-                switch (component) {
-                    case IntegerField field -> userInputs.put(id, field.getValue());
-                    case NumberField field -> userInputs.put(id, field.getValue());
-                    case Checkbox field -> userInputs.put(id, field.getValue());
-                    case TextField field -> userInputs.put(id, field.getValue());
-                    case ComboBox field -> {
-                        if ("mainMaterial".equals(id)) {
-                            // Особая логика для основного материала
-                        } else if ("operationMaterial".equals(id)) {
-                            // Особая логика для материала операции
-                        }
-                    }
-                    default -> {}
-                }
-            });
-        }
-
-        Integer quantity = (Integer) userInputs.get("quantity");
+        Integer quantity = quantityField.getValue();
         if (quantity == null || quantity <= 0) {
             priceLabel.setText("Введите тираж");
             weightLabel.setText(null);
             timeLabel.setText(null);
             return;
         }
-
+        
+        Map<String, Object> userInputs = new HashMap<>();
+        userInputs.put("quantity", quantity);
+        
         // Вызываем сервис расчета
-        CalculationReport report = priceCalculationService.calculateTotalPrice(template, userInputs);
-        // System.out.println(report.getReport()); // Для отладки
+        FinalCalculation calculation = priceCalculationService.calculate(template, userInputs);
 
+        // Проверяем на наличие ошибок
+        if (calculation.hasErrors()) {
+            priceLabel.setText("Ошибка расчета");
+            weightLabel.setText(null);
+            timeLabel.setText(null);
+            Notification.show(calculation.getErrors().get(0), 5000, Notification.Position.MIDDLE);
+            return;
+        }
+        
         // Отображаем цену
-        double priceInRubles = report.getFinalPrice() / 100.0;
+        double priceInRubles = calculation.getFinalPrice() / 100.0;
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("ru", "RU"));
         priceLabel.setText("Итого: " + currencyFormat.format(priceInRubles));
 
         // Отображаем вес
-        double weightInGrams = report.getTotalWeight();
+        double weightInGrams = calculation.getTotalWeight();
         if (weightInGrams > 0) {
-            if (weightInGrams < 1000) {
-                weightLabel.setText(String.format("Вес: %.0f гр.", weightInGrams));
-            } else {
-                weightLabel.setText(String.format("Вес: %.2f кг.", weightInGrams / 1000.0));
-            }
+            weightLabel.setText(weightInGrams < 1000 ? String.format("Вес: %.0f гр.", weightInGrams) : String.format("Вес: %.2f кг.", weightInGrams / 1000.0));
         } else {
             weightLabel.setText(null);
         }
 
         // Отображаем время
-        double timeInSeconds = report.getTotalManufacturingTime();
+        double timeInSeconds = calculation.getTotalManufacturingTime();
         if (timeInSeconds > 0) {
             timeLabel.setText("Время: " + formatSeconds(timeInSeconds));
         } else {
